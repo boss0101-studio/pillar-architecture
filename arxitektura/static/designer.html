@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pillar Konstruktor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">Pillar<span>.</span></a>
+    <ul>
+      <li><a href="index.html#loyihalar">Loyihalar</a></li>
+      <li><a href="designer.html" aria-current="page">Konstruktor</a></li>
+      <li><a href="builder.html">Erkin qurish</a></li>
+      <li><a href="paper.html">Oq qog'oz</a></li>
+      <li><a href="#galereya">Galereya</a></li>
+      <li><a href="shop.html">Mahsulotlar <span class="cart-badge" data-cart-count hidden>0</span></a></li>
+      <li><a href="index.html#aloqa">Aloqa</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="wrap">
+  <header class="ds-head">
+    <div>
+      <span class="label">Konstruktor · o'z binongizni loyihalang</span>
+      <h1>Bino konstruktori</h1>
+    </div>
+    <div class="ds-head-side">
+      <p>Chapda bino o'lchamlari va uslubini tanlang. Keyin asbobni olib, fasaddagi istalgan katakni bosing yoki ustidan sudrang: deraza, balkon, eshik yoki yaxlit devor qo'ying.</p>
+      <button class="btn" type="button" id="newBtn">+ Yangi bino</button>
+      <a class="btn-ghost" href="builder.html" title="Tayyor qutisiz: devorlarni o'zingiz chizasiz">Noldan erkin qurish →</a>
+    </div>
+  </header>
+
+  <div class="ds">
+    <form class="ds-controls" id="params" novalidate>
+      <fieldset>
+        <legend class="label">Hajm</legend>
+        <div class="rng"><label for="floors">Qavatlar</label><output id="floorsOut" for="floors"></output><input type="range" id="floors" name="floors" min="1" max="30" step="1"></div>
+        <div class="rng"><label for="bays">Fasad oraliqlari</label><output id="baysOut" for="bays"></output><input type="range" id="bays" name="bays" min="2" max="12" step="1"></div>
+        <div class="rng"><label for="floor_h">Qavat balandligi, m</label><output id="floor_hOut" for="floor_h"></output><input type="range" id="floor_h" name="floor_h" min="2.7" max="4.5" step="0.1"></div>
+        <div class="rng"><label for="bay_w">Oraliq kengligi, m</label><output id="bay_wOut" for="bay_w"></output><input type="range" id="bay_w" name="bay_w" min="3" max="7.5" step="0.1"></div>
+        <div class="rng"><label for="depth">Bino chuqurligi, m</label><output id="depthOut" for="depth"></output><input type="range" id="depth" name="depth" min="6" max="30" step="0.5"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="label">Tom</legend>
+        <div class="seg wrap3" data-name="roof">
+          <button type="button" data-v="tekis">Tekis</button>
+          <button type="button" data-v="nishab">Nishab</button>
+            <button type="button" data-v="bir">Bir nishab</button>
+            <button type="button" data-v="piramida">Piramida</button>
+          <button type="button" data-v="gumbaz">Gumbaz</button>
+          <button type="button" data-v="terrasa">Terrasa</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="label">Fasad materiali</legend>
+        <div class="swatches" id="materials"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="label">Derazalar</legend>
+        <div class="seg wrap3" data-name="window">
+          <button type="button" data-v="oddiy">Oddiy</button>
+          <button type="button" data-v="arkali">Arkali</button>
+          <button type="button" data-v="panorama">Panorama</button>
+            <button type="button" data-v="tor">Tor</button>
+            <button type="button" data-v="dumaloq">Dumaloq</button>
+            <button type="button" data-v="panjara">Panjara</button>
+          <button type="button" data-v="yoq">Yo'q</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend class="label">Birinchi qavat</legend>
+        <div class="seg" data-name="ground">
+          <button type="button" data-v="oddiy">Oddiy</button>
+          <button type="button" data-v="arkada">Arkada</button>
+          <button type="button" data-v="vitrina">Vitrina</button>
+        </div>
+      </fieldset>
+
+      <fieldset>
+          <legend class="label">Geometrik chiziqlar</legend>
+          <div class="checks">
+            <label><input type="checkbox" id="geoAxes"> O'qlar va o'lchamlar</label>
+            <label><input type="checkbox" id="geoDiag"> Diagonallar</label>
+            <label><input type="checkbox" id="geoGolden"> Oltin kesim (φ)</label>
+            <label><input type="checkbox" id="geoAngles"> Burchaklar</label>
+          </div>
+        </fieldset>
+        <fieldset class="row">
+        <div class="field">
+          <label for="category">Bino turi</label>
+          <select id="category" name="category">
+            <option value="turar-joy">Turar-joy</option><option value="jamoat">Jamoat</option>
+            <option value="tijorat">Tijorat</option><option value="interyer">Interyer</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="quality">Sifat</label>
+          <select id="quality" name="quality">
+            <option value="standart">Standart</option><option value="biznes">Biznes</option><option value="premium">Premium</option>
+          </select>
+        </div>
+      </fieldset>
+    </form>
+
+    <div class="ds-stage">
+      <div class="site-bar" id="siteBar">
+        <div class="btabs" id="bTabs" role="tablist" aria-label="Uylar"></div>
+        <button type="button" class="btn-ghost" id="addBuilding">+ Uy qo'shish</button>
+        <button type="button" class="btn-danger" id="delBuilding">Uyni olib tashlash</button>
+        <label class="gap" id="gapRow" for="gap" hidden><span title="Uylarni ko'cha bo'ylab qatorga tizadi">Qatorda oraliq</span><output id="gapOut">10 m</output><input type="range" id="gap" min="4" max="30" step="1" value="10"></label>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Fasad asboblari">
+        <div class="tools" id="tools"></div>
+        <div class="tool-actions">
+          <button type="button" class="btn-ghost" id="undo" title="Ctrl+Z">Orqaga</button>
+            <button type="button" class="btn-ghost" id="redo" title="Ctrl+Y">Qayta</button>
+          <button type="button" class="btn-ghost" id="clear">Kataklarni tozalash</button>
+          <button type="button" class="btn-ghost" id="export">SVG yuklab olish</button>
+        </div>
+      </div>
+      <div class="label cap" id="facadeCap">Old fasad</div>
+        <div class="sheet-canvas" id="facade" aria-label="Old fasad chizmasi"></div>
+
+      <div class="ds-bottom">
+        <div class="iso-card">
+          <span class="label">3D ko'rinish</span>
+          <div id="iso"></div>
+        </div>
+        <div class="ds-side">
+          <dl class="ds-stats" id="stats"></dl>
+          <div class="ds-cost">
+            <span class="label">Taxminiy qurilish narxi</span>
+            <b id="cost">—</b>
+            <span class="muted" id="costSub"></span>
+          </div>
+          <form class="ds-save" id="saveForm" novalidate>
+            <div class="field"><label for="dName">Loyiha nomi</label><input id="dName" name="name" maxlength="80" placeholder="Masalan: Mening hovlim"></div>
+            <div class="field"><label for="dAuthor">Muallif (ixtiyoriy)</label><input id="dAuthor" name="author" maxlength="60" autocomplete="name"></div>
+            <button class="btn" type="submit">Galereyaga saqlash</button>
+            <div class="io-row"><button type="button" class="btn-ghost" id="exportJson">Faylga saqlash (JSON)</button><label class="btn-ghost file-btn" for="importFile">Fayldan ochish</label><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+            <p class="msg" id="saveMsg" role="status"></p>
+          </form>
+        </div>
+      </div>
+      <div class="calc-card int-card" id="intCard" tabindex="-1">
+        <div class="calc-head"><span class="label">Ichki makon: xonalar, eshiklar, mebel</span><span class="muted" id="intNote"></span></div>
+        <div id="intBody"></div>
+      </div>
+      <div class="calc-card" id="calcCard">
+        <div class="calc-head"><span class="label">Geometrik chizma va hisob-kitob</span><span class="muted" id="calcNote"></span></div>
+        <div class="geo-plan" id="geoPlan"></div>
+        <div class="boq" id="boqBody"></div>
+        <div class="calc-grid" id="calcBody"></div>
+        <p class="muted calc-note">Hisoblar taxminiy: standart zichlik va yuklamalar, grunt bosimi 200 kPa deb olingan. Haqiqiy loyiha uchun muhandislik hisobi va grunt tekshiruvi kerak.</p>
+      </div>
+    </div>
+  </div>
+
+  <section id="galereya">
+    <div class="sec-head">
+      <div><span class="label">Foydalanuvchilar yaratgan</span><h2>Galereya</h2></div>
+      <p class="label">Bosing — konstruktorda ochiladi</p>
+    </div>
+    <div class="grid" id="gallery"><p class="empty">Yuklanmoqda…</p></div>
+  </section>
+</main>
+
+<dialog id="newDlg" aria-labelledby="newTitle">
+  <div class="new-dlg">
+    <div class="new-head">
+      <span class="label">Yangi loyiha</span>
+      <h2 id="newTitle">Nimadan boshlaymiz?</h2>
+      <p class="msg bad" id="newWarn" hidden>Joriy bino galereyaga saqlanmagan. Yangisini boshlasangiz, u o'chib ketadi.</p>
+    </div>
+    <div class="tpl-grid" id="tplGrid"></div>
+    <button class="btn-ghost" type="button" id="newCancel">Bekor qilish</button>
+  </div>
+</dialog>
+
+<footer><div class="wrap"><span>Pillar Architecture · Konstruktor</span><span class="mono">Dizaynlar SQLite bazasida saqlanadi</span></div></footer>
+
+<script src="i18n.js"></script>
+<script src="motion.js"></script>
+<script src="facade.js"></script>
+<script src="building.js"></script>
+<script src="settings.js"></script>
+<script src="interior.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="view3d.js"></script>
+<script src="site.js"></script>
+<script src="geo.js"></script>
+<script src="interior-ui.js"></script>
+<script src="shop.js"></script>
+<script src="io.js"></script>
+<script src="designer.js"></script>
+<script src="bgpicker.js"></script>
+<script src="bg3d.js"></script>
+<script src="ai-design.js"></script>
+<script src="ai.js"></script>
+</body>
+</html>

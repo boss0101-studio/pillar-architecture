@@ -1,0 +1,11 @@
+﻿# Ma'lumotlar bazasi: buyurtmalar, arizalar (shaxsiy ma'lumot) — repozitoriyga tushmaydi
+*.db
+*.db-journal
+# Yig'ilgan sayt va arxiv: GitHub Actions o'zi yig'adi (.github/workflows/pages.yml)
+sayt/
+sayt.zip
+__pycache__/
+*.pyc
+# Mahalliy sozlamalar va boshqa loyiha
+.claude/settings.local.json
+ipak-yoli.html

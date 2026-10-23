@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pillar Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html">Pillar<span>.</span> admin</a>
+    <ul><li><a href="index.html">← Saytga qaytish</a></li><li><a href="#" id="logout" hidden>Chiqish</a></li></ul>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section id="login">
+    <div class="sec-head"><div><span class="label">Kirish</span><h2>Admin token</h2></div></div>
+    <form class="sheet" id="loginForm" style="max-width: 460px">
+      <div class="field">
+        <label for="token">Token (server ishga tushganda konsolda chiqadi)</label>
+        <input id="token" type="password" autocomplete="off" required>
+      </div>
+      <button class="btn" type="submit">Kirish</button>
+      <p class="msg" id="loginMsg" role="status"></p>
+    </form>
+  </section>
+
+  <div id="panel" hidden>
+    <section>
+      <div class="sec-head"><div><span class="label">Mijozlar</span><h2>Arizalar</h2></div><button class="btn-ghost" type="button" id="refresh">Yangilash</button></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>№</th><th>Sana</th><th>Mijoz</th><th>Turi</th><th>Maydon</th><th>Xabar</th><th>Holat</th></tr></thead>
+          <tbody id="reqBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div><span class="label">Do'kon</span><h2>Buyurtmalar</h2></div></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>№</th><th>Sana</th><th>Mijoz</th><th>Mahsulotlar</th><th>Jami</th><th>Holat</th></tr></thead>
+          <tbody id="orderBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div><span class="label">Portfolio</span><h2>Loyihalar</h2></div></div>
+      <div class="two">
+        <form class="sheet" id="projForm" novalidate>
+          <div class="field"><label for="pTitle">Nomi</label><input id="pTitle" name="title" required></div>
+          <div class="row">
+            <div class="field"><label for="pCat">Kategoriya</label>
+              <select id="pCat" name="category"><option value="turar-joy">Turar-joy</option><option value="jamoat">Jamoat</option><option value="tijorat">Tijorat</option><option value="interyer">Interyer</option></select></div>
+            <div class="field"><label for="pStatus">Holat</label>
+              <select id="pStatus" name="status"><option value="loyihada">Loyihada</option><option value="qurilmoqda">Qurilmoqda</option><option value="qurildi">Qurildi</option></select></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="pCity">Shahar</label><input id="pCity" name="city" required></div>
+            <div class="field"><label for="pYear">Yil</label><input id="pYear" name="year" type="number" value="2026"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label for="pArea">Maydon, m²</label><input id="pArea" name="area_m2" type="number" value="1000"></div>
+            <div class="field"><label for="pFloors">Qavatlar</label><input id="pFloors" name="floors" type="number" value="3"></div>
+          </div>
+          <div class="field"><label for="pDesc">Tavsif</label><textarea id="pDesc" name="description" required></textarea></div>
+          <button class="btn" type="submit">Loyiha qo'shish</button>
+          <p class="msg" id="projMsg" role="status"></p>
+        </form>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Nomi</th><th>Yil</th><th>Holat</th><th></th></tr></thead>
+            <tbody id="projBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="sec-head"><div><span class="label">Konstruktor</span><h2>Foydalanuvchi dizaynlari</h2></div></div>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>№</th><th>Nomi</th><th>Muallif</th><th>Hajm</th><th>Sana</th><th></th></tr></thead>
+          <tbody id="designBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer><div class="wrap"><span>Pillar Architecture · admin</span></div></footer>
+<script src="i18n.js"></script>
+<script src="facade.js"></script>
+<script src="admin.js"></script>
+<script src="settings.js"></script>
+<script src="bgpicker.js"></script>
+<script src="bg3d.js"></script>
+<script src="ai.js"></script>
+</body>
+</html>

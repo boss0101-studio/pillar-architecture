@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <g fill="none" stroke="#000" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+    <!-- yer chizig'i -->
+    <path d="M0 900H1600"/>
+    <path d="M0 914H1600" stroke-width="1.5" stroke-dasharray="10 14" stroke-opacity=".5"/>
+
+    <!-- yordamchi doiralar va simmetriya o'qi -->
+    <circle cx="800" cy="560" r="300" stroke-width="1.2" stroke-opacity=".35"/>
+    <circle cx="800" cy="240" r="360" stroke-width="1.2" stroke-opacity=".25" stroke-dasharray="3 9"/>
+    <path d="M800 40V960" stroke-width="1.2" stroke-dasharray="32 8 4 8" stroke-opacity=".6"/>
+
+    <!-- markaziy gumbaz -->
+    <path d="M690 240H910"/>
+    <path d="M700 240A100 120 0 0 1 900 240"/>
+    <path d="M800 120V240M800 120Q735 150 725 240M800 120Q865 150 875 240" stroke-opacity=".6"/>
+    <path d="M800 120V76M788 92H812"/>
+
+    <!-- peshtoq -->
+    <path d="M600 900V262H1000V900"/>
+    <path d="M590 262H1010M600 284H1000"/>
+    <path d="M660 900V560Q660 390 800 310Q940 390 940 560V900"/>
+    <path d="M700 900V580Q700 450 800 390Q900 450 900 580V900" stroke-opacity=".8"/>
+    <!-- muqarnas qatorlari -->
+    <path d="M730 560a22 22 0 0 1 44 0M774 560a22 22 0 0 1 44 0M818 560a22 22 0 0 1 44 0" stroke-opacity=".7"/>
+    <path d="M752 520a22 22 0 0 1 44 0M796 520a22 22 0 0 1 44 0" stroke-opacity=".7"/>
+    <path d="M774 480a26 26 0 0 1 52 0" stroke-opacity=".7"/>
+    <!-- eshik -->
+    <path d="M750 900V760Q750 700 800 690Q850 700 850 760V900"/>
+    <!-- girih romblari -->
+    <path d="M630 340l14 14l-14 14l-14-14zM630 420l14 14l-14 14l-14-14zM630 500l14 14l-14 14l-14-14zM970 340l14 14l-14 14l-14-14zM970 420l14 14l-14 14l-14-14zM970 500l14 14l-14 14l-14-14z" stroke-opacity=".7"/>
+
+    <!-- minoralar -->
+    <path d="M520 900V230H580V900M1020 900V230H1080V900"/>
+    <path d="M514 230H586L550 176ZM1014 230H1086L1050 176Z"/>
+    <path d="M550 176V150M1050 176V150"/>
+    <path d="M520 300H580M520 380H580M520 460H580M520 540H580M520 620H580M520 700H580M520 780H580M1020 300H1080M1020 380H1080M1020 460H1080M1020 540H1080M1020 620H1080M1020 700H1080M1020 780H1080" stroke-opacity=".45" stroke-dasharray="14 6"/>
+
+    <!-- qanotlar -->
+    <path d="M140 900V640H520M140 780H520"/>
+    <path d="M1080 640H1460V900M1080 780H1460"/>
+    <!-- pastki arkadalar -->
+    <path d="M160 900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900"/>
+    <path d="M1100 900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900V850a30 30 0 0 1 60 0V900"/>
+    <!-- yuqori arkadalar -->
+    <path d="M160 780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780" stroke-opacity=".8"/>
+    <path d="M1100 780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780V745a30 30 0 0 1 60 0V780" stroke-opacity=".8"/>
+
+    <!-- o'lcham chiziqlari -->
+    <g stroke-width="1.2" stroke-opacity=".6">
+      <path d="M140 946H1460M140 934V958M520 934V958M600 934V958M1000 934V958M1080 934V958M1460 934V958"/>
+      <path d="M96 900V76M84 900H108M84 76H108M84 640H108M84 240H108"/>
+    </g>
+  </g>
+</svg>

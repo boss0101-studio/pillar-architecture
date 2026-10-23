@@ -1,0 +1,591 @@
+<meta charset="utf-8">
+<title>Pillar Architecture</title>
+<meta name="ustun-mode" content="static">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Caveat:wght@500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#bosh" data-view="bosh">Pillar<span>.</span></a>
+    <ul>
+      <li><a href="#bosh" data-view="bosh">Bosh sahifa</a></li>
+      <li><a href="#konstruktor" data-view="konstruktor">Konstruktor</a></li>
+      <li><a href="#erkin" data-view="erkin">Erkin qurish</a></li>
+      <li><a href="#qogoz" data-view="qogoz">Oq qog'oz</a></li>
+      <li><a href="#galereya" data-view="galereya">Galereya</a></li>
+      <li><a href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar <span class="cart-badge" data-cart-count hidden>0</span></a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= BOSH SAHIFA ================= -->
+<div class="view" id="bosh">
+  <header class="hero2">
+    <div class="wrap hero2-in">
+      <div class="hero2-text">
+        <a class="hero-new" href="#erkin" data-view="erkin"><b>Yangi</b><span>Erkin qurish, ichki makon, hovli va VR</span><i aria-hidden="true">→</i></a>
+        <span class="label">Arxitektura byurosi · Toshkent · 2009 yildan</span>
+        <h1>Iqlimga<br>mos <em>binolar</em></h1>
+        <p class="lede">Turar-joy, jamoat va tijorat binolarini loyihalaymiz. Hovli, ayvon va qalin devor kabi mahalliy yechimlarni bugungi texnologiya bilan uyg'unlashtiramiz.</p>
+        <div class="hero2-cta">
+          <a class="btn cta" href="#konstruktor" data-view="konstruktor">O'z binongizni loyihalang →</a>
+          <a class="btn-ghost cta2" href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar katalogi</a>
+        </div>
+        <ul class="hero2-points">
+          <li>Tayyor andozadan yoki noldan — devorlarni o'zingiz chizasiz</li>
+          <li>Ichki xonalar, mebel va hovli — 3D va VR'da ko'rasiz</li>
+          <li>G'isht, beton, fundament va smeta formulasi bilan hisoblanadi</li>
+        </ul>
+      </div>
+      <figure class="board" id="heroBoard" aria-label="Fasad chizmasi: andozalar almashib turadi">
+        <div class="board-bar"><span>PILLAR · CHIZMA</span><span id="tbSheet">VARAQ A-01</span></div>
+        <div class="board-sheet" id="heroSheet"></div>
+        <figcaption class="tblock">
+          <div><span class="label">Loyiha</span><b id="tbName">—</b></div>
+          <div><span class="label">Eni × chuq. × bal., m</span><b id="tbSize">—</b></div>
+          <div><span class="label">Tom va qavatlar</span><b id="tbRoof">—</b></div>
+        </figcaption>
+      </figure>
+    </div>
+    <div class="wrap">
+      <div class="stats band" id="stats">
+        <div><span class="label">Loyihalar</span><b>—</b></div>
+        <div><span class="label">Qurilgan</span><b>—</b></div>
+        <div><span class="label">Jami maydon, m²</span><b>—</b></div>
+        <div><span class="label">Shaharlar</span><b>—</b></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="marquee" aria-hidden="true"><div class="mq-track"><span>10 xil fasad materiali</span><span>6 xil tom</span><span>7 xil deraza</span><span>Noldan devor chizish</span><span>Ichki xonalar va mebel</span><span>Hovli: daraxt, hovuz, so'ri</span><span>3D, quyosh va soyalar</span><span>VR ko'zoynak rejimi</span><span>G'isht va beton hisobi</span><span>Fundament va smeta</span><span>2–3 uyli majmua</span><span>JSON, SVG, CSV eksport</span><span>10 xil fasad materiali</span><span>6 xil tom</span><span>7 xil deraza</span><span>Noldan devor chizish</span><span>Ichki xonalar va mebel</span><span>Hovli: daraxt, hovuz, so'ri</span><span>3D, quyosh va soyalar</span><span>VR ko'zoynak rejimi</span><span>G'isht va beton hisobi</span><span>Fundament va smeta</span><span>2–3 uyli majmua</span><span>JSON, SVG, CSV eksport</span></div></div>
+
+    <section id="imkoniyatlar">
+      <div class="sec-head">
+        <div><span class="label">Bir joyda hammasi</span><h2>Imkoniyatlar</h2></div>
+        <p class="sec-sub">Eskizdan smetagacha brauzerning o'zida: o'rnatish ham, ro'yxatdan o'tish ham shart emas.</p>
+      </div>
+      <div class="bento">
+        <a class="bento-t bt-a" href="#konstruktor" data-view="konstruktor">
+          <span class="label">01 · Konstruktor</span>
+          <h3>Fasad konstruktori</h3>
+          <p>Andozani tanlang, qavat va oraliqlarni sozlang, har bir deraza, balkon va eshikni katakchaga qo'ying.</p>
+          <div class="bt-vis bt-facade" id="bentoFacade"></div>
+          <span class="more">Konstruktorni ochish →</span>
+        </a>
+        <a class="bento-t bt-b" href="#erkin" data-view="erkin">
+          <span class="label">02 · Erkin qurish <em>yangi</em></span>
+          <h3>Noldan devor chizish</h3>
+          <p>Tayyor quti yo'q: tashqi va ichki devorlarni nuqtama-nuqta chizasiz, fundament va pol o'zi hisoblanadi.</p>
+          <svg class="bt-vis bv" viewBox="0 0 220 110" aria-hidden="true">
+            <defs><pattern id="bvGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" class="bv-grid"/></pattern></defs>
+            <rect width="220" height="110" fill="url(#bvGrid)"/>
+            <path class="bv-wall bv-draw" pathLength="100" d="M30 20H150V90H30Z"/>
+            <path class="bv-wall thin bv-draw d2" pathLength="100" d="M95 20V90"/>
+            <path class="bv-draft" d="M150 90H190"/>
+            <circle class="bv-node" cx="30" cy="20" r="3.5"/><circle class="bv-node" cx="150" cy="20" r="3"/><circle class="bv-node" cx="150" cy="90" r="3"/><circle class="bv-node" cx="190" cy="90" r="3"/>
+            <text class="bv-dim" x="90" y="13" text-anchor="middle">12,00 m</text><text class="bv-dim" x="160" y="58">7,00 m</text>
+          </svg>
+          <span class="more">Chizishni boshlash →</span>
+        </a>
+        <a class="bento-t bt-c" href="#konstruktor" data-view="konstruktor">
+          <span class="label">03 · Ichki makon <em>yangi</em></span>
+          <h3>Xonalar va mebel</h3>
+          <svg class="bt-vis bv" viewBox="0 0 160 100" aria-hidden="true">
+            <rect class="bv-room r1" x="12" y="10" width="62" height="40"/><rect class="bv-room r2" x="74" y="10" width="74" height="40"/><rect class="bv-room r3" x="12" y="50" width="136" height="40"/>
+            <path class="bv-wall" d="M12 10H148V90H12Z"/><path class="bv-wall thin" d="M74 10V50M12 50H58M70 50H148"/>
+            <path class="bv-swing" d="M58 50V62A12 12 0 0 0 70 50"/>
+            <rect class="bv-furn" x="20" y="16" width="20" height="26"/><rect class="bv-furn" x="96" y="16" width="34" height="12"/><rect class="bv-furn" x="64" y="66" width="34" height="14"/>
+          </svg>
+          <span class="more">Rejani chizish →</span>
+        </a>
+        <a class="bento-t bt-d" href="#konstruktor" data-view="konstruktor">
+          <span class="label">04 · Hovli <em>yangi</em></span>
+          <h3>To'siq, daraxt, hovuz</h3>
+          <svg class="bt-vis bv" viewBox="0 0 160 100" aria-hidden="true">
+            <rect class="bv-lawn" x="10" y="8" width="140" height="84"/>
+            <path class="bv-fence" d="M68 92H10V8H150V92H92"/>
+            <rect class="bv-house" x="48" y="24" width="64" height="38"/><rect class="bv-path" x="76" y="62" width="8" height="30"/>
+            <circle class="bv-tree" cx="24" cy="22" r="9"/><circle class="bv-tree" cx="136" cy="22" r="9"/><circle class="bv-tree" cx="24" cy="78" r="9"/>
+            <rect class="bv-pool" x="112" y="68" width="30" height="16"/>
+          </svg>
+          <span class="more">Hovlini bezash →</span>
+        </a>
+        <a class="bento-t bt-e" href="#konstruktor" data-view="konstruktor">
+          <span class="label">05 · 3D va VR</span>
+          <h3>Ichiga kirib yuring</h3>
+          <svg class="bt-vis bv" viewBox="0 0 160 100" aria-hidden="true">
+            <path class="bv-goggle" d="M14 30h132a8 8 0 0 1 8 8v28a8 8 0 0 1-8 8h-44l-10-12h-24l-10 12H14a8 8 0 0 1-8-8V38a8 8 0 0 1 8-8z"/>
+            <g class="bv-eye"><circle cx="48" cy="52" r="17"/><path d="M38 60V50l10-8 10 8v10z"/></g>
+            <g class="bv-eye"><circle cx="112" cy="52" r="17"/><path d="M102 60V50l10-8 10 8v10z"/></g>
+          </svg>
+          <span class="more">3D'ni ochish →</span>
+        </a>
+        <a class="bento-t bt-f" href="#smeta">
+          <span class="label">06 · Hisob-kitob</span>
+          <h3>Formulali smeta</h3>
+          <dl class="bt-vis bt-nums">
+            <div><dt>G'isht</dt><dd><b data-count="19752">19 752</b> dona</dd></div>
+            <div><dt>Fundament</dt><dd><b data-count="28.1" data-dec="1">28,1</b> m³</dd></div>
+            <div><dt>Foydali maydon</dt><dd><b data-count="145.4" data-dec="1">145,4</b> m²</dd></div>
+            <div class="tot"><dt>Jami</dt><dd>$<b data-count="11593">11 593</b></dd></div>
+          </dl>
+          <span class="more">Hisoblash →</span>
+        </a>
+        <a class="bento-t bt-g" href="#konstruktor" data-view="konstruktor">
+          <span class="label">07 · Majmua</span>
+          <h3>2–3 uyni erkin joylashtiring</h3>
+          <p>Uylarni bosh rejada sudrab ko'chiring va 90° ga buring: masofa, soya va zichlik darhol qayta hisoblanadi.</p>
+          <svg class="bt-vis bv" viewBox="0 0 220 90" aria-hidden="true">
+            <rect class="bv-plot" x="6" y="6" width="208" height="78"/>
+            <rect class="bv-house" x="20" y="34" width="54" height="40"/><rect class="bv-house on" x="98" y="20" width="40" height="54"/><rect class="bv-house" x="160" y="40" width="44" height="34"/>
+            <path class="bv-gapline" d="M74 54H98M138 57H160"/><text class="bv-dim" x="86" y="49" text-anchor="middle">10 m</text><text class="bv-dim" x="149" y="52" text-anchor="middle">9 m</text>
+          </svg>
+          <span class="more">Majmua yaratish →</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="xizmatlar">
+      <div class="sec-head">
+        <div><span class="label">Nima qilamiz</span><h2>Xizmatlar</h2></div>
+        <p class="sec-sub">Eskizdan qurilishgacha: bitta jamoa, bitta chizma.</p>
+      </div>
+      <div class="svc-grid">
+        <article class="svc-card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 42V18L24 6l18 12v24z"/><path d="M18 42V28h12v14"/><path d="M6 18h36"/></svg><h3>Arxitektura loyihasi</h3><p>Eskiz, ishchi chizmalar, konstruksiya va muhandislik bo'limlari.</p><a class="more" href="#mahsulotlar" data-view="mahsulotlar">Narxlar →</a></article>
+        <article class="svc-card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4 42 14v20L24 44 6 34V14z"/><path d="M6 14l18 10 18-10M24 24v20"/></svg><h3>3D konstruktor</h3><p>Binoni o'zingiz chizing: fasad, tom, materiallar va 3D ko'rinish.</p><a class="more" href="#konstruktor" data-view="konstruktor">Ochish →</a></article>
+        <article class="svc-card"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="4" width="28" height="40" rx="2"/><path d="M16 12h16v8H16zM16 28h4M22 28h4M28 28h4M16 35h4M22 35h4M28 35h4"/></svg><h3>Smeta va materiallar</h3><p>Formulali hisob, materiallar smetasi va bir bosishda buyurtma.</p><a class="more" href="#smeta">Hisoblash →</a></article>
+        <article class="svc-card"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 32a16 16 0 0 1 32 0"/><path d="M4 32h40v5H4zM20 16V10h8v6"/></svg><h3>Mualliflik nazorati</h3><p>Qurilish maydoniga haftalik tashrif va chizmaga muvofiqlik.</p><a class="more" href="#aloqa">Bog'lanish →</a></article>
+      </div>
+    </section>
+
+    <section id="konstruktor-blok">
+      <div class="promo-in">
+        <div class="promo-text">
+          <span class="label">Bino konstruktori</span>
+          <h2>Binongizni o'zingiz chizing</h2>
+          <p>Andozani tanlang yoki bo'sh varaqdan boshlang. Har bir deraza, balkon va eshikni o'zingiz joylaysiz, natijani darhol 3D'da ko'rasiz.</p>
+          <ul class="ticks">
+            <li>10 xil fasad materiali</li>
+            <li>6 xil tom, 7 xil deraza</li>
+            <li>3D, quyosh va soyalar</li>
+            <li>2–3 ta uyli majmua</li>
+            <li>O'qlar, o'lchamlar, oltin kesim</li>
+            <li>Smeta → savat → buyurtma</li>
+          </ul>
+          <a class="btn" href="#konstruktor" data-view="konstruktor">Konstruktorni ochish →</a>
+        </div>
+        <div class="promo-tpls" id="homeTemplates" aria-label="Andozalar: bosing va konstruktorda oching"></div>
+      </div>
+    </section>
+
+    <section id="jarayon">
+      <div class="sec-head">
+        <div><span class="label">Jarayon</span><h2>To'rt bosqich</h2></div>
+        <p class="sec-sub">Har bir bosqich oxirida chizma va smetani birga tasdiqlaymiz.</p>
+      </div>
+      <ol class="steps-list">
+        <li><span class="step-n">01</span><h3>Tanishuv</h3><p>Uchastka, maqsad va byudjetni muhokama qilamiz.</p><span class="step-t">1 kun · bepul</span></li>
+        <li><span class="step-n">02</span><h3>Eskiz loyiha</h3><p>Ikki variant, 3D ko'rinish va dastlabki smeta.</p><span class="step-t">2–3 hafta</span></li>
+        <li><span class="step-n">03</span><h3>Ishchi chizmalar</h3><p>Konstruksiya, muhandislik tarmoqlari va materiallar smetasi.</p><span class="step-t">6–10 hafta</span></li>
+        <li><span class="step-n">04</span><h3>Qurilish nazorati</h3><p>Qurilish maydoniga haftalik tashrif va hisobot.</p><span class="step-t">qurilish davomida</span></li>
+      </ol>
+    </section>
+
+    <section id="loyihalar">
+      <div class="sec-head">
+        <div><span class="label">Portfolio</span><h2>Loyihalar</h2></div>
+        <div class="filters" id="filters" role="group" aria-label="Kategoriya bo'yicha filtr">
+          <button type="button" data-cat="" aria-pressed="true">Barchasi</button>
+          <button type="button" data-cat="turar-joy" aria-pressed="false">Turar-joy</button>
+          <button type="button" data-cat="jamoat" aria-pressed="false">Jamoat</button>
+          <button type="button" data-cat="tijorat" aria-pressed="false">Tijorat</button>
+          <button type="button" data-cat="interyer" aria-pressed="false">Interyer</button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section id="tanlangan">
+      <div class="sec-head">
+        <div><span class="label">Katalogdan</span><h2>Tanlangan mahsulotlar</h2></div>
+        <a class="btn-ghost" href="#mahsulotlar" data-view="mahsulotlar">Barcha mahsulotlar →</a>
+      </div>
+      <div class="feat-grid" id="homeProducts"><p class="empty">Katalog yuklanmoqda…</p></div>
+    </section>
+
+    <section id="smeta">
+      <div class="sec-head">
+        <div><span class="label">Kalkulyator</span><h2>Dastlabki smeta</h2></div>
+      </div>
+      <div class="two">
+        <form class="sheet" id="estForm" novalidate>
+          <div class="row">
+            <div class="field">
+              <label for="estCat">Bino turi</label>
+              <select id="estCat" name="category">
+                <option value="turar-joy">Turar-joy</option>
+                <option value="jamoat">Jamoat binosi</option>
+                <option value="tijorat">Tijorat binosi</option>
+                <option value="interyer">Interyer</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="estQ">Sifat darajasi</label>
+              <select id="estQ" name="quality">
+                <option value="standart">Standart</option>
+                <option value="biznes" selected>Biznes</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="estArea">Umumiy maydon, m²</label>
+              <input id="estArea" name="area_m2" type="number" min="20" max="200000" value="1200" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="estFloors">Qavatlar soni</label>
+              <input id="estFloors" name="floors" type="number" min="1" max="60" value="4" inputmode="numeric">
+            </div>
+          </div>
+          <p class="msg" id="estMsg" role="status"></p>
+        </form>
+        <div class="result" aria-live="polite">
+          <div class="big"><span class="label">Taxminiy qurilish narxi</span><b id="rBuild">—</b></div>
+          <dl>
+            <div><dt class="label">1 m² narxi</dt><dd id="rM2">—</dd></div>
+            <div><dt class="label">Loyiha haqi (6%)</dt><dd id="rFee">—</dd></div>
+            <div><dt class="label">Loyihalash muddati</dt><dd id="rWeeks">—</dd></div>
+          </dl>
+          <p class="note">Bu namunaviy hisob. Aniq smeta yer uchastkasi, grunt tekshiruvi va topshiriq asosida tuziladi.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="savollar">
+      <div class="sec-head">
+        <div><span class="label">Ko'p beriladigan</span><h2>Savollar</h2></div>
+        <p class="sec-sub">Javob topilmasa — pastdagi ariza orqali yozing.</p>
+      </div>
+      <div class="faq"><details class="faq-i"><summary>Konstruktordan foydalanish pullikmi?</summary><p>Yo'q. Fasad konstruktori, erkin qurish, 3D, VR va hisob-kitob bepul, ro'yxatdan o'tish ham shart emas. Pullik qismi — arxitektor bilan haqiqiy loyiha.</p></details><details class="faq-i"><summary>Konstruktor va erkin qurishning farqi nima?</summary><p>Konstruktorda tayyor bino qutisini sozlaysiz: qavat, oraliq, tom, fasad kataklari. Erkin qurishda bo'sh uchastka beriladi — tashqi va ichki devorlarni noldan o'zingiz chizasiz.</p></details><details class="faq-i"><summary>Loyiham qayerda saqlanadi?</summary><p>Galereyaga, shu brauzerga yoki JSON faylga saqlaysiz. Faylni boshqa kompyuterda "Fayldan ochish" orqali davom ettirish mumkin.</p></details><details class="faq-i"><summary>Telefonda ishlaydimi? VR uchun nima kerak?</summary><p>Ha, telefonda ham ishlaydi. VR rejimida ekran ikkiga bo'linadi: telefonni karton VR ko'zoynakka qo'yib, binoni haqiqiy o'lchamda aylanib ko'rasiz. Quest kabi shlem ham qo'llanadi.</p></details><details class="faq-i"><summary>Hisob-kitob qanchalik aniq?</summary><p>Taxminiy: g'isht 394 dona/m³, fundament lenta usulida, standart me'yorlar bo'yicha. Har bir qiymat yonida formulasi ko'rinadi. Qurilish uchun muhandislik hisobi va grunt tekshiruvi kerak.</p></details><details class="faq-i"><summary>Chizmani ustaga qanday beraman?</summary><p>Fasadni SVG, 3D ko'rinishni PNG, smetani CSV (Excel) qilib yuklab oling yoki loyihani JSON fayl sifatida yuboring.</p></details></div>
+    </section>
+
+    <section class="cta-band" aria-labelledby="ctaTitle">
+      <div class="cta-band-text">
+        <span class="label">Boshlash uchun bir daqiqa yetadi</span>
+        <h2 id="ctaTitle">Birinchi devoringizni hozir chizing</h2>
+        <p>Bepul va ro'yxatdan o'tmasdan. Natija — 3D model, ichki reja va smeta.</p>
+      </div>
+      <div class="cta-band-btns">
+        <a class="btn" href="#erkin" data-view="erkin">Erkin qurish →</a>
+        <a class="btn-ghost" href="#konstruktor" data-view="konstruktor">Konstruktor</a>
+      </div>
+    </section>
+
+    <section id="aloqa">
+      <div class="sec-head">
+        <div><span class="label">Aloqa</span><h2>Loyihani muhokama qilamiz</h2></div>
+      </div>
+      <div class="contact-grid">
+        <div><span class="label">Telefon</span><span class="mono" id="phone">+998 71 200 00 00</span></div>
+        <div><span class="label">Manzil</span><span>Toshkent, Mirobod tumani (namuna)</span></div>
+        <div><span class="label">Ish vaqti</span><span>Dushanba–shanba, 9:00–18:00</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= KONSTRUKTOR ================= -->
+<div class="view" id="konstruktor" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Konstruktor · o'z binongizni loyihalang</span>
+        <h1>Bino konstruktori</h1>
+      </div>
+      <div class="ds-head-side">
+        <p>Chapda bino o'lchamlari va uslubini tanlang. Keyin asbobni olib, fasaddagi istalgan katakni bosing yoki ustidan sudrang: deraza, balkon, eshik yoki yaxlit devor qo'ying.</p>
+        <button class="btn" type="button" id="newBtn">+ Yangi bino</button>
+      </div>
+    </header>
+
+    <div class="ds">
+      <form class="ds-controls" id="params" novalidate>
+        <fieldset>
+          <legend class="label">Hajm</legend>
+          <div class="rng"><label for="floors">Qavatlar</label><output id="floorsOut" for="floors"></output><input type="range" id="floors" min="1" max="30" step="1"></div>
+          <div class="rng"><label for="bays">Fasad oraliqlari</label><output id="baysOut" for="bays"></output><input type="range" id="bays" min="2" max="12" step="1"></div>
+          <div class="rng"><label for="floor_h">Qavat balandligi, m</label><output id="floor_hOut" for="floor_h"></output><input type="range" id="floor_h" min="2.7" max="4.5" step="0.1"></div>
+          <div class="rng"><label for="bay_w">Oraliq kengligi, m</label><output id="bay_wOut" for="bay_w"></output><input type="range" id="bay_w" min="3" max="7.5" step="0.1"></div>
+          <div class="rng"><label for="depth">Bino chuqurligi, m</label><output id="depthOut" for="depth"></output><input type="range" id="depth" min="6" max="30" step="0.5"></div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Tom</legend>
+          <div class="seg wrap3" data-name="roof">
+            <button type="button" data-v="tekis">Tekis</button>
+            <button type="button" data-v="nishab">Nishab</button>
+            <button type="button" data-v="bir">Bir nishab</button>
+            <button type="button" data-v="piramida">Piramida</button>
+            <button type="button" data-v="gumbaz">Gumbaz</button>
+            <button type="button" data-v="terrasa">Terrasa</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Fasad materiali</legend>
+          <div class="swatches" id="materials"></div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Derazalar</legend>
+          <div class="seg wrap3" data-name="window">
+            <button type="button" data-v="oddiy">Oddiy</button>
+            <button type="button" data-v="arkali">Arkali</button>
+            <button type="button" data-v="panorama">Panorama</button>
+            <button type="button" data-v="tor">Tor</button>
+            <button type="button" data-v="dumaloq">Dumaloq</button>
+            <button type="button" data-v="panjara">Panjara</button>
+            <button type="button" data-v="yoq">Yo'q</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Birinchi qavat</legend>
+          <div class="seg" data-name="ground">
+            <button type="button" data-v="oddiy">Oddiy</button>
+            <button type="button" data-v="arkada">Arkada</button>
+            <button type="button" data-v="vitrina">Vitrina</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="label">Geometrik chiziqlar</legend>
+          <div class="checks">
+            <label><input type="checkbox" id="geoAxes"> O'qlar va o'lchamlar</label>
+            <label><input type="checkbox" id="geoDiag"> Diagonallar</label>
+            <label><input type="checkbox" id="geoGolden"> Oltin kesim (φ)</label>
+            <label><input type="checkbox" id="geoAngles"> Burchaklar</label>
+          </div>
+        </fieldset>
+        <fieldset class="row">
+          <div class="field">
+            <label for="category">Bino turi</label>
+            <select id="category">
+              <option value="turar-joy">Turar-joy</option><option value="jamoat">Jamoat</option>
+              <option value="tijorat">Tijorat</option><option value="interyer">Interyer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="quality">Sifat</label>
+            <select id="quality">
+              <option value="standart">Standart</option><option value="biznes">Biznes</option><option value="premium">Premium</option>
+            </select>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="ds-stage">
+        <div class="site-bar" id="siteBar">
+        <div class="btabs" id="bTabs" role="tablist" aria-label="Uylar"></div>
+        <button type="button" class="btn-ghost" id="addBuilding">+ Uy qo'shish</button>
+        <button type="button" class="btn-danger" id="delBuilding">Uyni olib tashlash</button>
+        <label class="gap" id="gapRow" for="gap" hidden><span title="Uylarni ko'cha bo'ylab qatorga tizadi">Qatorda oraliq</span><output id="gapOut">10 m</output><input type="range" id="gap" min="4" max="30" step="1" value="10"></label>
+      </div>
+      <div class="toolbar" role="toolbar" aria-label="Fasad asboblari">
+          <div class="tools" id="tools"></div>
+          <div class="tool-actions">
+            <button type="button" class="btn-ghost" id="undo" title="Ctrl+Z">Orqaga</button>
+            <button type="button" class="btn-ghost" id="redo" title="Ctrl+Y">Qayta</button>
+            <button type="button" class="btn-ghost" id="clear">Kataklarni tozalash</button>
+            <button type="button" class="btn-ghost" id="export" hidden>SVG yuklab olish</button>
+          </div>
+        </div>
+        <div class="label cap" id="facadeCap">Old fasad</div>
+        <div class="sheet-canvas" id="facade" aria-label="Old fasad chizmasi"></div>
+
+        <div class="ds-bottom">
+          <div class="iso-card">
+            <span class="label">3D ko'rinish</span>
+            <div id="iso"></div>
+          </div>
+          <div class="ds-side">
+            <dl class="ds-stats" id="dstats"></dl>
+            <div class="ds-cost">
+              <span class="label">Taxminiy qurilish narxi</span>
+              <b id="cost">—</b>
+              <span class="muted" id="costSub"></span>
+            </div>
+            <form class="ds-save" id="saveForm" novalidate>
+              <div class="field"><label for="dName">Loyiha nomi</label><input id="dName" maxlength="80" placeholder="Masalan: Mening hovlim"></div>
+              <div class="field"><label for="dAuthor">Muallif (ixtiyoriy)</label><input id="dAuthor" maxlength="60"></div>
+              <p class="target"><span class="dot" id="targetDot"></span><span id="targetText">Saqlanadi: <b>shu brauzerga</b> — faqat siz ko'rasiz</span></p>
+              <button class="btn" type="submit">Saqlash</button>
+            <div class="io-row"><button type="button" class="btn-ghost" id="exportJson">Faylga saqlash (JSON)</button><label class="btn-ghost file-btn" for="importFile">Fayldan ochish</label><input type="file" id="importFile" accept=".json,application/json" hidden></div>
+              <p class="msg" id="saveMsg" role="status"></p>
+            </form>
+          </div>
+        </div>
+      <div class="calc-card int-card" id="intCard" tabindex="-1">
+        <div class="calc-head"><span class="label">Ichki makon: xonalar, eshiklar, mebel</span><span class="muted" id="intNote"></span></div>
+        <div id="intBody"></div>
+      </div>
+      <div class="calc-card" id="calcCard">
+        <div class="calc-head"><span class="label">Geometrik chizma va hisob-kitob</span><span class="muted" id="calcNote"></span></div>
+        <div class="geo-plan" id="geoPlan"></div>
+        <div class="boq" id="boqBody"></div>
+        <div class="calc-grid" id="calcBody"></div>
+        <p class="muted calc-note">Hisoblar taxminiy: standart zichlik va yuklamalar, grunt bosimi 200 kPa deb olingan. Haqiqiy loyiha uchun muhandislik hisobi va grunt tekshiruvi kerak.</p>
+      </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ================= GALEREYA ================= -->
+<div class="view" id="galereya" hidden>
+  <main class="wrap">
+    <section>
+      <div class="sec-head">
+        <div><span class="label">Hamma ko'radi</span><h2>Umumiy galereya</h2></div>
+        <p class="label">Ochish — konstruktorda nusxa sifatida</p>
+      </div>
+      <div class="grid" id="sharedGallery"><p class="empty">Galereya yuklanmoqda…</p></div>
+    </section>
+    <section class="gal-sub">
+      <div class="sec-head">
+        <div><span class="label">Faqat shu brauzerda</span><h2>Mening dizaynlarim</h2></div>
+      </div>
+      <div class="grid" id="myGallery"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= ERKIN QURISH ================= -->
+<div class="view" id="erkin" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Erkin qurish · tayyor fundament yo'q</span>
+        <h1>Noldan qurish</h1>
+      </div>
+      <div class="ds-head-side">
+        <p>Bo'sh uchastka: tashqi devorlarni nuqtama-nuqta chizing, konturni yoping, ichki devor, eshik va deraza qo'ying, qavat qo'shing. Fundament, pol, yopma, g'isht soni va narx siz chizgan devorlardan hisoblanadi.</p>
+      </div>
+    </header>
+    <div id="fbApp"></div>
+  </main>
+</div>
+
+<!-- ================= OQ QOG'OZ ================= -->
+<div class="view" id="qogoz" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Oq qog'oz · qo'lda chizing, 3D'da ko'ring</span>
+        <h1>Oq qog'oz</h1>
+      </div>
+      <div class="ds-head-side"><p>Oq qog'ozga uyingizni qalam bilan qo'lda chizing: qiyshiq chiziqlar to'g'ri devorlarga aylanadi, uchlari ulanadi. Keyin bir bosishda 3D'ga o'tkazing va Erkin qurishda eshik, deraza, qavat qo'shib, smetani oling.</p></div>
+    </header>
+    <div id="ppApp"></div>
+  </main>
+</div>
+
+<!-- ================= SOZLAMALAR ================= -->
+<div class="view" id="sozlamalar" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Hisob · loyihalar · ko'rinish</span>
+        <h1>Sozlamalar</h1>
+      </div>
+      <div class="ds-head-side"><p>Profilingiz, yangi loyihalar uchun standart o'lchamlar, smeta narxlari va saytning ko'rinishi. Hammasi shu brauzerda saqlanadi.</p></div>
+    </header>
+    <div id="settingsApp"></div>
+  </main>
+</div>
+
+<!-- ================= MAHSULOTLAR ================= -->
+<div class="view" id="mahsulotlar" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Katalog · materiallar, elementlar, xizmatlar</span>
+        <h1>Mahsulotlar</h1>
+      </div>
+      <p>Fasad materiallari, deraza va eshiklar, tom tizimlari va loyihalash xizmatlari. Konstruktordagi smetani ham shu savatga bir tugma bilan yuborish mumkin.</p>
+    </header>
+    <div class="shop">
+      <section class="shop-main">
+        <div class="filters" id="shopFilters" role="group" aria-label="Mahsulot turi bo'yicha filtr"></div>
+        <div class="pgrid" id="shopGrid"><p class="empty">Katalog yuklanmoqda…</p></div>
+      </section>
+      <aside class="cart" aria-label="Savat">
+        <div class="cart-head"><h2>Savat</h2><span class="cart-badge" data-cart-count hidden>0</span></div>
+        <ul class="cart-list" id="cartList"></ul>
+        <div class="cart-total"><span>Jami</span><b id="cartTotal">$0</b></div>
+        <form class="sheet" id="orderForm" novalidate>
+          <div class="field"><label for="oName">Ismingiz</label><input id="oName" maxlength="80" autocomplete="name" required></div>
+          <div class="field"><label for="oPhone">Telefon</label><input id="oPhone" type="tel" maxlength="30" placeholder="+998 90 123 45 67" autocomplete="tel" required></div>
+          <div class="field"><label for="oNote">Izoh (ixtiyoriy)</label><textarea id="oNote" maxlength="500" placeholder="Yetkazish manzili, muddat…"></textarea></div>
+          <button class="btn" type="submit" disabled>Buyurtma berish</button>
+          <p class="msg" id="orderMsg" role="status"></p>
+        </form>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<dialog id="dlg" aria-labelledby="dTitle">
+  <div class="dlg">
+    <div class="facade" id="dFacade"></div>
+    <div class="info">
+      <span class="pill" id="dStatus"></span>
+      <h3 id="dTitle"></h3>
+      <p id="dDesc"></p>
+      <dl class="spec" id="dSpec"></dl>
+      <button class="btn-ghost close" type="button" id="dClose">Yopish</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="newDlg" aria-labelledby="newTitle">
+  <div class="new-dlg">
+    <div class="new-head">
+      <span class="label">Yangi loyiha</span>
+      <h2 id="newTitle">Nimadan boshlaymiz?</h2>
+      <p class="msg bad" id="newWarn" hidden>Joriy bino saqlanmagan. Yangisini boshlasangiz, u o'chib ketadi.</p>
+    </div>
+    <div class="tpl-grid" id="tplGrid"></div>
+    <button class="btn-ghost" type="button" id="newCancel">Bekor qilish</button>
+  </div>
+</dialog>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <div><a class="brand" href="#bosh" data-view="bosh">Pillar<span>.</span></a><p class="muted">Iqlimga mos binolar. Toshkent, 2009 yildan.</p></div>
+    <nav aria-label="Sahifalar"><span class="label">Sahifalar</span><a href="#bosh" data-view="bosh">Bosh sahifa</a><a href="#konstruktor" data-view="konstruktor">Konstruktor</a><a href="#erkin" data-view="erkin">Erkin qurish</a><a href="#qogoz" data-view="qogoz">Oq qog'oz</a><a href="#galereya" data-view="galereya">Galereya</a><a href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar</a></nav>
+    <div><span class="label">Aloqa</span><span class="mono">+998 71 200 00 00</span><span>Toshkent, Mirobod tumani (namuna)</span><span class="muted">Dushanba–shanba, 9:00–18:00</span></div>
+  </div>
+  <div class="wrap foot-bottom"><span>© 2026 Pillar Architecture — namunaviy loyiha</span><span class="mono">Bino konstruktori · brauzer versiyasi</span></div>
+</footer>
+
+<script src="i18n.js"></script>
+<script src="motion.js"></script>
+<script src="facade.js"></script>
+<script src="building.js"></script>
+<script src="settings.js"></script>
+<script src="interior.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="view3d.js"></script>
+<script src="site.js"></script>
+<script src="geo.js"></script>
+<script src="interior-ui.js"></script>
+<script src="shop.js"></script>
+<script src="io.js"></script>
+<script src="web.js"></script>
+<script src="home.js"></script>
+<script src="freebuild.js"></script>
+<script src="paper.js"></script>
+<script src="bgpicker.js"></script>
+<script src="bg3d.js"></script>
+<script src="ai-design.js"></script>
+<script src="ai.js"></script>

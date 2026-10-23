@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "arxitektura",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["C:\\Users\\user\\Desktop\\ustun-arxitektura\\arxitektura\\server.py"],
+      "port": 8000
+    },
+    {
+      "name": "web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8010", "--bind", "127.0.0.1", "--directory", "C:\\Users\\user\\Desktop\\ustun-arxitektura\\web"],
+      "port": 8010
+    }
+  ]
+}

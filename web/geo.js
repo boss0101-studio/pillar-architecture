@@ -46,7 +46,17 @@ const Geo = (function () {
     const sideOpen = 2 * N * sideCols * openingArea(upper, sideW, h), backOpen = N * p.bays * openingArea(upper, p.bay_w, h);
     counts[upper] = (counts[upper] || 0) + 2 * N * sideCols + N * p.bays;
     glass += sideOpen + backOpen;
-    const gross = 2 * (W + D) * Hb, open = frontOpen + sideOpen + backOpen, net = gross - open;
+    let gross = 2 * (W + D) * Hb, open = frontOpen + sideOpen + backOpen, net = gross - open;
+    const ps = shapeOf(p) !== "rect" ? planShape(p) : null;
+    if (ps) {                                                         // shakldor plan: old fasaddan boshqa qirralar bo'yicha derazalar
+      let cols = 0, colW = 0;
+      planEdges(ps).forEach(e => { if (e.full || e.L < 1.2) return; const c = Math.max(1, Math.round(e.L / p.bay_w)); cols += c; colW += e.L; });
+      counts[upper] = Math.max(0, (counts[upper] || 0) - (2 * N * sideCols + N * p.bays)) + N * cols;
+      glass -= sideOpen + backOpen;
+      const other = N * cols * openingArea(upper, cols ? colW / cols : p.bay_w, h);
+      glass += other;
+      gross = ps.perimeter * Hb; open = frontOpen + other; net = gross - open;
+    }
 
     // Tom: yuza va hajm (har bir tur uchun formula matni bilan)
     let roofArea, roofVol = 0, roofF, roofVF = "", dome = 0;
@@ -74,14 +84,19 @@ const Geo = (function () {
     } else {
       roofArea = W * D; roofF = `${n1(W)} × ${n1(D)}`;
     }
-    const A0 = W * D, Vb = A0 * Hb, floorArea = A0 * N + (p.roof === "terrasa" ? pw * pd : 0);
-    const slabVol = N * (W - 2 * T) * (D - 2 * T) * 0.25;
-    return { g, W, D, N, h, Hb, R, upper, counts, frontOpen, sideOpen, backOpen, glass, doors, gross, open, net, roofArea, roofVol, roofF, roofVF, dome, A0, Vb, floorArea, slabVol, pw, pd };
+    if (ps) {                                                         // shakldor tom: tekis yuza plan bo'yicha, nishab — qiyalik koeffitsienti bilan
+      const span = ps.wings ? ps.a : Math.min(W, D), k = Math.hypot(1, R / (span / 2));
+      if (["nishab", "bir", "piramida"].includes(p.roof)) { roofArea = ps.area * k; roofVol = ps.area * R / 3; roofF = `S × √(1 + (R / ${n1(span / 2)})²) = ${n1(ps.area)} × ${n1(k)}`; roofVF = `⅓ × ${n1(ps.area)} × ${n1(R)}`; }
+      else { roofArea = ps.area + (p.roof === "gumbaz" ? dome : p.roof === "terrasa" ? (pw + 1.2) * (pd + 1.2) : 0); roofF = `${n1(ps.area)}${p.roof === "gumbaz" ? ` + gumbaz ${n1(dome)}` : ""}`; }
+    }
+    const A0 = ps ? ps.area : W * D, Vb = A0 * Hb, floorArea = A0 * N + (p.roof === "terrasa" ? pw * pd : 0);
+    const slabVol = N * (ps ? Math.max(0, ps.area - ps.perimeter * T) : (W - 2 * T) * (D - 2 * T)) * 0.25;
+    return { g, W, D, N, h, Hb, R, upper, counts, frontOpen, sideOpen, backOpen, glass, doors, gross, open, net, roofArea, roofVol, roofF, roofVF, dome, A0, Vb, floorArea, slabVol, pw, pd, ps };
   }
 
   // ---------- Bitta uy uchun hisob ----------
   function building(p, cells) {
-    const m = measure(p, cells), { g, W, D, N, h, Hb, R, net, glass, doors, gross, open, roofArea, roofVol, A0, Vb, floorArea, slabVol, pw, pd } = m;
+    const m = measure(p, cells), { g, W, D, N, h, Hb, R, net, glass, doors, gross, open, roofArea, roofVol, A0, Vb, floorArea, slabVol, pw, pd, ps } = m;
     const Vt = Vb + roofVol, Senv = net + roofArea, mat = MATERIALS[p.material] || {};
 
     // Konstruksiya (taxminiy)
@@ -92,12 +107,13 @@ const Geo = (function () {
 
     const groups = [];
     groups.push({ title: "Plan geometriyasi", rows: [
-      { k: "Perimetr", f: `P = 2 × (W + D) = 2 × (${n1(W)} + ${n1(D)})`, v: n1(2 * (W + D)), u: "m" },
-      { k: "Plan yuzasi", f: `S = W × D = ${n1(W)} × ${n1(D)}`, v: n1(A0), u: "m²" },
+      ps ? { k: "Plan shakli", f: `${SHAPES[ps.shape]} · ${n1(W)} × ${n1(D)} m${ps.wings && ps.shape !== "rect" ? ` · qanot ${n1(ps.a)} m` : ""}`, v: "", u: "" } : null,
+      ps ? { k: "Perimetr", f: `P = Σ qirralar uzunligi`, v: n1(ps.perimeter), u: "m" } : { k: "Perimetr", f: `P = 2 × (W + D) = 2 × (${n1(W)} + ${n1(D)})`, v: n1(2 * (W + D)), u: "m" },
+      ps ? { k: "Plan yuzasi", f: `S = kontur yuzasi${ps.holes.length ? " − ichki hovli" : ""}`, v: n1(A0), u: "m²" } : { k: "Plan yuzasi", f: `S = W × D = ${n1(W)} × ${n1(D)}`, v: n1(A0), u: "m²" },
       { k: "Plan diagonali", f: `d = √(W² + D²) = √(${n1(W)}² + ${n1(D)}²)`, v: n1(Math.hypot(W, D)), u: "m" },
       { k: "Eng katta ichki doira", f: `r = min(W, D) / 2 = ${n1(Math.min(W, D))} / 2`, v: n1(Math.min(W, D) / 2), u: "m" },
       { k: "Oraliqlar moduli", f: `W = ${p.bays} × ${n1(p.bay_w)} (o'qlar A–${String.fromCharCode(65 + p.bays)})`, v: n1(W), u: "m" },
-    ] });
+    ].filter(Boolean) });
 
     const ratio = W / D, gold = (Math.abs(ratio - PHI) / PHI) * 100, hw = Hb / W;
     groups.push({ title: "Nisbatlar", rows: [
@@ -139,7 +155,7 @@ const Geo = (function () {
 
     const glazing = (glass / gross) * 100;
     groups.push({ title: "Devor va oynalanish", rows: [
-      { k: "Devorning umumiy yuzasi", f: `2 × (W + D) × Hb = 2 × (${n1(W)} + ${n1(D)}) × ${n1(Hb)}`, v: n0(gross), u: "m²" },
+      ps ? { k: "Devorning umumiy yuzasi", f: `P × Hb = ${n1(ps.perimeter)} × ${n1(Hb)}`, v: n0(gross), u: "m²" } : { k: "Devorning umumiy yuzasi", f: `2 × (W + D) × Hb = 2 × (${n1(W)} + ${n1(D)}) × ${n1(Hb)}`, v: n0(gross), u: "m²" },
       { k: "Deraza va eshiklar", f: `old ${n0(m.frontOpen)} + yon ${n0(m.sideOpen)} + orqa ${n0(m.backOpen)}`, v: n0(open), u: "m²" },
       { k: "Sof devor yuzasi", f: `${n0(gross)} − ${n0(open)}`, v: n0(net), u: "m²" },
       { k: "Oynalanish", f: `oyna / devor = ${n0(glass)} / ${n0(gross)} × 100`, v: n1(glazing), u: "%", tone: glazing > 45 ? "warn" : "" },
@@ -187,8 +203,9 @@ const Geo = (function () {
     const n = list.length, bb = bboxOf(L), bw = bb.x1 - bb.x0, bd = bb.z1 - bb.z0;
     const Y = yard && yard.on ? yard : null, R = Y ? yardRect(L, Y) : null;          // hovli bo'lsa — uchastka = hovli to'sig'i ichi
     const plotW = R ? R.x1 - R.x0 : bw + 2 * SETBACK, plotD = R ? R.z1 - R.z0 : bd + 2 * SETBACK, plot = plotW * plotD;
-    const built = L.reduce((s, l) => s + l.W * l.D, 0);
-    const area = list.reduce((s, b, i) => s + L[i].W * L[i].D * b.params.floors, 0);
+    const foot = i => (shapeOf(list[i].params) !== "rect" ? planShape(list[i].params).area : L[i].W * L[i].D);   // shakldor planda haqiqiy yuza
+    const built = L.reduce((s, l, i) => s + foot(i), 0);
+    const area = list.reduce((s, b, i) => s + foot(i) * b.params.floors, 0);
     const cover = (built / plot) * 100, far = area / plot;
     const rows = [
       { k: "Uchastka yuzasi", f: R ? `hovli: (${n1(bw)} + 2×${Y.margin}) × (${n1(bd)} + 2×${Y.margin}) = ${n1(plotW)} × ${n1(plotD)}` : `(${n1(bw)} + 2×${SETBACK}) × (${n1(bd)} + 2×${SETBACK}) = ${n1(plotW)} × ${n1(plotD)}`, v: n0(plot), u: "m²" },

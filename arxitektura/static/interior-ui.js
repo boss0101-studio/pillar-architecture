@@ -219,6 +219,11 @@ const InteriorUI = (function () {
     if (fl > p.floors - 1) fl = p.floors - 1;
     if (!p.floors || sel && sel.k === "stair" && p.floors < 2) sel = null;
     const many = Site.list.length > 1, who = many ? `${Site.active + 1}-uy · ` : "";
+    if (shapeOf(p) !== "rect") {                                     // shakldor planda xona to'ri hali yo'q; reja o'chmaydi, to'rtburchakka qaytsa chiqadi
+      el("intNote").textContent = `${who}ichki reja: faqat to'rtburchak planda`;
+      body.innerHTML = `<div class="int-empty"><p>Ichki xonalar va mebel hozircha faqat to'rtburchak planda chiziladi. "${esc(SHAPES[shapeOf(p)])}" shaklida bino 3D'da tashqi ko'rinishi bilan quriladi.</p></div>`;
+      return;
+    }
     el("intNote").textContent = b.interior === undefined ? `${who}ichi loyihalanmagan` : `${who}ichki reja yoqilgan`;
     if (b.interior === undefined) {
       body.innerHTML = `<div class="int-empty"><p>${who ? esc(who) : ""}Bu uyning ichi hali loyihalanmagan: 3D ko'rinishda u qorong'i hajm bo'lib turadi. Xonalarga bo'ling, eshik va mebel qo'ying — ichkarini 3D'da ko'rasiz, VR'da esa kirib yurasiz.</p>` +

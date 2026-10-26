@@ -46,6 +46,7 @@ DESIGN_CHOICES = {
     "window": {"oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "yoq"},
     "ground": {"oddiy", "arkada", "vitrina"},
 }
+DESIGN_SHAPES = {"rect", "L", "U", "T", "court", "circle", "octagon", "hexagon", "triangle", "trapezoid"}
 MAX_BUILDINGS = 3   # bitta majmuada eng ko'pi bilan nechta uy
 # Ichki reja: mebel turlari (interior.js katalogi bilan bir xil) va chegaralar
 ITEM_TYPES = {"bed", "sofa", "table", "chair", "wardrobe", "kitchen", "fridge", "bath",
@@ -217,6 +218,9 @@ def validate_building(raw):
     params = {k: req_int(raw_params, k, lo, hi) for k, (lo, hi) in DESIGN_INTS.items()}
     params.update({k: req_float(raw_params, k, lo, hi) for k, (lo, hi) in DESIGN_FLOATS.items()})
     params.update({k: req_choice(raw_params, k, ch) for k, ch in DESIGN_CHOICES.items()})
+    # Plan shakli (building.js SHAPES) va qanot eni — ixtiyoriy: eski dizaynlar to'rtburchak bo'lib qoladi
+    params["shape"] = req_choice(raw_params, "shape", DESIGN_SHAPES) if raw_params.get("shape") is not None else "rect"
+    params["wing"] = req_float(raw_params, "wing", 0.2, 0.6) if raw_params.get("wing") is not None else 0.4
 
     raw_cells = raw.get("cells") or {}
     if not isinstance(raw_cells, dict) or len(raw_cells) > 30 * 12:
@@ -440,6 +444,8 @@ _PARAMS_SCHEMA = {
         "material": {"type": "string", "enum": _MATS, "description": "gisht=red brick, oqgisht=white brick, beton=concrete, qorabeton=dark concrete, ganch=white plaster, travertin, tosh=stone, koshin=blue tile, yogoch=wood, metall=metal"},
         "window": {"type": "string", "enum": ["oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "yoq"]},
         "ground": {"type": "string", "enum": ["oddiy", "arkada", "vitrina"]},
+        "shape": {"type": "string", "enum": sorted(DESIGN_SHAPES), "description": "plan: rect, L, U (П), T, court (inner courtyard), circle, octagon, hexagon, triangle, trapezoid"},
+        "wing": {"type": "number", "description": "wing width for L/U/T/court as a share of the smaller side, 0.2-0.6"},
         "category": {"type": "string", "enum": list(CATEGORIES) if "CATEGORIES" in globals() else ["turar-joy", "jamoat", "tijorat", "interyer"]},
         "quality": {"type": "string", "enum": ["standart", "biznes", "premium"]},
     },

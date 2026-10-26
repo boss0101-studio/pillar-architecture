@@ -41,7 +41,13 @@ const WINDOW_CELL = { oddiy: "win", arkali: "arch", panorama: "wide", tor: "slit
 const upperType = p => WINDOW_CELL[p.window] || "win";
 
 // Tanlov ro'yxatlari (server.py dagi DESIGN_CHOICES bilan bir xil bo'lishi kerak)
+// Plan shakllari. To'rtburchakdan tashqari: to'rtburchaklar birlashmasi ("qanotlar") va qavariq ko'pburchaklar
+const SHAPES = {
+  rect: "To'rtburchak", L: "L shakl", U: "П shakl", T: "T shakl", court: "Ichki hovlili",
+  circle: "Aylana", octagon: "Sakkizburchak", hexagon: "Oltiburchak", triangle: "Uchburchak", trapezoid: "Trapetsiya",
+};
 const OPTIONS = {
+  shape: Object.keys(SHAPES),
   category: ["turar-joy", "jamoat", "tijorat", "interyer"],
   quality: ["standart", "biznes", "premium"],
   roof: ["tekis", "nishab", "bir", "piramida", "gumbaz", "terrasa"],
@@ -52,7 +58,7 @@ const OPTIONS = {
 
 const DEFAULT_PARAMS = {
   category: "turar-joy", quality: "biznes", floors: 5, bays: 6, floor_h: 3.3, bay_w: 4.2, depth: 14,
-  roof: "tekis", material: "gisht", window: "oddiy", ground: "oddiy",
+  roof: "tekis", material: "gisht", window: "oddiy", ground: "oddiy", shape: "rect", wing: 0.4,
 };
 
 // Boshlang'ich nuqtalar: "bosh" — noldan, qolganlari tayyor andoza
@@ -98,16 +104,86 @@ function cellType(p, cells, f, b) {
 
 function geometry(p) {
   const W = p.bays * p.bay_w, Hb = p.floors * p.floor_h;
-  const domeR = Math.min(W * 0.28, p.depth * 0.4, 9);
+  // To'rtburchak bo'lmagan planda nishab tomlar qanot eni (yoki qavariq shaklning kichik o'lchami) bo'ylab quriladi
+  const rect = shapeOf(p) === "rect", ps = rect ? null : planShape(p), span = rect ? W : ps.wings ? ps.a : Math.min(W, p.depth);
+  const domeR = rect ? Math.min(W * 0.28, p.depth * 0.4, 9) : Math.min((ps.wings ? ps.a : Math.min(W, p.depth)) * 0.36, 9);
   const R = {
     tekis: 0.9,
-    nishab: Math.min(W * 0.22, 7),
-    bir: Math.min(W * 0.14, 4.5),                          // bir nishabli: eni bo'ylab ko'tariladi
-    piramida: Math.min(Math.min(W, p.depth) * 0.32, 6.5),  // to'rt nishabli, cho'qqisi markazda
+    nishab: Math.min(span * (rect ? 0.22 : 0.4), 7),
+    bir: Math.min(span * (rect ? 0.14 : 0.25), 4.5),       // bir nishabli: eni bo'ylab ko'tariladi
+    piramida: Math.min(Math.min(rect ? W : span, p.depth) * 0.32, 6.5),  // to'rt nishabli, cho'qqisi markazda
     gumbaz: domeR * 0.45 + domeR * 1.15 + 1.2,
     terrasa: p.floor_h + 0.4,
   }[p.roof];
   return { W, D: p.depth, Hb, R, H: Hb + R, domeR };
+}
+
+// ---------- Plan shakli ----------
+// Koordinatalar metrda: x 0..W (chapdan o'ngga), z 0..D (orqadan ko'chaga; z = D — old fasad).
+// Konturlar shunday aylanadiki, AB qirraning tashqi normali (-dz, dx) bo'ladi (old fasad: +x yo'nalish, normal +z).
+// Qavariq bo'lmagan shakllar to'rtburchak "qanotlar"dan yig'iladi: tom har qanotga alohida quriladi.
+const shapeOf = p => (SHAPES[p && p.shape] ? p.shape : "rect");
+const ringArea = pts => pts.reduce((s, [x, z], i) => { const [x2, z2] = pts[(i + 1) % pts.length]; return s + x * z2 - x2 * z; }, 0) / 2;
+const orient = (pts, neg) => ((ringArea(pts) < 0) === neg ? pts : pts.slice().reverse());   // tashqi kontur: manfiy, teshik: musbat
+function planShape(p) {
+  const W = p.bays * p.bay_w, D = p.depth, s = shapeOf(p), m = Math.min(W, D);
+  let a = Math.max(3, m * Math.min(0.6, Math.max(0.2, Number(p.wing) || 0.4)));   // qanot eni
+  let outer, holes = [], wings = null;
+  const R = (x0, z0, x1, z1) => ({ x0, z0, x1, z1 });
+  switch (s) {
+    case "L": a = Math.min(a, W - 2, D - 2);
+      outer = [[0, D], [W, D], [W, D - a], [a, D - a], [a, 0], [0, 0]]; wings = [R(0, D - a, W, D), R(0, 0, a, D - a)]; break;
+    case "U": a = Math.min(a, (W - 2) / 2, D - 2);
+      outer = [[0, D], [W, D], [W, 0], [W - a, 0], [W - a, D - a], [a, D - a], [a, 0], [0, 0]]; wings = [R(0, D - a, W, D), R(0, 0, a, D - a), R(W - a, 0, W, D - a)]; break;
+    case "T": a = Math.min(a, W - 2, D - 2);
+      outer = [[0, D], [W, D], [W, D - a], [(W + a) / 2, D - a], [(W + a) / 2, 0], [(W - a) / 2, 0], [(W - a) / 2, D - a], [0, D - a]];
+      wings = [R(0, D - a, W, D), R((W - a) / 2, 0, (W + a) / 2, D - a)]; break;
+    case "court": a = Math.min(a, (m - 3) / 2);
+      outer = [[0, D], [W, D], [W, 0], [0, 0]]; holes = [[[a, D - a], [W - a, D - a], [W - a, a], [a, a]]];
+      wings = [R(0, D - a, W, D), R(0, 0, W, a), R(0, a, a, D - a), R(W - a, a, W, D - a)]; break;
+    case "circle": outer = Array.from({ length: 24 }, (_, i) => [W / 2 + W / 2 * Math.cos(i * Math.PI / 12), D / 2 + D / 2 * Math.sin(i * Math.PI / 12)]); break;
+    case "octagon": { const c = m * 0.29; outer = [[c, D], [W - c, D], [W, D - c], [W, c], [W - c, 0], [c, 0], [0, c], [0, D - c]]; break; }
+    case "hexagon": outer = [[W / 4, D], [W * 3 / 4, D], [W, D / 2], [W * 3 / 4, 0], [W / 4, 0], [0, D / 2]]; break;
+    case "triangle": outer = [[0, D], [W, D], [W / 2, 0]]; break;
+    case "trapezoid": outer = [[0, D], [W, D], [W * 0.8, 0], [W * 0.2, 0]]; break;
+    default: outer = [[0, D], [W, D], [W, 0], [0, 0]]; wings = [R(0, 0, W, D)];
+  }
+  outer = orient(outer, true); holes = holes.map(h => orient(h, false));
+  const rings = [outer, ...holes];
+  const area = Math.abs(ringArea(outer)) - holes.reduce((t, h) => t + Math.abs(ringArea(h)), 0);
+  const perimeter = rings.reduce((t, r) => t + r.reduce((u, [x, z], i) => { const [x2, z2] = r[(i + 1) % r.length]; return u + Math.hypot(x2 - x, z2 - z); }, 0), 0);
+  return { shape: s, W, D, a, outer, holes, rings, wings, convex: !wings, area, perimeter };
+}
+// Har bir qirra: boshlanishi, yo'nalishi, tashqi normali, uzunligi; "front" — ko'chadan ko'rinadigan qirra
+function planEdges(ps) {
+  const frontAt = x => {                                        // shu x da konturning eng oldingi (eng katta z) nuqtasi
+    let best = -Infinity;
+    ps.outer.forEach(([x1, z1], i) => { const [x2, z2] = ps.outer[(i + 1) % ps.outer.length];
+      if ((x - x1) * (x - x2) <= 1e-9 && Math.abs(x2 - x1) > 1e-9) best = Math.max(best, z1 + (z2 - z1) * (x - x1) / (x2 - x1)); });
+    return best;
+  };
+  const out = [];
+  ps.rings.forEach((r, ri) => r.forEach(([x1, z1], i) => {
+    const [x2, z2] = r[(i + 1) % r.length], L = Math.hypot(x2 - x1, z2 - z1); if (L < 1e-6) return;
+    const dx = (x2 - x1) / L, dz = (z2 - z1) / L, nx = -dz, nz = dx, mx = (x1 + x2) / 2, mz = (z1 + z2) / 2;
+    const full = ri === 0 && nz > 0.99 && Math.abs(L - ps.W) < 0.01 && Math.abs(mz - ps.D) < 0.01;   // to'liq eni bo'yicha old fasad
+    const front = ri === 0 && nz > 0.5 && mz >= frontAt(mx) - 0.05;
+    out.push({ x1, z1, x2, z2, L, dx, dz, nx, nz, full, front, hole: ri > 0 });
+  }));
+  return out;
+}
+// Ko'pburchakni d ga suradi (musbat — tashqariga), burchaklarda kesishma (miter) bilan
+function offsetRing(r, d) {
+  const n = r.length, out = [];
+  for (let i = 0; i < n; i++) {
+    const [ax, az] = r[(i - 1 + n) % n], [bx, bz] = r[i], [cx, cz] = r[(i + 1) % n];
+    const l1 = Math.hypot(bx - ax, bz - az) || 1, l2 = Math.hypot(cx - bx, cz - bz) || 1;
+    const n1 = [-(bz - az) / l1, (bx - ax) / l1], n2 = [-(cz - bz) / l2, (cx - bx) / l2];
+    let mx = n1[0] + n2[0], mz = n1[1] + n2[1]; const ml = Math.hypot(mx, mz) || 1; mx /= ml; mz /= ml;
+    const k = d / Math.max(0.3, mx * n1[0] + mz * n1[1]);
+    out.push([bx + mx * k, bz + mz * k]);
+  }
+  return out;
 }
 
 function metrics(p, cells) {
@@ -117,7 +193,7 @@ function metrics(p, cells) {
     const o = OPENING[cellType(p, cells, f, b)];
     if (o && cellType(p, cells, f, b) !== "arcade") glass += (o[1] - o[0]) * (o[3] - o[2]);
   }
-  const floorArea = g.W * g.D;
+  const floorArea = shapeOf(p) === "rect" ? g.W * g.D : planShape(p).area;
   const extra = p.roof === "terrasa" ? floorArea * 0.3 : 0;   // tomdagi pavilon
   return {
     width: g.W, height: g.H, floorArea,
@@ -363,6 +439,23 @@ function renderIso(p, cells) {
   const mat = MATERIALS[p.material], edge = `stroke="${INK}" stroke-width="1" stroke-linejoin="round"`;
   const { W, D, Hb } = g;
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" class="bld">`];
+  if (shapeOf(p) !== "rect") {                                       // shakldor plan: devorlar prizma, orqadan oldga chiziladi
+    const ps = planShape(p), E = planEdges(ps).filter(e => e.nx > 0.01 || e.nz > 0.01);
+    out.push(poly(ps.outer.map(([x, z]) => P(x + 1.5, z + 1.5, 0)), INK, `fill-opacity=".08"`));
+    E.sort((a, b) => (a.x1 + a.x2 + a.z1 + a.z2) - (b.x1 + b.x2 + b.z1 + b.z2)).forEach(e => {
+      const shade = e.nz > 0.5 ? "" : `<polygon points="${[P(e.x1, e.z1, 0), P(e.x2, e.z2, 0), P(e.x2, e.z2, Hb), P(e.x1, e.z1, Hb)].join(" ")}" fill="${INK}" fill-opacity=".18"/>`;
+      out.push(poly([P(e.x1, e.z1, 0), P(e.x2, e.z2, 0), P(e.x2, e.z2, Hb), P(e.x1, e.z1, Hb)], mat.fill, edge) + shade);
+      const n = e.L < 1.2 || p.window === "yoq" ? 0 : Math.max(1, Math.round(e.L / p.bay_w));
+      for (let f = 0; f < p.floors; f++) for (let i = 0; i < n; i++) {
+        const t0 = (i + .3) / n, t1 = (i + .7) / n, za = (f + .25) * p.floor_h, zb = (f + .75) * p.floor_h;
+        const A = [e.x1 + (e.x2 - e.x1) * t0, e.z1 + (e.z2 - e.z1) * t0], B = [e.x1 + (e.x2 - e.x1) * t1, e.z1 + (e.z2 - e.z1) * t1];
+        out.push(poly([P(A[0], A[1], za), P(B[0], B[1], za), P(B[0], B[1], zb), P(A[0], A[1], zb)], GLASS, `fill-opacity=".85"`));
+      }
+    });
+    ps.rings.forEach((r, i) => out.push(poly(r.map(([x, z]) => P(x, z, Hb)), i ? INK : mat.fill, i ? `fill-opacity=".35"` : edge)));
+    out.push(`</svg>`);
+    return out.join("");
+  }
 
   // yerdagi soya
   out.push(poly([P(0, 0, 0), P(W + 3, 0, 0), P(W + 3, D + 3, 0), P(0, D + 3, 0)], INK, `fill-opacity=".08"`));

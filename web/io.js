@@ -17,7 +17,7 @@ window.saveFile = async function (filename, data) {
 
 const ProjectIO = (function () {
   const FORMAT = "ustun-loyiha";
-  const LIMITS = { floors: [1, 30, 1], bays: [2, 12, 1], floor_h: [2.7, 4.5, 0.1], bay_w: [3, 7.5, 0.1], depth: [6, 30, 0.5] };
+  const LIMITS = { floors: [1, 30, 1], bays: [2, 12, 1], floor_h: [2.7, 4.5, 0.1], bay_w: [3, 7.5, 0.1], depth: [6, 30, 0.5], wing: [0.2, 0.6, 0.1] };
   const CELLS = new Set(Object.keys(OPENING));
 
   // Fayl ichidagi ma'lumot ishonchsiz: har bir qiymat ruxsat etilgan oraliqqa keltiriladi

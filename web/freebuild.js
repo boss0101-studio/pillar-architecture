@@ -13,7 +13,10 @@
     beton:    { n: "Monolit beton",         color: 0x9aa0a4, css: "#9aa0a4" },
   };
   const DEF_OPEN = { door: { w: 0.9, h: 2.1, sill: 0 }, win: { w: 1.2, h: 1.4, sill: 0.9 } };
-  const TOOLS = [["select", "Tanlash"], ["out", "Tashqi devor"], ["in", "Ichki devor"], ["door", "Eshik"], ["win", "Deraza"], ["erase", "O'chirish"]];
+  const TOOLS = [["select", "Tanlash"], ["out", "Tashqi devor"], ["in", "Ichki devor"], ["shape", "Shakl"], ["door", "Eshik"], ["win", "Deraza"], ["erase", "O'chirish"]];
+  // Tayyor kontur shakllari: bosilgan joyga yopiq tashqi devor sifatida qo'yiladi (keyin oddiy devorlardek tahrirlanadi)
+  const SHAPE_KINDS = [["rect", "To'rtburchak"], ["L", "L shakl"], ["U", "П shakl"], ["T", "T shakl"], ["circle", "Aylana"], ["semi", "Yarim aylana"],
+                       ["octagon", "Sakkizburchak"], ["hexagon", "Oltiburchak"], ["triangle", "Uchburchak"], ["trapezoid", "Trapetsiya"]];
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const nf = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toLocaleString("ru-RU");
   const n0 = v => Math.round(v).toLocaleString("ru-RU");
@@ -42,13 +45,14 @@
     }));
     m.outT = num(raw.outT, 0.2, 0.8, 0.38); m.inT = num(raw.inT, 0.08, 0.4, 0.12);
     m.outMat = MATS[raw.outMat] ? raw.outMat : "gisht"; m.inMat = MATS[raw.inMat] ? raw.inMat : "gisht";
-    m.roof = raw.roof === "yoq" ? "yoq" : "tekis"; m.fd = num(raw.fd, 0.5, 3, 1.2);
+    m.roof = ["yoq", "nishab", "gumbaz"].includes(raw.roof) ? raw.roof : "tekis"; m.fd = num(raw.fd, 0.5, 3, 1.2);
     m.doorW = num(raw.doorW, 0.6, 3, 0.9); m.winW = num(raw.winW, 0.4, 4, 1.2); m.winH = num(raw.winH, 0.4, 2.4, 1.4);
     return m;
   }
   let M = blank();
   try { M = clean(JSON.parse(localStorage.getItem(STORE) || "null")); } catch {}
   let lv = 0, tool = "out", draw = null, hover = null, sel = null, kesim = false, msg = "", undo = [], redo = [];
+  let shp = { k: "rect", w: 12, d: 10, wing: 0.4 }, arc = false, arcEnd = null;   // shakl asbobi va yoy (egri devor) rejimi
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(M)); } catch {} };
 
   // Devor segmentlari: [{ ci, si, a, b, k, t, L }]
@@ -96,6 +100,49 @@
   function doRedo() { if (!redo.length) return; undo.push(JSON.stringify(M)); M = clean(JSON.parse(redo.pop())); lv = Math.min(lv, M.levels.length - 1); sel = null; save(); changed(); }
   function flash(t) { msg = t; renderHint(); setTimeout(() => { if (msg === t) { msg = ""; renderHint(); } }, 2200); }
 
+  // ---------- Shakl va yoy geometriyasi ----------
+  // Markazi (cx, cz) bo'lgan, eni w va chuqurligi d bo'lgan yopiq kontur; z pastga (ko'cha tomonga)
+  function shapePts(k, w, d, wing, cx, cz) {
+    const a = Math.max(2, Math.min(w, d) * clamp(wing, 0.2, 0.6)), x0 = -w / 2, z0 = -d / 2, x1 = w / 2, z1 = d / 2, ring = (n, from, to) =>
+      Array.from({ length: n }, (_, i) => { const t = from + (to - from) * i / (to === from + 2 * Math.PI ? n : n - 1); return [w / 2 * Math.cos(t), d / 2 * Math.sin(t)]; });
+    let pts;
+    switch (k) {
+      case "L": pts = [[x0, z0], [x0 + a, z0], [x0 + a, z1 - a], [x1, z1 - a], [x1, z1], [x0, z1]]; break;
+      case "U": pts = [[x0, z0], [x0 + a, z0], [x0 + a, z1 - a], [x1 - a, z1 - a], [x1 - a, z0], [x1, z0], [x1, z1], [x0, z1]]; break;
+      case "T": pts = [[-a / 2, z0], [a / 2, z0], [a / 2, z1 - a], [x1, z1 - a], [x1, z1], [x0, z1], [x0, z1 - a], [-a / 2, z1 - a]]; break;
+      case "circle": pts = ring(24, 0, 2 * Math.PI); break;
+      case "semi": pts = ring(13, Math.PI, 2 * Math.PI).map(([x, z]) => [x, z * 2 + d / 2]); break;     // tekis tomoni ko'chaga qaragan yarim aylana
+      case "octagon": { const c = Math.min(w, d) * 0.29; pts = [[x0 + c, z0], [x1 - c, z0], [x1, z0 + c], [x1, z1 - c], [x1 - c, z1], [x0 + c, z1], [x0, z1 - c], [x0, z0 + c]]; break; }
+      case "hexagon": pts = [[x0 + w / 4, z0], [x1 - w / 4, z0], [x1, 0], [x1 - w / 4, z1], [x0 + w / 4, z1], [x0, 0]]; break;
+      case "triangle": pts = [[0, z0], [x1, z1], [x0, z1]]; break;
+      case "trapezoid": pts = [[x0 + w * 0.2, z0], [x1 - w * 0.2, z0], [x1, z1], [x0, z1]]; break;
+      default: pts = [[x0, z0], [x1, z0], [x1, z1], [x0, z1]];
+    }
+    // Uchastkadan chiqib ketmasin: kerak bo'lsa butun shakl suriladi
+    const xs = pts.map(q => q[0] + cx), zs = pts.map(q => q[1] + cz);
+    const sx = Math.min(0, SITE_W - Math.max(...xs)) + Math.max(0, -Math.min(...xs)), sz = Math.min(0, SITE_D - Math.max(...zs)) + Math.max(0, -Math.min(...zs));
+    return pts.map(([x, z]) => [r2(clamp(x + cx + sx, 0, SITE_W)), r2(clamp(z + cz + sz, 0, SITE_D))]);
+  }
+  // A dan B gacha C nuqtadan o'tadigan yoy: oraliq nuqtalar (A va B kirmaydi); C chiziqda yotsa — bo'sh
+  function arcPts(A, B, C) {
+    const ax = A[0], az = A[1], bx = B[0], bz = B[1], cx = C[0], cz = C[1];
+    const D2 = 2 * (ax * (bz - cz) + bx * (cz - az) + cx * (az - bz)); if (Math.abs(D2) < 1e-6) return [];
+    const ux = ((ax * ax + az * az) * (bz - cz) + (bx * bx + bz * bz) * (cz - az) + (cx * cx + cz * cz) * (az - bz)) / D2;
+    const uz = ((ax * ax + az * az) * (cx - bx) + (bx * bx + bz * bz) * (ax - cx) + (cx * cx + cz * cz) * (bx - ax)) / D2;
+    const r = Math.hypot(ax - ux, az - uz); if (r > 200) return [];
+    const ang = (x, z) => Math.atan2(z - uz, x - ux), norm = t => ((t % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+    const tA = ang(ax, az), sweepCW = norm(ang(bx, bz) - tA), viaC = norm(ang(cx, cz) - tA);
+    const sweep = viaC <= sweepCW ? sweepCW : sweepCW - 2 * Math.PI;          // C orqali o'tadigan yo'nalish
+    const n = clamp(Math.ceil(Math.abs(sweep) * r / 0.6), 4, 32), out = [];
+    for (let i = 1; i < n; i++) { const t = tA + sweep * i / n; out.push([r2(clamp(ux + r * Math.cos(t), 0, SITE_W)), r2(clamp(uz + r * Math.sin(t), 0, SITE_D))]); }
+    return out;
+  }
+  function placeShape(raw) {
+    const pts = shapePts(shp.k, shp.w, shp.d, shp.wing, snapG(raw[0]), snapG(raw[1]));
+    commit(() => { M.levels[lv].chains.push({ k: "out", closed: true, pts }); });
+    flash(`${SHAPE_KINDS.find(x => x[0] === shp.k)[1]} qo'yildi: devorlari oddiy devorlardek tahrirlanadi va hisobga kiradi.`);
+  }
+
   // ---------- Amallar ----------
   function snapPoint(raw, ortho) {
     let p = [clamp(snapG(raw[0]), 0, SITE_W), clamp(snapG(raw[1]), 0, SITE_D)];
@@ -111,6 +158,7 @@
     return best ? best.slice() : p;
   }
   function finishDraw() {
+    arcEnd = null;
     if (!draw) return;
     const d = draw; draw = null;
     if (d.pts.length >= 2) commit(() => { M.levels[lv].chains.push({ k: d.k, closed: false, pts: d.pts }); });
@@ -158,6 +206,17 @@
     let best = -1, bd = 0.5;
     level.open.forEach((o, i) => { const d = Math.hypot(o.x - p[0], o.z - p[1]); if (d < Math.max(bd, 0)) { const lim = o.w / 2 + 0.15; if (d < lim) { bd = d; best = i; } } });
     return best;
+  }
+
+  // Oxirgi qavatdagi har bir yopiq kontur uchun: markaz, tom balandligi (nishab) va gumbaz radiusi
+  function roofForms(level) {
+    const forms = level.chains.filter(c => c.k === "out" && c.closed && c.pts.length >= 3).map(c => {
+      const xs = c.pts.map(q => q[0]), zs = c.pts.map(q => q[1]), w = Math.max(...xs) - Math.min(...xs), d = Math.max(...zs) - Math.min(...zs);
+      const half = Math.min(w, d) / 2, R = Math.min(half * 0.75, 6), A = polyArea(c.pts), r = Math.min(half * 0.7, 8);
+      const cx = c.pts.reduce((s2, q) => s2 + q[0], 0) / c.pts.length, cz = c.pts.reduce((s2, q) => s2 + q[1], 0) / c.pts.length;
+      return { c, A, R, half, r, cx, cz };
+    });
+    return { forms, slope: forms.reduce((s2, x) => s2 + x.A * Math.hypot(1, x.R / Math.max(0.5, x.half)), 0), dome: forms.reduce((s2, x) => s2 + 2 * Math.PI * x.r * x.r * 1.15, 0) };
   }
 
   // ---------- Hisob-kitob (hammasi chizilgan devorlardan) ----------
@@ -243,15 +302,20 @@
     const prow = [];
     levels.forEach(l => { if (l.A) prow.push({ k: `${l.i + 1}-qavat maydoni`, f: `kontur ${nf(l.A)} − perimetr ${nf(l.P)} × ${nf(M.outT / 2, 2)} − ichki ${nf(l.Lin)} × ${nf(M.inT, 2)}`, v: nf(l.net), u: "m²" }); });
     const totalNet = sum(l => l.net);
-    const slabA = levels.slice(1).reduce((s, l) => s + l.A, 0), roofA = M.roof === "tekis" ? levels[levels.length - 1].A : 0;
+    const slabA = levels.slice(1).reduce((s, l) => s + l.A, 0), roofA = M.roof === "tekis" || M.roof === "gumbaz" ? levels[levels.length - 1].A : 0;
+    const rf = roofForms(M.levels[M.levels.length - 1]);           // nishab (cho'qqili) va gumbaz o'lchamlari
     const slabV = slabA * SLAB + roofA * 0.25;
     if (prow.length) {
       prow.push({ k: "Umumiy foydali maydon", f: levels.filter(l => l.A).map(l => nf(l.net)).join(" + "), v: nf(totalNet), u: "m²" });
       if (slabA || roofA) prow.push({ k: "Yopma plitalar", f: `${nf(slabA)} × ${SLAB}${roofA ? ` + tom ${nf(roofA)} × 0,25` : ""}`, v: nf(slabV, 2), u: "m³" });
       if (roofA) prow.push({ k: "Tekis tom yuzasi", f: `oxirgi qavat konturi`, v: nf(roofA), u: "m²" });
+      if (M.roof === "nishab" && rf.slope) prow.push({ k: "Nishab tom yuzasi", f: rf.forms.map(x => `${nf(x.A)} × √(1 + (${nf(x.R, 2)} / ${nf(x.half, 2)})²)`).join(" + "), v: nf(rf.slope), u: "m²" });
+      if (M.roof === "gumbaz" && rf.dome) prow.push({ k: "Gumbaz yuzasi", f: rf.forms.map(x => `2π × ${nf(x.r, 2)}² × 1,15`).join(" + "), v: nf(rf.dome), u: "m²" });
       groups.push({ title: "Pol, yopma va tom", rows: prow });
       if (slabV) boq.push({ n: "Yopma beton B25 (armatura bilan)", q: Math.ceil(slabV * 10) / 10, u: "m³", p: FP.pBeton });
       if (roofA) boq.push({ n: "Tekis tom tizimi", q: Math.ceil(roofA), u: "m²", p: price("roof-flat", 18) });
+      if (M.roof === "nishab" && rf.slope) boq.push({ n: "Cherepitsa tom", q: Math.ceil(rf.slope), u: "m²", p: price("roof-tile", 28) });
+      if (M.roof === "gumbaz" && rf.dome) boq.push({ n: "Gumbaz koshin qoplamasi", q: Math.ceil(rf.dome), u: "m²", p: price("roof-dome", 160) });
     }
 
     // Eshik, deraza, yorug'lik
@@ -275,6 +339,7 @@
     <div class="fb">
       <div class="fb-bar">
         <div class="fb-tools" role="toolbar" aria-label="Chizish asboblari">${TOOLS.map(([t, l]) => `<button type="button" data-fbt="${t}">${l}</button>`).join("")}</div>
+        <button type="button" class="btn-ghost fb-arc" data-fba="arc" aria-pressed="false" title="Devorni egri (yoy) qilib chizish — A tugmasi">◠ Yoy devor</button>
         <span class="sp"></span>
         <button type="button" class="btn-ghost" data-fba="undo" title="Ctrl+Z">Orqaga</button>
         <button type="button" class="btn-ghost" data-fba="redo" title="Ctrl+Y">Qayta</button>
@@ -283,6 +348,13 @@
         <button type="button" class="btn-danger" data-fba="new">Hammasini tozalash</button>
       </div>
       <div class="fb-levels" id="fbLevels"></div>
+      <div class="fb-shape" id="fbShape" hidden>
+        <span class="label">Shakl</span>
+        <div class="fb-shapes" role="radiogroup" aria-label="Kontur shakli">${SHAPE_KINDS.map(([k, n]) => `<button type="button" role="radio" data-fbk="${k}" aria-checked="false">${n}</button>`).join("")}</div>
+        <label>eni <input type="number" min="3" max="40" step="0.5" data-fbsh="w"> m</label>
+        <label>chuqurligi <input type="number" min="3" max="30" step="0.5" data-fbsh="d"> m</label>
+        <label class="fb-wing">qanot <select data-fbsh="wing"><option value="0.3">30%</option><option value="0.4">40%</option><option value="0.5">50%</option><option value="0.6">60%</option></select></label>
+      </div>
       <div class="fb-opts">
         <label>Tashqi devor <select data-fbo="outT"><option value="0.25">250 mm</option><option value="0.38">380 mm</option><option value="0.51">510 mm</option><option value="0.3">300 mm</option></select></label>
         <label>material <select data-fbo="outMat">${Object.entries(MATS).map(([k, m]) => `<option value="${k}">${m.n}</option>`).join("")}</select></label>
@@ -290,7 +362,7 @@
         <label>material <select data-fbo="inMat">${Object.entries(MATS).map(([k, m]) => `<option value="${k}">${m.n}</option>`).join("")}</select></label>
         <label>Eshik eni <input type="number" min="0.6" max="3" step="0.1" data-fbo="doorW"> m</label>
         <label>Deraza <input type="number" min="0.4" max="4" step="0.1" data-fbo="winW"> × <input type="number" min="0.4" max="2.4" step="0.1" data-fbo="winH"> m</label>
-        <label>Tom <select data-fbo="roof"><option value="tekis">Tekis tom</option><option value="yoq">Tomsiz</option></select></label>
+        <label>Tom <select data-fbo="roof"><option value="tekis">Tekis tom</option><option value="nishab">Nishab tom (cho'qqili)</option><option value="gumbaz">Gumbaz</option><option value="yoq">Tomsiz</option></select></label>
         <label>Fundament chuqurligi <input type="number" min="0.5" max="3" step="0.1" data-fbo="fd"> m</label>
       </div>
       <div class="fb-main">
@@ -311,6 +383,11 @@
   function syncOpts() {
     app.querySelectorAll("[data-fbo]").forEach(el => { const v = M[el.dataset.fbo]; if (el.tagName === "SELECT") el.value = String(v); else el.value = v; });
     app.querySelectorAll("[data-fbt]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.fbt === tool)));
+    const sp = $("#fbShape"); sp.hidden = tool !== "shape";
+    sp.querySelectorAll("[data-fbk]").forEach(b => b.setAttribute("aria-checked", String(b.dataset.fbk === shp.k)));
+    sp.querySelectorAll("[data-fbsh]").forEach(el => { el.value = String(shp[el.dataset.fbsh]); });
+    sp.querySelector(".fb-wing").hidden = !["L", "U", "T"].includes(shp.k);
+    const ab = $("[data-fba='arc']"); ab.setAttribute("aria-pressed", String(arc)); ab.hidden = !(tool === "out" || tool === "in");
     $("[data-fbv='kesim']").setAttribute("aria-pressed", String(kesim));
     const ub = $("[data-fba='undo']"), rb = $("[data-fba='redo']"); ub.disabled = !undo.length; rb.disabled = !redo.length;
   }
@@ -343,6 +420,7 @@
     // o'lcham yozuvlari (har segment uzunligi)
     segs.forEach(sg => {
       if (sg.L < 0.9) return;
+      const ch = level.chains[sg.ci]; if (ch && ch.pts.length >= 12 && sg.L < 2.5) return;   // aylana/yoy bo'laklari: yozuvlar tiqilib qolmasin
       const mx = (sg.a[0] + sg.b[0]) / 2, mz = (sg.a[1] + sg.b[1]) / 2, dx = (sg.b[0] - sg.a[0]) / sg.L, dz = (sg.b[1] - sg.a[1]) / sg.L;
       let ang = Math.atan2(dz, dx) * 180 / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
       const off = sg.t / 2 + 0.35, tx = mx - dz * off, tz = mz + dx * off;
@@ -361,7 +439,7 @@
     });
     // chizilayotgan zanjir va ko'rsatkich
     if (draw) {
-      const pts = hover ? [...draw.pts, hover] : draw.pts;
+      const pts = hover && !arcEnd ? [...draw.pts, hover] : draw.pts;
       o.push(`<polyline class="fb-draft ${draw.k}" points="${pts.map(p => p.join(",")).join(" ")}"/>`);
       draw.pts.forEach((p, i) => o.push(`<circle class="fb-node${i === 0 && draw.pts.length >= 3 ? " start" : ""}" cx="${p[0]}" cy="${p[1]}" r="${i === 0 && draw.pts.length >= 3 ? 0.32 : 0.16}"/>`));
       if (hover) {
@@ -370,6 +448,11 @@
       }
     }
     if (hover && (tool === "out" || tool === "in")) o.push(`<circle class="fb-cursor" cx="${hover[0]}" cy="${hover[1]}" r="0.14"/>`);
+    if (hover && tool === "shape") o.push(`<polygon class="fb-shape-ghost" points="${shapePts(shp.k, shp.w, shp.d, shp.wing, snapG(hover[0]), snapG(hover[1])).map(q => q.join(",")).join(" ")}"/>`);
+    if (draw && arcEnd) {                                           // yoy: oxirgi nuqta -> sichqoncha -> tanlangan uch
+      const l = draw.pts[draw.pts.length - 1], mid = hover ? arcPts(l, arcEnd, hover) : [];
+      o.push(`<polyline class="fb-draft arc ${draw.k}" points="${[l, ...mid, arcEnd].map(q => q.join(",")).join(" ")}"/><circle class="fb-node" cx="${arcEnd[0]}" cy="${arcEnd[1]}" r="0.2"/>`);
+    }
     if (hover && (tool === "door" || tool === "win")) {                // teshik qayerga tushishini ko'rsatish
       const hit = nearestSeg(level, hover, 0.6);
       if (hit) { const w = tool === "door" ? M.doorW : M.winW, dx = (hit.sg.b[0] - hit.sg.a[0]) / hit.sg.L, dz = (hit.sg.b[1] - hit.sg.a[1]) / hit.sg.L;
@@ -385,8 +468,10 @@
       in: draw ? "Keyingi nuqtani bosing. Enter yoki ikki marta bosish — tugatish." : "Ichki devor: xonalarni ajratish uchun tashqi devordan tashqi devorgacha chizing.",
       door: `Eshik (${nf(M.doorW, 2)} m): devor ustini bosing.`, win: `Deraza (${nf(M.winW, 2)} × ${nf(M.winH, 2)} m): tashqi devor ustini bosing.`,
       erase: "O'chiriladigan devor bo'lagini yoki eshik/derazani bosing.",
+      shape: "Shakl: turini va o'lchamini tanlang, keyin rejada markazini bosing — yopiq tashqi devor tayyor bo'ladi.",
     }[tool];
-    h.textContent = msg || base; h.classList.toggle("bad", !!msg && /bo'lmaydi|emas|qisqa|bor\.|faqat|qo'ying/.test(msg));
+    const arcHint = arc && (tool === "out" || tool === "in") ? (!draw ? "Yoy devor: avval boshlang'ich nuqtani bosing." : !arcEnd ? "Yoy devor: yoy tugaydigan nuqtani bosing." : "Yoy devor: sichqonchani suring va egilishini tanlab bosing.") : "";
+    h.textContent = msg || arcHint || base; h.classList.toggle("bad", !!msg && /bo'lmaydi|emas|qisqa|bor\.|faqat|qo'ying/.test(msg));
   }
   function renderLevels() {
     $("#fbLevels").innerHTML = `<span class="label">Qavatlar</span>` + M.levels.map((l, i) => `<button type="button" data-fbl="${i}" aria-pressed="${i === lv}">${i + 1}-qavat</button>`).join("") +
@@ -425,11 +510,14 @@
 
   // ---------- Hodisalar ----------
   app.addEventListener("click", e => {
+    const k2 = e.target.closest("[data-fbk]");
+    if (k2) { shp.k = k2.dataset.fbk; changed(); return; }
     const b = e.target.closest("[data-fbt],[data-fba],[data-fbl],[data-fbv]"); if (!b || b.tagName === "INPUT") return;
     if (b.dataset.fbt) { finishDraw(); tool = b.dataset.fbt; sel = null; changed(); return; }
     if (b.dataset.fbl !== undefined) { finishDraw(); lv = Number(b.dataset.fbl); sel = null; changed(); return; }
     if (b.dataset.fbv) { view3dCmd(b.dataset.fbv); return; }
     const a = b.dataset.fba;
+    if (a === "arc") { arc = !arc; arcEnd = null; changed(); return; }
     if (a === "undo") doUndo(); else if (a === "redo") doRedo();
     else if (a === "addcopy" || a === "addblank") {
       finishDraw();
@@ -462,6 +550,7 @@
       commit(() => { M[k] = v; M = clean(M); });
       return;
     }
+    if (t.dataset.fbsh) { const k = t.dataset.fbsh; shp[k] = k === "w" ? clamp(Number(t.value) || 12, 3, SITE_W) : k === "d" ? clamp(Number(t.value) || 10, 3, SITE_D) : clamp(Number(t.value) || 0.4, 0.2, 0.6); changed(); return; }
     if (t.dataset.fbh !== undefined) { commit(() => { M.levels[lv].h = clamp(Number(t.value) || 3, 2.4, 6); }); return; }
     if (t.dataset.fbs && sel && sel.kind === "op") {
       const k = t.dataset.fbs, op = M.levels[lv].open[sel.i]; if (!op) return;
@@ -491,9 +580,17 @@
     if (tool === "out" || tool === "in") {
       const now = performance.now(), dbl = now - lastDown.t < 320 && Math.hypot(e.clientX - lastDown.x, e.clientY - lastDown.y) < 6;
       lastDown = { t: now, x: e.clientX, y: e.clientY };
-      if (dbl && draw) { finishDraw(); return; }                       // ikki marta bosish (bir joyda) — zanjirni tugatish
+      if (dbl && draw && !arcEnd) { finishDraw(); return; }           // ikki marta bosish (bir joyda) — zanjirni tugatish
+      if (arc && draw && draw.pts.length) {                            // yoy: 1-bosish — tugash nuqtasi, 2-bosish — egilish
+        if (!arcEnd) { const p = snapPoint(raw, false); if (!same(p, draw.pts[draw.pts.length - 1])) { arcEnd = p; changed(); } return; }
+        const end = arcEnd; arcEnd = null;
+        draw.pts.push(...arcPts(draw.pts[draw.pts.length - 1], end, raw));
+        if (draw.pts.length > 190) { flash("Yoy juda uzun: kamroq nuqta bilan chizing."); draw.pts.length = 190; }
+        clickDraw(end); return;
+      }
       clickDraw(snapPoint(raw, e.shiftKey)); return;
     }
+    if (tool === "shape") { placeShape(raw); return; }
     if (tool === "door" || tool === "win") { placeOpening(tool, raw); return; }
     const oi = hitOpening(level, raw), seg = nearestSeg(level, raw, 0.35);
     if (tool === "erase") {
@@ -509,7 +606,7 @@
     const svg = e.target.closest && e.target.closest("#fbPlan svg");
     if (!svg) { if (hover) { hover = null; renderPlan(); } return; }
     const raw = svgPt(svg, e);
-    hover = tool === "out" || tool === "in" ? snapPoint(raw, e.shiftKey) : raw;
+    hover = (tool === "out" || tool === "in") && !arcEnd ? snapPoint(raw, e.shiftKey) : raw;
     renderPlan();
   });
   document.addEventListener("keydown", e => {
@@ -519,8 +616,9 @@
       if (!app.contains(document.activeElement) && document.activeElement !== document.body) return;
       e.preventDefault(); e.stopImmediatePropagation(); (k === "y" || e.shiftKey) ? doRedo() : doUndo(); return;
     }
+    if (k === "a" && !e.ctrlKey && !e.metaKey && (tool === "out" || tool === "in")) { arc = !arc; arcEnd = null; changed(); return; }
     if (k === "enter" && draw) { e.preventDefault(); finishDraw(); }
-    else if (k === "escape") { if (draw) { draw = null; changed(); } else { sel = null; changed(); } }
+    else if (k === "escape") { if (arcEnd) { arcEnd = null; changed(); } else if (draw) { draw = null; changed(); } else { sel = null; changed(); } }
     else if (k === "backspace" && draw) { e.preventDefault(); draw.pts.pop(); if (!draw.pts.length) draw = null; changed(); }
     else if ((k === "delete" || k === "backspace") && sel) { e.preventDefault(); deleteSel(); }
   }, true);
@@ -587,8 +685,24 @@
       const shared = p => ends.filter(q => same(p, q)).length > 1;
       level.chains.forEach(c => { if (c.k === "out" && c.closed && c.pts.length >= 3) {
         if (li === 0) slab(c.pts, 0, 0.08, floorM); else slab(c.pts, y0 - SLAB, SLAB, slabM);
-        if (top && M.roof === "tekis" && !kesim) slab(c.pts, y0 + h, 0.25, slabM);
+        if (top && (M.roof === "tekis" || M.roof === "gumbaz") && !kesim) slab(c.pts, y0 + h, 0.25, slabM);
       } });
+      if (top && !kesim && (M.roof === "nishab" || M.roof === "gumbaz")) roofForms(level).forms.forEach(fm => {
+        if (M.roof === "nishab") {                                     // chetlardan markazdagi cho'qqiga (har qanday kontur uchun)
+          const pos = [], apex = [fm.cx, y0 + h + fm.R, fm.cz], ring = fm.c.pts, cx = fm.cx, cz = fm.cz;
+          const eave = ring.map(([x, z]) => { const dx = x - cx, dz = z - cz, l = Math.hypot(dx, dz) || 1; return [x + dx / l * 0.4, z + dz / l * 0.4]; });   // 40 sm chiqish
+          eave.forEach(([x, z], i) => { const [x2, z2] = eave[(i + 1) % eave.length]; pos.push(x, y0 + h, z, x2, y0 + h, z2, ...apex); });
+          const geo = T(new THREE.BufferGeometry()); geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3)); geo.computeVertexNormals();
+          const me = new THREE.Mesh(geo, mat(0x8e4a32, { side: THREE.DoubleSide })); me.castShadow = true; me.receiveShadow = true; g.add(me);
+          maxH = Math.max(maxH, y0 + h + fm.R);
+        } else {
+          const r = fm.r, dh = r * 0.45, yb = y0 + h + 0.25;
+          const drum = new THREE.Mesh(T(new THREE.CylinderGeometry(r, r, dh, 40)), mat(0xece7dc)); drum.position.set(fm.cx, yb + dh / 2, fm.cz); drum.castShadow = true; g.add(drum);
+          const dome = new THREE.Mesh(T(new THREE.SphereGeometry(r, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2)), mat(0x2a9896, { roughness: 0.35, metalness: 0.3 }));
+          dome.position.set(fm.cx, yb + dh, fm.cz); dome.scale.y = 1.15; dome.castShadow = true; g.add(dome);
+          maxH = Math.max(maxH, yb + dh + r * 1.15);
+        }
+      });
       const atts = level.open.map(o => ({ o, at: attach(level, o) })).filter(x => x.at);
       segs.forEach(sg => {
         const wallH = sg.k === "out" && top && M.roof === "tekis" && !kesim ? h + 0.6 : h;    // parapet

@@ -210,6 +210,128 @@
 
     const upper = upperType(p);
     const sideCols = Math.max(1, Math.round(D / p.bay_w)), sideW = D / sideCols;
+    if (shapeOf(p) !== "rect") return shaped();                    // L, П, T, ichki hovli, aylana va boshqa planlar
+
+    // ---------- Shakldor plan: devorlar kontur qirralari bo'ylab, tom — qanotlar bo'yicha yoki qavariq shaklda piramida ----------
+    function shaped() {
+      const ps = planShape(p), E = planEdges(ps), X = x => x - W / 2, Z = z => z - D / 2;
+      const walls = [], frontWalls = new THREE.Group();
+      let frontG = null;
+      E.forEach(e => {
+        let cols, cw, typeAt;
+        if (e.full) { cols = p.bays; cw = p.bay_w; typeAt = (f, b) => cellType(p, cells, f, b); }   // old fasad: konstruktor kataklari
+        else {
+          cols = Math.max(1, Math.round(e.L / p.bay_w)); cw = e.L / cols;
+          const plain = e.L < 1.2;
+          typeAt = (f, c) => {
+            if (plain) return "wall";
+            if (e.front) {                                         // ko'chaga qaragan qiya qirra: shu x dagi fasad katagi
+              const x = e.x1 + e.dx * (c + 0.5) * cw, b = Math.min(p.bays - 1, Math.max(0, Math.floor(x / p.bay_w)));
+              return cellType(p, cells, f, b);
+            }
+            return upper;
+          };
+        }
+        const w = makeWall(cols, cw, typeAt);
+        w.rotation.y = Math.atan2(-e.dz, e.dx);
+        w.position.set(X(e.x1) - e.nx * T, 0, Z(e.z1) - e.nz * T);   // tashqi yuzasi kontur chizig'ida
+        if (e.full) { w.userData.front = { bw: p.bay_w, fh: p.floor_h, floors: p.floors, bays: p.bays }; frontG = w; out.add(w); }
+        else if (e.front) frontWalls.add(w); else out.add(w);
+        walls.push(w);
+      });
+      out.add(frontWalls); if (!frontG) frontG = frontWalls;
+
+      // Kontur (teshiklari bilan) bo'yicha yuqoriga cho'zilgan jism
+      const prism = (rings, depth, y, m, shadow = true) => {
+        const sh2 = new THREE.Shape(rings[0].map(([x, z]) => new THREE.Vector2(X(x), -Z(z))));
+        rings.slice(1).forEach(r => sh2.holes.push(new THREE.Path(r.map(([x, z]) => new THREE.Vector2(X(x), -Z(z))))));
+        const mesh = mk(track(new THREE.ExtrudeGeometry(sh2, { depth, bevelEnabled: false, curveSegments: 4 })), m, 0, y, 0, shadow);
+        mesh.rotation.x = -Math.PI / 2; return mesh;
+      };
+      const grow = d => ps.rings.map(r => offsetRing(r, d));
+
+      const dark = prism(grow(-T + 0.01), Hb, 0, track(new THREE.MeshStandardMaterial({ color: 0x1b2024, roughness: 1 })), false);
+      out.add(dark);
+      for (let f = 1; f < p.floors; f++) out.add(prism(grow(0.08), 0.12, f * p.floor_h - 0.06, ledgeMat));
+
+      const roofMark = out.children.length;
+      out.add(prism(grow(0.25), 0.22, Hb - 0.11, ledgeMat));          // karniz
+      const parapet = h => E.forEach(e => {
+        const m = box(e.L + 0.3, h, 0.3, plainMat, X((e.x1 + e.x2) / 2) - e.nx * 0.15, Hb + 0.3 + h / 2, Z((e.z1 + e.z2) / 2) - e.nz * 0.15);
+        m.rotation.y = Math.atan2(-e.dz, e.dx); out.add(m);
+      });
+      const flat = h => { out.add(prism(grow(0.15), 0.3, Hb, plainMat)); parapet(h); };
+      // Gumbaz va pavilon joyi: eng katta qanot markazi yoki qavariq shakl markazi
+      const centre = ps.outer.reduce((s2, [x, z]) => [s2[0] + x / ps.outer.length, s2[1] + z / ps.outer.length], [0, 0]);
+      const spot = (() => {
+        if (ps.wings) {
+          const w = ps.wings.slice().sort((a, b) => (b.x1 - b.x0) * (b.z1 - b.z0) - (a.x1 - a.x0) * (a.z1 - a.z0))[0];
+          return { x: X((w.x0 + w.x1) / 2), z: Z((w.z0 + w.z1) / 2), w: w.x1 - w.x0, d: w.z1 - w.z0 };
+        }
+        return { x: X(centre[0]), z: Z(centre[1]), w: W * 0.6, d: D * 0.6 };
+      })();
+
+      // Bitta to'g'ri to'rtburchak qanot ustidagi nishab tom (tizma lokal z bo'ylab)
+      function rectRoof(type, w, d) {
+        const grp = new THREE.Group(), oh = 0.55;
+        const R = type === "nishab" ? Math.min(w * 0.4, 7) : type === "bir" ? Math.min(w * 0.25, 4.5) : Math.min(Math.min(w, d) * 0.32, 6.5);
+        if (type === "nishab") {
+          const yE = -R * oh / (w / 2), len = Math.hypot(w / 2 + oh, R - yE), ang = Math.atan2(R - yE, w / 2 + oh), mid = -(w / 2 + oh) / 2, midY = (yE + R) / 2;
+          const sl = box(len, 0.25, d + 2 * oh, roofMat, mid, midY + 0.12, 0); sl.rotation.z = ang;
+          const sr = box(len, 0.25, d + 2 * oh, roofMat, -mid, midY + 0.12, 0); sr.rotation.z = -ang;
+          const tri = new THREE.Shape(); tri.moveTo(-w / 2, 0); tri.lineTo(w / 2, 0); tri.lineTo(0, R); tri.lineTo(-w / 2, 0);
+          const triGeo = track(new THREE.ExtrudeGeometry(tri, { depth: T, bevelEnabled: false })), triMat = wallMat(w, R);
+          const gb = mk(triGeo, triMat, 0, 0, -(d / 2 - T)); gb.rotation.y = Math.PI;
+          grp.add(sl, sr, mk(triGeo, triMat, 0, 0, d / 2 - T), gb);
+        } else if (type === "bir") {
+          const k = R / w, len = Math.hypot(w + 2 * oh, R + 2 * k * oh), ang = Math.atan2(R, w);
+          const sl = box(len, 0.3, d + 2 * oh, roofMat, 0, R / 2 + 0.15, 0); sl.rotation.z = ang; grp.add(sl);
+          const tri = new THREE.Shape(); tri.moveTo(-w / 2, 0); tri.lineTo(w / 2, 0); tri.lineTo(w / 2, R); tri.lineTo(-w / 2, 0);
+          const triGeo = track(new THREE.ExtrudeGeometry(tri, { depth: T, bevelEnabled: false })), triMat = wallMat(w, R);
+          grp.add(mk(triGeo, triMat, 0, 0, d / 2 - T), mk(triGeo, triMat, 0, 0, -d / 2), box(T, R, d, wallMat(d, R), w / 2 - T / 2, R / 2, 0));
+        } else {
+          const a = w / 2 + oh, b = d / 2 + oh, A = [-a, 0, b], B = [a, 0, b], C = [a, 0, -b], E2 = [-a, 0, -b], Pk = [0, R, 0];
+          const geo = track(new THREE.BufferGeometry());
+          geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([...A, ...B, ...Pk, ...B, ...C, ...Pk, ...C, ...E2, ...Pk, ...E2, ...A, ...Pk]), 3));
+          geo.computeVertexNormals(); grp.add(mk(geo, roofMat, 0, 0, 0));
+        }
+        return grp;
+      }
+
+      if (p.roof === "tekis") flat(0.9);
+      else if (p.roof === "terrasa") {
+        flat(0.5);
+        const pw = Math.max(2, spot.w * 0.5), pd = Math.max(2, spot.d * 0.6), ph = p.floor_h, y0 = Hb + 0.3;
+        const pav = box(pw, ph, pd, glassMat, spot.x, y0 + ph / 2, spot.z, false); out.add(pav);
+        const ed = new THREE.LineSegments(track(new THREE.EdgesGeometry(pav.geometry)), track(new THREE.LineBasicMaterial({ color: 0x2a2f33 })));
+        ed.position.copy(pav.position); out.add(ed, box(pw + 1.2, 0.3, pd + 1.2, ironMat, spot.x, y0 + ph + 0.15, spot.z));
+      } else if (p.roof === "gumbaz") {
+        flat(0.9);
+        const r = g.domeR, dh = r * 0.45, y0 = Hb + 0.3;
+        out.add(mk(track(new THREE.CylinderGeometry(r, r, dh, 48)), plainMat, spot.x, y0 + dh / 2, spot.z));
+        const dome = mk(track(new THREE.SphereGeometry(r, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2)),
+          track(new THREE.MeshStandardMaterial({ color: 0x2a9896, roughness: 0.35, metalness: 0.3 })), spot.x, y0 + dh, spot.z);
+        dome.scale.y = 1.15; out.add(dome);
+        out.add(mk(track(new THREE.CylinderGeometry(0.06, 0.06, 1.3, 8)), ironMat, spot.x, y0 + dh + r * 1.15 + 0.55, spot.z));
+      } else if (ps.wings) {                                           // nishab, bir nishab, piramida: har qanotga alohida
+        ps.wings.forEach(wg => {
+          const w = wg.x1 - wg.x0, d = wg.z1 - wg.z0, turn = w > d;     // tizma qanotning uzun tomoni bo'ylab
+          const rg = rectRoof(p.roof, turn ? d : w, turn ? w : d);
+          rg.position.set(X((wg.x0 + wg.x1) / 2), Hb, Z((wg.z0 + wg.z1) / 2)); if (turn) rg.rotation.y = Math.PI / 2;
+          out.add(rg);
+        });
+      } else {                                                        // qavariq shakl: chetlaridan markazdagi cho'qqiga
+        const ring = offsetRing(ps.outer, 0.55), top = [X(centre[0]), Hb + g.R, Z(centre[1])], pos = [];
+        ring.forEach(([x, z], i) => { const [x2, z2] = ring[(i + 1) % ring.length]; pos.push(X(x2), Hb, Z(z2), X(x), Hb, Z(z), ...top); });
+        const geo = track(new THREE.BufferGeometry()); geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(pos), 3)); geo.computeVertexNormals();
+        const rm = new THREE.Mesh(geo, track(roofMat.clone())); rm.material.side = THREE.DoubleSide; rm.castShadow = true; rm.receiveShadow = true; out.add(rm);
+      }
+      const roofG = new THREE.Group();
+      out.children.slice(roofMark).forEach(c => roofG.add(c));
+      out.add(roofG);
+      const ceilG = new THREE.Group(); out.add(ceilG);
+      return { group: out, g, roofG, ceilG, floorGs: [], wallGroups: walls, frontG, dark, coll: null };
+    }
 
     const front = makeWall(p.bays, p.bay_w, (f, b) => cellType(p, cells, f, b));
     front.position.set(-W / 2, 0, D / 2 - T); out.add(front);

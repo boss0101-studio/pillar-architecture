@@ -62,6 +62,7 @@ function syncControls() {
   $("materials").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === params.material));
   $("category").value = params.category;
   $("quality").value = params.quality;
+  if (window.ShapeUI) ShapeUI.sync(params);                    // plan shakli va qanot eni (shape-ui.js)
 }
 
 // ---------- Chizish ----------

@@ -21,7 +21,7 @@
     const s = ` ${String(q).toLowerCase()} `;
     if (/[а-яё]/.test(s)) return /[ўқғҳ]/.test(s) ? "uz" : "ru";
     const score = {
-      uz: /o'|g'|ʻ| (qanday|nega|nima|qayerda|qilib|bilan|uchun|kerak|qanaqa|qila|qo'y|bormi|yo'q|qanaqasiga|ishlamayapti|chiqmayapti)\b/g,
+      uz: /o'|g'|ʻ| (qanday|nega|nima|qayerda|qilib|bilan|uchun|kerak|qanaqa|qila|qo'y|bormi|yo'q|qanaqasiga|ishlamayapti|chiqmayapti|uyning|uyni|ichini|yarat|loyihalab|menga|qurib|ber)\b/g,
       tr: /[ışğ]| (nasıl|neden|nedir|nerede|bir|ve|için|değil|mı|mi|yapabilirim)\b/g,
       es: /[ñ¿¡]| (cómo|como|qué|que|por|para|puedo|dónde|donde|el|la|los|una|no funciona)\b/g,
       fr: /[çœ]| (comment|pourquoi|quoi|est|les|des|une|je|peux|ne|pas|où)\b/g,
@@ -191,6 +191,7 @@
   // Dizaynga aralashish: model apply_design asbobi bilan konstruktordagi loyihani o'zgartiradi
   const DESIGN_INSTR = ` You can change the user's building in the Designer with the apply_design tool; the current project is in <design_state> (JSON). ` +
     `When the user asks to change, build or design something (e.g. "make it 5 floors", "add balconies", "a dome roof", "design a house for me"), call apply_design instead of describing manual steps, then say briefly what you changed. ` +
+    `When asked to design a whole house or building, make it complete in one apply_design call: "new_design" (choose fitting floors, plan shape, roof, material, windows, balconies/doors), then "yard" with items for houses, then "interior" mode "auto" so rooms, doors and furniture are inside. ` +
     `When the user sends a photo or drawing of a building and wants it built or designed: look at it carefully, estimate the number of floors (rows of windows), bays (columns of windows), floor height, roof shape, facade material, window type, ground floor (shops, arcade or doors) and where balconies/doors are; ` +
     `then call apply_design with one "new_design" action (params + cells) that reproduces it as closely as the Designer allows, and explain in 2–4 sentences what you recognized and what was approximated. ` +
     `If they ask to redesign it, keep the recognized base and apply their changes. Only change what was asked; keep values inside the limits in the tool description.`;
@@ -300,8 +301,10 @@
         catch (e) { warn = `${e.message} ${T("Oflayn javob berildi.")}`; live.text = ""; }
       }
       if (!live.text && !out.res) {
-        const D = designTool(), acts = D && !img ? D.parseCommand(match || q) : [];
-        if (acts.length) { out.res = D.apply(acts); live.text = T("Bajarildi: konstruktordagi loyiha o'zgartirildi."); live.src = "offline"; }
+        const D = designTool(), plan = D && !img && D.designFromText ? D.designFromText(match || q, ansLang || LANG()) : null;   // "uy loyihalab ber" — butun loyiha
+        const acts = plan ? plan.acts : D && !img ? D.parseCommand(match || q) : [];
+        if (plan) { out.res = D.apply(acts); live.text = plan.text; live.src = "offline"; }
+        else if (acts.length) { out.res = D.apply(acts); live.text = T("Bajarildi: konstruktordagi loyiha o'zgartirildi."); live.src = "offline"; }
         else if (img) { live.text = T("Rasmdan bino qurish uchun Claude AI kerak: u artifact versiyasida yoki serverda ANTHROPIC_API_KEY bilan ishlaydi. Oflayn rejimda buyruq yozing, masalan: \"5 qavat, gumbaz tom, g'isht\"."); live.src = "offline"; }
         else { const o = offline(q, ctx, match); live.text = o.text; live.go = o.go; live.src = "offline"; }
       }

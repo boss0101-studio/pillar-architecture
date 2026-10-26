@@ -162,10 +162,58 @@ const AIDesign = (function () {
     const acts = Object.keys(p).length ? [{ type: "set_params", params: p }] : [];
     if (/balkon|balcon|балкон|balkon/.test(s) && /(qo'sh|qo'y|add|добав|añad|ekle|ajout|hinzu)/.test(s)) acts.push({ type: "set_cells", cells: [{ floor: "upper", bay: "all", type: "balc" }] });
     if (/hovli|yard|двор|patio|avlu|cour|hof/.test(s) && /(qo'sh|yoq|add|turn on|добав|включ|añad|activa|ekle|ajout|hinzu)/.test(s)) acts.push({ type: "yard", on: true });
-    if (/(ichki|interior|интерьер|комнат|habitaci|iç mekân|oda|intérieur|pièces|innen|zimmer)/.test(s) && /(avto|auto|yarat|qil|create|generate|созда|crea|genera|oluştur|crée|génère|erstell)/.test(s)) acts.push({ type: "interior", mode: "auto" });
+    if (/(ichki|ichini|ichi |interior|интерьер|комнат|habitaci|iç mekân|oda|intérieur|pièces|innen|zimmer)/.test(s) && /(avto|auto|yarat|qil|create|generate|созда|crea|genera|oluştur|crée|génère|erstell)/.test(s)) acts.push({ type: "interior", mode: "auto" });
     return acts;
   }
 
-  return { available: () => !!host(), describe, apply, undo, canUndo: () => !!last, parseCommand, SCHEMA, TOOL_DESC, GUIDE };
+  // ---------- Oflayn: "menga uy loyihalab ber" kabi so'rovdan butun loyiha tuziladi (Claude bo'lmasa ham) ----------
+  // Bino turi bo'yicha asos tanlanadi, so'rovdagi so'zlar (qavat, shakl, tom, material, balkon, hovli...) uni o'zgartiradi.
+  const WANT = /loyiha|dizayn|qur(ib|ish|ing|gin)?\b|yarat|chiz|design|build|create|make|draw|спроект|построй|создай|нарисуй|diseñ|constru|crea|tasarla|inşa|oluştur|conçois|construis|crée|entwirf|bau|erstell/;
+  const KINDS = [   // [nom, so'zlar, asos parametrlar, kataklar, hovli]
+    ["masjid", /masjid|madrasa|maqbara|mosque|madrasah|мечет|медресе|mezquita|cami|medrese|mosquée|moschee/, { category: "jamoat", floors: 1, bays: 7, floor_h: 4.5, depth: 18, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada", shape: "rect" }, [], false],
+    ["ofis", /ofis|office|biznes markaz|офис|oficina|büro|bureau/, { category: "tijorat", floors: 6, bays: 8, floor_h: 3.6, depth: 18, roof: "terrasa", material: "travertin", window: "panorama", ground: "vitrina", shape: "rect" }, [], false],
+    ["dokon", /do'kon|savdo|magazin|shop|store|mall|магазин|tienda|mağaza|boutique|laden/, { category: "tijorat", floors: 2, bays: 6, floor_h: 4, depth: 16, roof: "tekis", material: "qorabeton", window: "panorama", ground: "vitrina", shape: "rect" }, [], false],
+    ["kopqavat", /ko'p qavatli|turar.?joy|kvartira|apartment|многоэтаж|квартир|apartamento|apartman|immeuble|wohnhaus|hochhaus/, { category: "turar-joy", floors: 9, bays: 6, floor_h: 3, depth: 14, roof: "tekis", material: "beton", window: "oddiy", ground: "vitrina", shape: "rect" }, [{ floor: "upper", bay: 1, type: "balc" }, { floor: "upper", bay: 4, type: "balc" }], false],
+    ["maktab", /maktab|kutubxona|bog'cha|school|library|школ|библиотек|escuela|biblioteca|okul|kütüphane|école|bibliothèque|schule|bibliothek/, { category: "jamoat", floors: 3, bays: 8, floor_h: 3.6, depth: 16, roof: "tekis", material: "oqgisht", window: "oddiy", ground: "oddiy", shape: "U" }, [], true],
+    ["villa", /villa|dacha|katta uy|особняк|вилл|mansión|köşk|manoir/, { category: "turar-joy", floors: 2, bays: 6, floor_h: 3.3, depth: 14, roof: "piramida", material: "travertin", window: "panorama", ground: "oddiy", shape: "L", quality: "premium" }, [{ floor: 2, bay: "all", type: "balc" }], true],
+    ["uy", /[\s,.](uy|hovli|house|home|cottage|дом|коттедж|casa|ev|maison|haus)/, { category: "turar-joy", floors: 2, bays: 4, floor_h: 3.2, depth: 12, roof: "nishab", material: "gisht", window: "oddiy", ground: "oddiy", shape: "rect" }, [{ floor: 2, bay: 1, type: "balc" }, { floor: 2, bay: 2, type: "balc" }], true],
+  ];
+  const SHAPE_WORDS = [["court", /ichki hovli|courtyard|внутренн\w* двор|patio interior|iç avlu|cour intérieure|innenhof/], ["U", /п shakl|p shakl|u shakl|u.?shape|п.?образ|forma de u|u şekl|en u\b|u.?förm/],
+    ["L", /l shakl|l.?shape|г.?образ|forma de l|l şekl|en l\b|l.?förm/], ["T", /t shakl|t.?shape|т.?образ|forma de t|t şekl|en t\b|t.?förm/],
+    ["circle", /aylana|dumaloq|round|circle|кругл|redond|circular|yuvarlak|rond|rund/], ["octagon", /sakkizburchak|octagon|восьмиуг|octógon|sekizgen|octogon|achteck/],
+    ["hexagon", /oltiburchak|hexagon|шестиуг|hexágon|altıgen|sechseck/], ["triangle", /uchburchak|triangle|треугол|triáng|üçgen|dreieck/], ["trapezoid", /trapetsiya|trapez/]];
+  const SUM = {
+    uz: { done: "Loyiha tayyor", fl: "qavat", sh: "plan", rf: "tom", mt: "material", bal: "balkonlar", yard: "hovli (daraxt, hovuz, so'ri)", int: "ichki reja: xonalar, eshiklar, mebel", tip: "Xohlasangiz o'zgartirishni yozing, masalan: \"3 qavat qil\", \"tom gumbaz\", \"oq g'isht\"." },
+    en: { done: "Design ready", fl: "floors", sh: "plan", rf: "roof", mt: "material", bal: "balconies", yard: "yard (trees, pool, daybed)", int: "interior plan: rooms, doors, furniture", tip: "Write any change you want, e.g. \"make it 3 floors\", \"dome roof\", \"white brick\"." },
+    es: { done: "Proyecto listo", fl: "plantas", sh: "planta", rf: "techo", mt: "material", bal: "balcones", yard: "patio (árboles, piscina, tarima)", int: "plano interior: habitaciones, puertas, muebles", tip: "Escribe cualquier cambio, p. ej.: \"3 plantas\", \"techo de cúpula\", \"ladrillo blanco\"." },
+    ru: { done: "Проект готов", fl: "этажей", sh: "план", rf: "крыша", mt: "материал", bal: "балконы", yard: "двор (деревья, бассейн, топчан)", int: "внутренняя планировка: комнаты, двери, мебель", tip: "Напишите, что изменить, например: \"сделай 3 этажа\", \"купол\", \"белый кирпич\"." },
+  };
+  function designFromText(q, lang) {
+    const s = " " + String(q).toLowerCase().replace(/[ʻʼ’‘`]/g, "'") + " ";
+    const kind = KINDS.find(k => k[1].test(s));
+    if (!kind || !WANT.test(s)) return null;                       // faqat "uy/bino ... loyihala/qur" so'rovlari
+    if (/ichki|ichini|interior|интерьер|habitaci|iç mekân|intérieur|innenraum/.test(s)) return null;   // mavjud uyning ichi — yangi loyiha emas
+    const p = { ...kind[2] }, extra = parseCommand(q).find(a => a.type === "set_params");
+    if (extra) Object.assign(p, extra.params);
+    for (const [v, re] of SHAPE_WORDS) if (re.test(s)) { p.shape = v; break; }
+    if (/arkali|arch|арочн|arque|kemerli|arc\b|bogen/.test(s)) p.window = "arkali";
+    if (/panorama|panoram|панорам/.test(s)) p.window = "panorama";
+    const noYard = /hovlisiz|without (a )?yard|без двора|sin patio/.test(s), noInt = /ichisiz|without interior|без интерьер/.test(s);
+    const yard = !noYard && (kind[4] || /hovli|bog'|yard|garden|двор|сад|jardín|patio|bahçe|jardin|garten/.test(s));
+    const balc = /balkon|balcon|балкон/.test(s) || kind[3].length;
+    const cells = /balkon|balcon|балкон/.test(s) && !kind[3].length ? [{ floor: "upper", bay: "all", type: "balc" }] : kind[3];
+    const acts = [{ type: "new_design", name: "", houses: [{ params: p, cells }] }];
+    if (yard) acts.push({ type: "yard", on: true, fence: "devor", items: ["tree", "tree", "tree", "pool", "suri", "bed", "car"] });
+    if (!noInt && p.floors <= 12) acts.push({ type: "interior", mode: "auto" });
+    const L = SUM[lang] || SUM.en, mat = MATERIALS[p.material] ? MATERIALS[p.material].label : p.material;
+    const tl = lang === "uz" ? "uz" : (window.USTUN_I18N || {})[lang] ? lang : "en";   // lug'ati yo'q til (ru...) — nomlar inglizcha
+    const T = s2 => (window.UstunI18n && tl !== "uz" ? UstunI18n.t(s2, 0, tl) : s2);   // shakl, tom va material nomlari lug'atdan
+    const roofN = { tekis: "Tekis", nishab: "Nishab", bir: "Bir nishab", piramida: "Piramida", gumbaz: "Gumbaz", terrasa: "Terrasa" }[p.roof] || p.roof;
+    const text = `**${L.done}**:\n- ${p.floors} ${L.fl}, ${T(SHAPES[p.shape || "rect"])} ${L.sh}, ${L.rf}: ${T(roofN)}, ${L.mt}: ${T(mat)}` +
+      `${balc ? `\n- ${L.bal}` : ""}${yard ? `\n- ${L.yard}` : ""}${!noInt && p.floors <= 12 ? `\n- ${L.int}` : ""}\n\n${L.tip}`;
+    return { acts, text };
+  }
+
+  return { available: () => !!host(), describe, apply, undo, canUndo: () => !!last, parseCommand, designFromText, SCHEMA, TOOL_DESC, GUIDE };
 })();
 window.AIDesign = AIDesign;

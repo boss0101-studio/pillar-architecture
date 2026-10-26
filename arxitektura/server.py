@@ -478,7 +478,8 @@ AI_DESIGN_RULES = ("\n\nDizaynga aralashish (faqat <design_state> berilganda app
                    "- Foydalanuvchi binoni o'zgartirish, qurish yoki loyihalashni so'rasa (\"5 qavat qil\", \"balkon qo'sh\", \"gumbaz tom\", \"uy loyihalab ber\") — qo'lda qadamlarni tushuntirish o'rniga apply_design ni chaqir va nima o'zgarganini qisqa ayt.\n"
                    "- Bino rasmi (surat yoki chizma) yuborilsa: diqqat bilan qara, qavatlar soni (deraza qatorlari), oraliqlar (deraza ustunlari), qavat balandligi, tom shakli, fasad materiali, deraza turi, pastki qavat (do'kon, arkada yoki eshik), balkon va eshiklar joyini aniqla; "
                    "so'ng bitta \"new_design\" amali (params + cells) bilan konstruktor imkon bergancha o'xshatib qur va 2-4 gapda nimani taniganingni va nimani taxminan qilganingni ayt.\n"
-                   "- Faqat so'ralganini o'zgartir; qiymatlar asbob ta'rifidagi chegaralarda bo'lsin. Avval qisqa izoh yoz, keyin asbobni chaqir.")
+                   "- Butun uy yoki bino loyihalashni so'rasa — bitta apply_design chaqiruvida to'liq qil: "new_design" (mos qavat, plan shakli, tom, material, deraza, balkon/eshik), uy bo'lsa "yard" elementlari bilan, so'ng "interior" mode "auto" (xonalar, eshiklar, mebel).
+- Faqat so'ralganini o'zgartir; qiymatlar asbob ta'rifidagi chegaralarda bo'lsin. Avval qisqa izoh yoz, keyin asbobni chaqir.")
 
 
 def ai_answer(msgs, context, lang="uz", image=None, design=None):

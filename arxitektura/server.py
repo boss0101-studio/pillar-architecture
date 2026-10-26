@@ -42,17 +42,17 @@ DESIGN_CHOICES = {
     "quality": set(QUALITY),
     # building.js dagi OPTIONS bilan bir xil bo'lishi kerak
     "roof": {"tekis", "nishab", "bir", "piramida", "gumbaz", "terrasa"},
-    "material": {"gisht", "oqgisht", "beton", "qorabeton", "ganch", "travertin", "tosh", "koshin", "yogoch", "metall"},
-    "window": {"oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "yoq"},
+    "material": {"gisht", "oqgisht", "beton", "qorabeton", "ganch", "travertin", "tosh", "koshin", "yogoch", "metall", "shisha"},
+    "window": {"oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "baland", "kvadrat", "uchtabaqa", "yoq"},
     "ground": {"oddiy", "arkada", "vitrina"},
 }
-DESIGN_SHAPES = {"rect", "L", "U", "T", "court", "circle", "octagon", "hexagon", "triangle", "trapezoid"}
+DESIGN_SHAPES = {"rect", "L", "U", "T", "court", "circle", "sphere", "octagon", "hexagon", "triangle", "trapezoid"}
 MAX_BUILDINGS = 3   # bitta majmuada eng ko'pi bilan nechta uy
 # Ichki reja: mebel turlari (interior.js katalogi bilan bir xil) va chegaralar
 ITEM_TYPES = {"bed", "sofa", "table", "chair", "wardrobe", "kitchen", "fridge", "bath",
               "toilet", "sink", "desk", "plant", "carpet", "tv"}
 MAX_EDGES_PER_FLOOR, MAX_ITEMS_PER_FLOOR = 600, 80
-CELL_TYPES = {"win", "wide", "arch", "balc", "door", "wall", "shop", "arcade", "slit", "round", "lattice"}
+CELL_TYPES = {"win", "wide", "arch", "balc", "door", "wall", "shop", "arcade", "slit", "round", "lattice", "tall", "square", "triple", "door2", "glassdoor", "archdoor", "garage"}
 ORDER_STATUSES = {"yangi", "tasdiqlandi", "yetkazildi", "bekor"}
 MAX_ORDER_ITEMS = 100
 
@@ -434,17 +434,17 @@ AI_LANGS = {"uz": "Uzbek (O'zbekcha)", "en": "English", "es": "Spanish (Español
 
 
 _ROOFS = ["tekis", "nishab", "bir", "piramida", "gumbaz", "terrasa"]
-_MATS = ["gisht", "oqgisht", "beton", "qorabeton", "ganch", "travertin", "tosh", "koshin", "yogoch", "metall"]
-_CELLS = ["win", "wide", "arch", "slit", "round", "lattice", "balc", "door", "shop", "arcade", "wall", "auto"]
+_MATS = ["gisht", "oqgisht", "beton", "qorabeton", "ganch", "travertin", "tosh", "koshin", "yogoch", "metall", "shisha"]
+_CELLS = ["win", "wide", "arch", "slit", "round", "lattice", "tall", "square", "triple", "balc", "door", "door2", "glassdoor", "archdoor", "garage", "shop", "arcade", "wall", "auto"]
 _PARAMS_SCHEMA = {
     "type": "object", "description": "floors 1-30, bays 2-12, floor_h 2.7-4.5 m, bay_w 3-7.5 m, depth 6-30 m",
     "properties": {
         "floors": {"type": "integer"}, "bays": {"type": "integer"}, "floor_h": {"type": "number"}, "bay_w": {"type": "number"}, "depth": {"type": "number"},
         "roof": {"type": "string", "enum": _ROOFS, "description": "flat, gable, single-pitch, pyramid, dome, roof terrace"},
         "material": {"type": "string", "enum": _MATS, "description": "gisht=red brick, oqgisht=white brick, beton=concrete, qorabeton=dark concrete, ganch=white plaster, travertin, tosh=stone, koshin=blue tile, yogoch=wood, metall=metal"},
-        "window": {"type": "string", "enum": ["oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "yoq"]},
+        "window": {"type": "string", "enum": ["oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "baland", "kvadrat", "uchtabaqa", "yoq"]},
         "ground": {"type": "string", "enum": ["oddiy", "arkada", "vitrina"]},
-        "shape": {"type": "string", "enum": sorted(DESIGN_SHAPES), "description": "plan: rect, L, U (П), T, court (inner courtyard), circle, octagon, hexagon, triangle, trapezoid"},
+        "shape": {"type": "string", "enum": sorted(DESIGN_SHAPES), "description": "plan: rect, L, U (П), T, court (inner courtyard), circle (cylinder), sphere (ball-shaped building), octagon, hexagon, triangle, trapezoid"},
         "wing": {"type": "number", "description": "wing width for L/U/T/court as a share of the smaller side, 0.2-0.6"},
         "category": {"type": "string", "enum": list(CATEGORIES) if "CATEGORIES" in globals() else ["turar-joy", "jamoat", "tijorat", "interyer"]},
         "quality": {"type": "string", "enum": ["standart", "biznes", "premium"]},

@@ -48,7 +48,7 @@ if (window.View3D) { View3D.onMoveItem = (k, x, z) => Site.moveItem(k, x, z); Vi
 $("materials").innerHTML = Object.entries(MATERIALS).map(([k, m]) =>
   `<button type="button" data-v="${k}" aria-pressed="false"><i style="background:${m.fill}"></i>${m.label}</button>`).join("");
 
-$("tools").innerHTML = ["balc", "win", "wide", "arch", "slit", "round", "lattice", "door", "shop", "arcade", "wall", "auto"].map(t =>
+$("tools").innerHTML = ["balc", "win", "wide", "arch", "slit", "round", "lattice", "tall", "square", "triple", "door", "door2", "glassdoor", "archdoor", "garage", "shop", "arcade", "wall", "auto"].map(t =>
   `<button type="button" data-tool="${t}" aria-pressed="${t === tool}">
      <svg viewBox="0 0 40 40" aria-hidden="true">${t === "auto" ? `<text x="20" y="25" text-anchor="middle" font-size="12" fill="${INK}">A</text>` : drawCell(t, 0, 0, 40, 40)}</svg>
      <span>${CELL_LABELS[t]}</span>

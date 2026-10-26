@@ -69,7 +69,11 @@
       case "balc": return [rectAt(d.x1, d.x2, d.z1, d.z2)];
       case "shop": return [rectAt(d.x1, d.cx - gap, d.z1 + 0.15, d.z2), rectAt(d.cx + gap, d.x2, d.z1 + 0.15, d.z2)];
       case "door": return [rectAt(d.x1 + 0.12 * w, d.x2 - 0.12 * w, d.z1 + h * 0.5, d.z2 - h * 0.1)];
-      case "slit": case "lattice": return [rectAt(d.x1, d.x2, d.z1, d.z2)];
+      case "slit": case "lattice": case "square": case "glassdoor": return [rectAt(d.x1, d.x2, d.z1, d.z2)];
+      case "tall": return [rectAt(d.x1, d.x2, d.z1, d.z1 + h * 0.68), rectAt(d.x1, d.x2, d.z1 + h * 0.7 + gap, d.z2)];
+      case "triple": { const pw = (w - 2 * gap) / 3; return [0, 1, 2].map(i => rectAt(d.x1 + i * (pw + gap), d.x1 + i * (pw + gap) + pw, d.z1, d.z2)); }
+      case "door2": return [rectAt(d.x1 + 0.08 * w, d.cx - 0.06 * w, d.z1 + h * 0.55, d.z2 - h * 0.1), rectAt(d.cx + 0.06 * w, d.x2 - 0.08 * w, d.z1 + h * 0.55, d.z2 - h * 0.1)];
+      case "archdoor": { const s = new THREE.Shape(), r = d.r * 0.75; s.absarc(d.cx, d.spring, r, 0, Math.PI, false); s.lineTo(d.cx + r, d.spring); return [s]; }
       default: return [];
     }
   }
@@ -102,6 +106,9 @@
     } else if (kind === "seam") {                // metall panel choklari
       x.lineWidth = 4; for (let i = 0; i < 4; i++) line(i * 64 + 2, 0, i * 64 + 2, 256);
       x.strokeStyle = "rgba(255,255,255,.22)"; x.lineWidth = 2; for (let i = 0; i < 4; i++) line(i * 64 + 8, 0, i * 64 + 8, 256);
+    } else if (kind === "glass") {               // vitraj: ochiq rama to'ri
+      x.fillStyle = "#9cc0dc"; x.fillRect(0, 0, 256, 256); x.strokeStyle = "rgba(235,242,247,.95)"; x.lineWidth = 6;
+      line(0, 3, 256, 3); line(3, 0, 3, 256); line(0, 128, 256, 128); x.lineWidth = 3; line(128, 0, 128, 256);
     } else if (kind === "rubble") {              // notekis tabiiy tosh
       const P = [[0, 90, 128, 77, 230, 115, 256, 102], [0, 200, 154, 210, 256, 192]];
       P.forEach(pl => { x.beginPath(); x.moveTo(pl[0], pl[1]); for (let i = 2; i < pl.length; i += 2) x.lineTo(pl[i], pl[i + 1]); x.stroke(); });
@@ -134,8 +141,10 @@
     const baseTex = track(makeTex(mat.pattern, mat.fill) || { dispose() {} });
     const hasTex = !!mat.pattern;
 
+    const glassy = p.material === "shisha";                       // butunlay oynali bino: devor — shaffof vitraj
     const wallMat = (cw, ch) => {
-      const m = new THREE.MeshStandardMaterial({ color: hasTex ? 0xffffff : mat.fill, roughness: 0.92, metalness: 0 });
+      const m = new THREE.MeshStandardMaterial(glassy ? { color: 0xdbe9f3, roughness: 0.08, metalness: 0.35, transparent: true, opacity: 0.5 }
+                                                      : { color: hasTex ? 0xffffff : mat.fill, roughness: 0.92, metalness: 0 });
       if (hasTex) {
         const t = baseTex.clone(); t.needsUpdate = true; t.anisotropy = maxAniso;
         t.repeat.set(Math.max(1, Math.round(cw / TILE)) / cw, Math.max(1, Math.round(ch / TILE)) / ch);   // har katak naqshi chok joyida uzilmasin
@@ -144,6 +153,7 @@
       return track(m);
     };
     const ledgeMat = track(new THREE.MeshStandardMaterial({ color: new THREE.Color(mat.fill).multiplyScalar(0.82), roughness: 0.9 }));
+    const woodMat = track(new THREE.MeshStandardMaterial({ color: 0x6b4a2e, roughness: 0.7 }));
     const plainMat = track(new THREE.MeshStandardMaterial({ color: mat.fill, roughness: 0.9 }));
 
     function cellTemplate(type, cw, ch, wm) {
@@ -159,7 +169,7 @@
       }
       let shape = rectAt(0, cw, 0, ch), d = null;
       if (o) {
-        d = dims(o, cw, ch, type === "arch" || type === "arcade");
+        d = dims(o, cw, ch, type === "arch" || type === "arcade" || type === "archdoor");
         if (o[2] === 0) shape = notched(d, cw, ch); else shape.holes.push(holePath(d));
       }
       grp.add(mk(track(new THREE.ExtrudeGeometry(shape, { depth: T, bevelEnabled: false, curveSegments: 14 })), wm, 0, 0, 0));
@@ -175,6 +185,12 @@
           grp.add(box(0.04, d.z2 - d.z1, 0.05, ironMat, d.x1 + (d.x2 - d.x1) * i / 4, (d.z1 + d.z2) / 2, T * 0.62, false));
           grp.add(box(d.x2 - d.x1, 0.04, 0.05, ironMat, d.cx, d.z1 + (d.z2 - d.z1) * i / 4, T * 0.62, false));
         }
+      }
+      if (type === "door2" || type === "archdoor" || type === "garage") {   // eshik tavaqalari / garaj darvozasi
+        const top = type === "archdoor" ? d.spring : d.z2, leafM = type === "garage" ? ironMat : woodMat;
+        const dm = new THREE.Mesh(track(new THREE.ShapeGeometry(rectAt(d.x1, d.x2, 0, top))), leafM); dm.position.z = T * 0.4; grp.add(dm);
+        if (type === "garage") for (let i = 1; i < 5; i++) grp.add(box(d.x2 - d.x1, 0.04, 0.04, plainMat, d.cx, top * i / 5, T * 0.45, false));
+        else grp.add(box(0.03, top, 0.04, ironMat, d.cx, top / 2, T * 0.45, false));
       }
       if (type === "door") {
         const dm = new THREE.Mesh(track(new THREE.ShapeGeometry(rectAt(d.x1, d.x2, 0, d.z2))), ironMat);
@@ -217,6 +233,7 @@
     // ---------- Shakldor plan: devorlar kontur qirralari bo'ylab, tom — qanotlar bo'yicha yoki qavariq shaklda piramida ----------
     function shaped() {
       const ps = planShape(p), E = planEdges(ps), X = x => x - W / 2, Z = z => z - D / 2;
+      if (ps.shape === "sphere") return sphereBuilding();
       const walls = [], frontWalls = new THREE.Group();
       let frontG = null;
       E.forEach(e => {
@@ -337,6 +354,32 @@
       out.children.slice(roofMark).forEach(c => roofG.add(c));
       out.add(roofG);
       return { group: out, g, roofG, ceilG, floorGs, wallGroups: walls, frontG, dark, coll };
+    }
+
+    // ---------- Shar: qavatlar silindri shar qobig'i ichida, har qavatda oyna halqasi, oldida eshik ----------
+    function sphereBuilding() {
+      const S = g.sphere, R = S.R, cy = S.cy, th = y => Math.acos(Math.max(-1, Math.min(1, (y - cy) / R)));   // balandlik -> qutb burchagi
+      const shell = new THREE.Group(), bands = new THREE.Group();
+      const shellM = glassy ? wallMat(2 * Math.PI * R, 2 * R) : (() => { const m = wallMat(2 * Math.PI * R / 6, R); if (m.map) m.map.repeat.set(6 / (2 * Math.PI * R / 6), 3 / R); return m; })();
+      shell.add(mk(track(new THREE.SphereGeometry(R, 56, 36, 0, Math.PI * 2, 0, th(0))), shellM, 0, cy, 0));
+      const winT = upperType(p);
+      if (winT !== "wall" && !glassy) for (let f = 0; f < p.floors; f++) {   // har qavatda oyna halqasi (ramalar bilan)
+        const y1 = f * p.floor_h + p.floor_h * 0.3, y2 = f * p.floor_h + p.floor_h * 0.78, a = th(y2), b = th(y1);
+        const band = mk(track(new THREE.SphereGeometry(R + 0.03, 56, 2, 0, Math.PI * 2, a, b - a)), glassMat, 0, cy, 0, false); band.userData.fl = f; bands.add(band);
+        const n = Math.max(8, Math.round(2 * Math.PI * Math.sqrt(Math.max(0, R * R - ((y1 + y2) / 2 - cy) ** 2)) / p.bay_w));
+        for (let i = 0; i < n; i++) {                              // vertikal ramalar
+          const t = i / n * Math.PI * 2, rr = Math.sqrt(Math.max(0, R * R - ((y1 + y2) / 2 - cy) ** 2)) + 0.05;
+          const fr = box(0.08, y2 - y1, 0.08, ironMat, Math.sin(t) * rr, (y1 + y2) / 2, Math.cos(t) * rr, false); fr.userData.fl = f; bands.add(fr);
+        }
+      }
+      const zf = Math.sqrt(Math.max(0, R * R - (1.2 - cy) ** 2));  // old tomonda eshik va soyabon
+      shell.add(box(1.8, 2.5, 0.6, woodMat, 0, 1.25, zf - 0.15), box(2.6, 0.12, 1.2, ironMat, 0, 2.6, zf + 0.2));
+      out.add(shell, bands, ceilG);
+      const coll = interior ? addInterior(interior) : null;
+      const dark = interior ? null : mk(track(new THREE.SphereGeometry(R - 0.25, 40, 24, 0, Math.PI * 2, 0, th(0))), track(new THREE.MeshStandardMaterial({ color: 0x1b2024, roughness: 1 })), 0, cy, 0, false);
+      if (dark && !glassy) out.add(dark);
+      const roofG = new THREE.Group(); out.add(roofG);
+      return { group: out, g, roofG, ceilG, floorGs, wallGroups: [bands], frontG: shell, dark: glassy ? null : dark, coll };
     }
 
     const front = makeWall(p.bays, p.bay_w, (f, b) => cellType(p, cells, f, b));
@@ -951,7 +994,7 @@
   const vr = { on: false, stereo: true, x: 0, z: 0, yaw: 0, pitch: 0, dragYaw: 0, lookYaw: 0, eye: 1.65, walk: 0,
                keys: new Set(), gyro: false, devQ: null, yawOffset: null, xr: null, xrOffset: new THREE.Vector3(), ui: null,
                build: true, tool: "win", aim: null, aimNdc: new THREE.Vector2(), aimKey: "", flash: 0 };
-  const VR_TOOLS = ["win", "wide", "arch", "balc", "door", "shop", "arcade", "slit", "round", "lattice", "wall", "auto"];
+  const VR_TOOLS = ["win", "wide", "arch", "balc", "door", "shop", "arcade", "slit", "round", "lattice", "tall", "square", "triple", "door2", "glassdoor", "archdoor", "garage", "wall", "auto"];
   const ROOF_L = { tekis: "Tekis", nishab: "Nishab", bir: "Bir nishab", piramida: "Piramida", gumbaz: "Gumbaz", terrasa: "Terrasa" };
   const toolName = t => (typeof CELL_LABELS !== "undefined" && CELL_LABELS[t]) || t;
   let vrMark = null;

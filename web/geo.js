@@ -243,7 +243,8 @@ const Geo = (function () {
   }
 
   // ---------- Materiallar smetasi (BOQ): loyihadagi mahsulotlar va miqdorlar ----------
-  const CELL_PRODUCT = { win: "el-win", wide: "el-wide", arch: "el-arch", slit: "el-slit", round: "el-round", lattice: "el-lattice", balc: "el-balc", door: "el-door", shop: "el-shop" };
+  const CELL_PRODUCT = { win: "el-win", wide: "el-wide", arch: "el-arch", slit: "el-slit", round: "el-round", lattice: "el-lattice", balc: "el-balc", door: "el-door", shop: "el-shop",
+    tall: "el-win-alu", square: "el-win", triple: "el-win-alu", door2: "el-door-wood", glassdoor: "el-door-glass", archdoor: "el-door-wood", garage: "el-garage" };
   const ROOF_PRODUCT = { nishab: "roof-tile", piramida: "roof-tile", bir: "roof-metal", tekis: "roof-flat", terrasa: "roof-flat" };
   function boq(list) {
     const qty = {}, add = (id, q) => { if (id && q > 0) qty[id] = (qty[id] || 0) + q; };

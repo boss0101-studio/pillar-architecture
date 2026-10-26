@@ -12,7 +12,7 @@
   { "id": "mat-fibro",     "cat": "material", "name": "Fibrotsement panel",       "unit": "m²",    "price": 58,   "icon": "panel",    "desc": "Yengil, yonmaydigan panel, ventilyatsiyali fasad uchun." },
   { "id": "mat-dekor",     "cat": "material", "name": "Dekorativ suvoq (koroed)", "unit": "m²",    "price": 22,   "icon": "plaster",  "desc": "Izolyatsiya ustidan, istalgan rangda bo'yaladi." },
   { "id": "mat-klinker",   "cat": "material", "name": "Klinker plitka",           "unit": "m²",    "price": 64,   "icon": "brick",    "desc": "G'isht ko'rinishidagi yupqa plitka, sovuqqa chidamli." },
-  { "id": "mat-shisha",    "cat": "material", "name": "Shisha fasad (vitraj)",    "unit": "m²",    "price": 210,  "icon": "glass",    "desc": "Alyuminiy karkas, energiya tejovchi oyna paket." },
+  { "id": "mat-shisha",    "cat": "material", "name": "Shisha fasad (vitraj)",    "unit": "m²",    "price": 210,  "icon": "glass",    "mat": "shisha",    "desc": "Alyuminiy karkas, energiya tejovchi oyna paket." },
 
   { "id": "el-win",        "cat": "element",  "name": "Oddiy deraza (PVX)",       "unit": "dona",  "price": 140,  "cell": "win",      "desc": "Ikki kamerali paket, 1,2 × 1,6 m." },
   { "id": "el-arch",       "cat": "element",  "name": "Arkali deraza",            "unit": "dona",  "price": 260,  "cell": "arch",     "desc": "Yarim doira tepali, alyuminiy rama." },

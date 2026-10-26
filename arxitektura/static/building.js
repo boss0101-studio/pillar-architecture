@@ -13,6 +13,7 @@ const MATERIALS = {
   koshin:    { label: "Koshin",        fill: "#2f5fae", pattern: "tile",   dens: 1900, u: 1.2 },
   yogoch:    { label: "Yog'och",       fill: "#a8734a", pattern: "wood",   dens: 600,  u: 0.45 },
   metall:    { label: "Metall panel",  fill: "#8e99a2", pattern: "seam",   dens: 400,  u: 0.35 },
+  shisha:    { label: "Shisha (vitraj)", fill: "#8fb3cf", pattern: "glass", dens: 2500, u: 1.4 },   // butunlay oynali bino: 3D'da shaffof
 };
 const INK = "#1f2326", GLASS = "#3f5f7e", GLASS_HI = "#9cbdd8", ROOF_TILE = "#5a4840", DOME = "#2a9896";
 
@@ -20,6 +21,8 @@ const CELL_LABELS = {
   auto: "Avto", win: "Deraza", wide: "Panorama", arch: "Arkali", balc: "Balkon",
   door: "Eshik", shop: "Vitrina", arcade: "Arkada", wall: "Devor",
   slit: "Tor", round: "Dumaloq", lattice: "Panjara",
+  tall: "Baland deraza", square: "Kvadrat deraza", triple: "Uch tabaqali", door2: "Ikki tabaqali eshik",
+  glassdoor: "Shisha eshik", archdoor: "Arkali eshik", garage: "Garaj darvozasi",
 };
 // Har bir element fasaddagi katak ichida egallagan ulushi: [x1, x2, z1, z2] (0..1)
 const OPENING = {
@@ -33,18 +36,25 @@ const OPENING = {
   slit:   [.40, .60, .12, .88],      // tor vertikal deraza
   round:  [.25, .75, .20, .80],      // dumaloq deraza: diametri katakning eni va balandligidan kichigi
   lattice:[.22, .78, .18, .82],      // panjarali (girih) deraza
+  tall:   [.32, .68, .08, .92],      // poldan shiftgacha baland tor deraza
+  square: [.30, .70, .30, .70],      // kvadrat deraza
+  triple: [.08, .92, .28, .76],      // uch tabaqali keng deraza
+  door2:  [.16, .84, .00, .80],      // ikki tabaqali kirish eshigi
+  glassdoor: [.24, .76, .00, .82],   // shisha eshik
+  archdoor:  [.26, .74, .00, .86],   // arkali eshik
+  garage: [.08, .92, .00, .68],      // garaj darvozasi
   wall:   null,
 };
 
 // Umumiy deraza turi -> yuqori qavatlardagi katak turi
-const WINDOW_CELL = { oddiy: "win", arkali: "arch", panorama: "wide", tor: "slit", dumaloq: "round", panjara: "lattice", yoq: "wall" };
+const WINDOW_CELL = { oddiy: "win", arkali: "arch", panorama: "wide", tor: "slit", dumaloq: "round", panjara: "lattice", baland: "tall", kvadrat: "square", uchtabaqa: "triple", yoq: "wall" };
 const upperType = p => WINDOW_CELL[p.window] || "win";
 
 // Tanlov ro'yxatlari (server.py dagi DESIGN_CHOICES bilan bir xil bo'lishi kerak)
 // Plan shakllari. To'rtburchakdan tashqari: to'rtburchaklar birlashmasi ("qanotlar") va qavariq ko'pburchaklar
 const SHAPES = {
   rect: "To'rtburchak", L: "L shakl", U: "П shakl", T: "T shakl", court: "Ichki hovlili",
-  circle: "Aylana", octagon: "Sakkizburchak", hexagon: "Oltiburchak", triangle: "Uchburchak", trapezoid: "Trapetsiya",
+  circle: "Silindr", sphere: "Shar", octagon: "Sakkizburchak", hexagon: "Oltiburchak", triangle: "Uchburchak", trapezoid: "Trapetsiya",
 };
 const OPTIONS = {
   shape: Object.keys(SHAPES),
@@ -115,6 +125,10 @@ function geometry(p) {
     gumbaz: domeR * 0.45 + domeR * 1.15 + 1.2,
     terrasa: p.floor_h + 0.4,
   }[p.roof];
+  if (shapeOf(p) === "sphere") {                 // shar: qavatlar silindri shar ichida, shar markazi qavatlar o'rtasida
+    const r0 = Math.min(W, p.depth) / 2, cy = Hb / 2, Rs = Math.hypot(r0, cy) * 1.02;
+    return { W, D: p.depth, Hb, R: cy + Rs - Hb, H: cy + Rs, domeR, sphere: { r0, cy, R: Rs } };
+  }
   return { W, D: p.depth, Hb, R, H: Hb + R, domeR };
 }
 
@@ -141,6 +155,7 @@ function planShape(p) {
     case "court": a = Math.min(a, (m - 3) / 2);
       outer = [[0, D], [W, D], [W, 0], [0, 0]]; holes = [[[a, D - a], [W - a, D - a], [W - a, a], [a, a]]];
       wings = [R(0, D - a, W, D), R(0, 0, W, a), R(0, a, a, D - a), R(W - a, a, W, D - a)]; break;
+    case "sphere": { const r0 = m / 2; outer = Array.from({ length: 24 }, (_, i) => [W / 2 + r0 * Math.cos(i * Math.PI / 12), D / 2 + r0 * Math.sin(i * Math.PI / 12)]); break; }   // shar: yer sathidagi kesimi — aylana
     case "circle": outer = Array.from({ length: 24 }, (_, i) => [W / 2 + W / 2 * Math.cos(i * Math.PI / 12), D / 2 + D / 2 * Math.sin(i * Math.PI / 12)]); break;
     case "octagon": { const c = m * 0.29; outer = [[c, D], [W - c, D], [W, D - c], [W, c], [W - c, 0], [c, 0], [0, c], [0, D - c]]; break; }
     case "hexagon": outer = [[W / 4, D], [W * 3 / 4, D], [W, D / 2], [W * 3 / 4, 0], [W / 4, 0], [0, D / 2]]; break;
@@ -360,6 +375,35 @@ function drawCell(t, x, y, w, h) {
       return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${GLASS}" ${st}/>` +
         `<line x1="${cx - r}" y1="${cy}" x2="${cx + r}" y2="${cy}" ${st} stroke-opacity=".7"/><line x1="${cx}" y1="${cy - r}" x2="${cx}" y2="${cy + r}" ${st} stroke-opacity=".7"/>`;
     }
+    case "tall":
+      return `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${GLASS}" ${st}/>` +
+        `<line x1="${ox}" y1="${oy + oh * .3}" x2="${ox + ow}" y2="${oy + oh * .3}" ${st} stroke-opacity=".7"/><line x1="${ox + ow / 2}" y1="${oy + oh * .3}" x2="${ox + ow / 2}" y2="${oy + oh}" ${st} stroke-opacity=".7"/>`;
+    case "square":
+      return `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${GLASS}" ${st}/>` +
+        `<line x1="${ox + ow / 2}" y1="${oy}" x2="${ox + ow / 2}" y2="${oy + oh}" ${st}/><line x1="${ox}" y1="${oy + oh / 2}" x2="${ox + ow}" y2="${oy + oh / 2}" ${st}/>`;
+    case "triple": {
+      let s = `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${GLASS}" ${st}/>`;
+      for (let i = 1; i < 3; i++) s += `<line x1="${ox + ow * i / 3}" y1="${oy}" x2="${ox + ow * i / 3}" y2="${oy + oh}" ${st}/>`;
+      return s + `<line x1="${ox}" y1="${oy + oh * .3}" x2="${ox + ow}" y2="${oy + oh * .3}" ${st} stroke-opacity=".6"/><rect x="${ox - w * .02}" y="${oy + oh}" width="${ow + w * .04}" height="${Math.max(1.5, h * .04)}" fill="${INK}" fill-opacity=".7"/>`;
+    }
+    case "door2":
+      return `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="#6b4a2e" ${st}/>` +
+        `<line x1="${ox + ow / 2}" y1="${oy}" x2="${ox + ow / 2}" y2="${oy + oh}" ${st}/>` +
+        `<rect x="${ox + ow * .08}" y="${oy + oh * .1}" width="${ow * .34}" height="${oh * .3}" fill="${GLASS}"/><rect x="${ox + ow * .58}" y="${oy + oh * .1}" width="${ow * .34}" height="${oh * .3}" fill="${GLASS}"/>` +
+        `<rect x="${ox - w * .05}" y="${oy - h * .06}" width="${ow + w * .1}" height="${h * .05}" fill="${INK}"/>`;
+    case "glassdoor":
+      return `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${GLASS}" ${st}/>` +
+        `<line x1="${ox + ow / 2}" y1="${oy}" x2="${ox + ow / 2}" y2="${oy + oh}" ${st}/><line x1="${ox + ow * .42}" y1="${oy + oh * .45}" x2="${ox + ow * .42}" y2="${oy + oh * .6}" stroke="${INK}" stroke-width="2"/>`;
+    case "archdoor": {
+      const r = ow / 2;
+      return `<path d="M${ox},${oy + oh} V${oy + r} A${r},${r} 0 0 1 ${ox + ow},${oy + r} V${oy + oh} Z" fill="#6b4a2e" ${st}/>` +
+        `<path d="M${ox + ow * .15},${oy + r} A${r * .7},${r * .7} 0 0 1 ${ox + ow * .85},${oy + r} Z" fill="${GLASS}"/><line x1="${ox + r}" y1="${oy + r}" x2="${ox + r}" y2="${oy + oh}" ${st}/>`;
+    }
+    case "garage": {
+      let s = `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="#8e99a2" ${st}/>`;
+      for (let i = 1; i < 5; i++) s += `<line x1="${ox}" y1="${oy + oh * i / 5}" x2="${ox + ow}" y2="${oy + oh * i / 5}" ${st} stroke-opacity=".6"/>`;
+      return s;
+    }
     case "lattice": {
       const cx = ox + ow / 2, cy = oy + oh / 2;
       let s = `<rect x="${ox}" y="${oy}" width="${ow}" height="${oh}" fill="${GLASS}" ${st}/>`;
@@ -403,6 +447,12 @@ function patternDef(uid, kind, s) {
     const w = 1.4 * s, h = 1.0 * s, P = (a, b) => `${a * w},${b * h}`;
     return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}">` +
       `<path d="M${P(0, .35)} L${P(.5, .3)} L${P(.9, .45)} L${P(1, .4)} M${P(0, .78)} L${P(.6, .82)} L${P(1, .75)} M${P(.3, 0)} L${P(.27, .33)} M${P(.75, 0)} L${P(.8, .38)} M${P(.62, .45)} L${P(.58, .8)} M${P(.2, .78)} L${P(.24, 1)} M${P(.88, .76)} L${P(.9, 1)}" stroke="${INK}" stroke-opacity=".22" fill="none"/></pattern>`;
+  }
+  if (kind === "glass") {          // vitraj: alyuminiy ramalar to'ri
+    const w = 1.5 * s, h = 1.5 * s;
+    return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${w}" height="${h}">` +
+      `<rect x="0" y="0" width="${w}" height="${h}" fill="#5f87a8" fill-opacity=".35"/><path d="M0,0 H${w} M0,0 V${h}" stroke="#e8eef2" stroke-opacity=".7" stroke-width="1.5"/>` +
+      `<path d="M${w * .15},${h * .2} L${w * .4},${h * .05}" stroke="#ffffff" stroke-opacity=".45"/></pattern>`;
   }
   if (kind === "tile") {           // girih uslubidagi romb
     const w = 0.8 * s;

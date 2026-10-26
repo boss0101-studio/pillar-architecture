@@ -11,6 +11,7 @@
     gisht:    { n: "Pishiq g'isht",        color: 0xb5683f, css: "#b5683f" },
     gazoblok: { n: "Gazoblok",              color: 0xe3ded2, css: "#e3ded2" },
     beton:    { n: "Monolit beton",         color: 0x9aa0a4, css: "#9aa0a4" },
+    shisha:   { n: "Shisha (vitraj)",       color: 0x9cc0dc, css: "#9cc0dc", glass: true },   // oynali devor: 3D'da shaffof
   };
   const DEF_OPEN = { door: { w: 0.9, h: 2.1, sill: 0 }, win: { w: 1.2, h: 1.4, sill: 0.9 } };
   const TOOLS = [["select", "Tanlash"], ["out", "Tashqi devor"], ["in", "Ichki devor"], ["shape", "Shakl"], ["door", "Eshik"], ["win", "Deraza"], ["erase", "O'chirish"]];
@@ -282,6 +283,11 @@
       const a = vol.beton * 80;
       mrows.push({ k: "Devor betoni (B25)", f: `V = ${nf(vol.beton, 2)}`, v: nf(vol.beton, 2), u: "m³" }, { k: "Devor armaturasi", f: `V × 80 kg/m³`, v: n0(a), u: "kg" });
       boq.push({ n: "Devor betoni B25", q: Math.ceil(vol.beton * 10) / 10, u: "m³", p: FP.pBeton }, { n: "Armatura A500", q: Math.ceil(a), u: "kg", p: FP.pArm });
+    }
+    if (vol.shisha) {                                                 // shisha devor: yuza bo'yicha (alyuminiy karkasli vitraj)
+      const A = (M.outMat === "shisha" ? netOut : 0) + (M.inMat === "shisha" ? netIn : 0);
+      mrows.push({ k: "Shisha devor (vitraj)", f: `sof devor yuzasi`, v: nf(A), u: "m²" });
+      boq.push({ n: "Shisha fasad (vitraj)", q: Math.ceil(A), u: "m²", p: price("mat-shisha", 210) });
     }
     groups.push({ title: "Devor materiallari", rows: mrows });
 
@@ -706,7 +712,7 @@
       const atts = level.open.map(o => ({ o, at: attach(level, o) })).filter(x => x.at);
       segs.forEach(sg => {
         const wallH = sg.k === "out" && top && M.roof === "tekis" && !kesim ? h + 0.6 : h;    // parapet
-        const m = mat(MATS[sg.k === "out" ? M.outMat : M.inMat].color);
+        const MT = MATS[sg.k === "out" ? M.outMat : M.inMat], m = MT.glass ? mat(MT.color, { transparent: true, opacity: 0.45, metalness: 0.35, roughness: 0.08 }) : mat(MT.color);
         const ea = shared(sg.a) ? sg.t / 2 : 0, eb = shared(sg.b) ? sg.t / 2 : 0;          // burchaklarda devorlar bir-biriga kirib, tirqish qolmaydi
         const wg = new THREE.Group(); wg.position.set(sg.a[0], y0 + (li === 0 ? 0.08 : 0), sg.a[1]); wg.rotation.y = -Math.atan2(sg.b[1] - sg.a[1], sg.b[0] - sg.a[0]); g.add(wg);
         const hh = wallH - (li === 0 ? 0.08 : 0);

@@ -5,7 +5,7 @@
 const AIDesign = (function () {
   const host = () => window.DesignHost || null;
   const clone = o => JSON.parse(JSON.stringify(o));
-  const CELL_TYPES = ["win", "wide", "arch", "slit", "round", "lattice", "balc", "door", "shop", "arcade", "wall", "auto"];
+  const CELL_TYPES = ["win", "wide", "arch", "slit", "round", "lattice", "tall", "square", "triple", "balc", "door", "door2", "glassdoor", "archdoor", "garage", "shop", "arcade", "wall", "auto"];
   const LIMITS = "floors 1–30, bays 2–12, floor_h 2.7–4.5 m, bay_w 3–7.5 m, depth 6–30 m";
   let last = null;                                                     // oxirgi AI o'zgarishidan oldingi holat (bekor qilish uchun)
 
@@ -33,11 +33,11 @@ const AIDesign = (function () {
   };
   const GUIDE = `apply_design guide: house = 1-based house number (default: active house). Limits: ${LIMITS}. ` +
     "roof: tekis=flat, nishab=gable/pitched, bir=single-pitch, piramida=pyramid, gumbaz=dome, terrasa=roof terrace. " +
-    "material: gisht=red fired brick, oqgisht=white brick, beton=concrete panel, qorabeton=dark concrete, ganch=white plaster, travertin=travertine, tosh=natural stone, koshin=blue glazed tile, yogoch=wood, metall=metal panel. " +
-    "window (default on upper floors): oddiy=standard, arkali=arched, panorama=panoramic, tor=narrow vertical, dumaloq=round, panjara=lattice, yoq=none. " +
+    "material: gisht=red fired brick, oqgisht=white brick, beton=concrete panel, qorabeton=dark concrete, ganch=white plaster, travertin=travertine, tosh=natural stone, koshin=blue glazed tile, yogoch=wood, metall=metal panel, shisha=all-glass curtain wall (transparent building). " +
+    "window (default on upper floors): oddiy=standard, arkali=arched, panorama=panoramic, tor=narrow vertical, dumaloq=round, panjara=lattice, baland=tall floor-to-ceiling, kvadrat=square, uchtabaqa=triple-pane wide, yoq=none. " +
     "ground: oddiy=windows + middle door, arkada=arcade, vitrina=shop windows. " +
-    "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle, octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans (rooms, doors, furniture, stairs) work for every shape. " +
-    "cells: floor 1 = ground floor (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\"); type win=window, wide=panoramic, arch=arched, slit=narrow, round, lattice, balc=balcony, door, shop=shop window, arcade, wall=blank, auto=default. " +
+    "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle (cylinder), sphere (ball-shaped building), octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans (rooms, doors, furniture, stairs) work for every shape. " +
+    "cells: floor 1 = ground floor (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\"); type win=window, wide=panoramic, arch=arched, slit=narrow, round, lattice, tall, square, triple, balc=balcony, door, door2=double door, glassdoor=glass door, archdoor=arched door, garage=garage door, shop=shop window, arcade, wall=blank, auto=default. " +
     "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking). interior: mode auto|clear.";
   const TOOL_DESC = "Change the building project open in the Designer: set floors, bays, sizes, roof, material, window type, ground floor; paint facade cells " +
     "(windows, balconies, doors, shop windows, arcade, blank wall); start a new design with 1–3 houses (use it to build a building from a photo); add/remove/select houses; " +
@@ -151,7 +151,8 @@ const AIDesign = (function () {
     material: [["oqgisht", /oq g'isht|white brick|бел\w* кирпич|ladrillo blanco|beyaz tuğla|brique blanche|weiße?r? ziegel/], ["gisht", /g'isht|brick|кирпич|ladrillo|tuğla|brique|ziegel/],
       ["qorabeton", /qora beton|dark concrete|черн\w* бетон|hormigón negro|siyah beton|béton noir|dunkle?r? beton/], ["beton", /beton|concrete|бетон|hormigón/],
       ["travertin", /travertin/], ["tosh", /tosh|stone|камен|piedra|taş|pierre|stein/], ["koshin", /koshin|tile|изразц|azulejo|çini|faïence/],
-      ["yogoch", /yog'och|wood|дерев|madera|ahşap|bois|holz/], ["metall", /metall|metal/], ["ganch", /ganch|plaster|штукатур|yeso|sıva|plâtre|putz/]],
+      ["yogoch", /yog'och|wood|дерев|madera|ahşap|bois|holz/], ["metall", /metall|metal/], ["ganch", /ganch|plaster|штукатур|yeso|sıva|plâtre|putz/],
+      ["shisha", /shisha|oynak|oyna(dan|li)|glass|стекл|vidrio|cristal|cam |verre|glas/]],
   };
   function parseCommand(q) {
     const s = String(q).toLowerCase().replace(/[ʻʼ’‘`]/g, "'"), p = {};
@@ -180,7 +181,7 @@ const AIDesign = (function () {
   ];
   const SHAPE_WORDS = [["court", /ichki hovli|courtyard|внутренн\w* двор|patio interior|iç avlu|cour intérieure|innenhof/], ["U", /п shakl|p shakl|u shakl|u.?shape|п.?образ|forma de u|u şekl|en u\b|u.?förm/],
     ["L", /l shakl|l.?shape|г.?образ|forma de l|l şekl|en l\b|l.?förm/], ["T", /t shakl|t.?shape|т.?образ|forma de t|t şekl|en t\b|t.?förm/],
-    ["circle", /aylana|dumaloq|round|circle|кругл|redond|circular|yuvarlak|rond|rund/], ["octagon", /sakkizburchak|octagon|восьмиуг|octógon|sekizgen|octogon|achteck/],
+    ["sphere", /shar|sfera|sphere|ball|шар|сфер|esfer|küre|sphère|kugel/], ["circle", /silindr|cylinder|цилиндр|cilindr|silindir|cylindre|zylind|aylana|dumaloq|round|circle|кругл|redond|circular|yuvarlak|rond|rund/], ["octagon", /sakkizburchak|octagon|восьмиуг|octógon|sekizgen|octogon|achteck/],
     ["hexagon", /oltiburchak|hexagon|шестиуг|hexágon|altıgen|sechseck/], ["triangle", /uchburchak|triangle|треугол|triáng|üçgen|dreieck/], ["trapezoid", /trapetsiya|trapez/]];
   const SUM = {
     uz: { done: "Loyiha tayyor", fl: "qavat", sh: "plan", rf: "tom", mt: "material", bal: "balkonlar", yard: "hovli (daraxt, hovuz, so'ri)", int: "ichki reja: xonalar, eshiklar, mebel", tip: "Xohlasangiz o'zgartirishni yozing, masalan: \"3 qavat qil\", \"tom gumbaz\", \"oq g'isht\"." },

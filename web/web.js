@@ -130,34 +130,10 @@ runEstimate();
 
 // ================= DIZAYNLARNI TOZALASH =================
 // Bazadagi va brauzerdagi ma'lumot — boshqalar yozgan, ishonchsiz. Chizishdan oldin oraliqlarga keltiriladi.
-const CHOICES = {
-  category: ["turar-joy", "jamoat", "tijorat", "interyer"], quality: ["standart", "biznes", "premium"],
-  roof: ["tekis", "nishab", "gumbaz", "terrasa"], material: Object.keys(MATERIALS),
-  window: ["oddiy", "arkali", "panorama", "yoq"], ground: ["oddiy", "arkada", "vitrina"],
-};
-const LIMITS = { floors: [1, 30, 1], bays: [2, 12, 1], floor_h: [2.7, 4.5, 0.1], bay_w: [3, 7.5, 0.1], depth: [6, 30, 0.5] };
-const CELL_SET = new Set(Object.keys(OPENING));
-
-function cleanParams(raw) {
-  const p = {};
-  for (const [k, [lo, hi, step]] of Object.entries(LIMITS)) {
-    const v = Number(raw && raw[k]);
-    p[k] = Number.isFinite(v) ? Math.round(Math.min(hi, Math.max(lo, v)) / step) * step : DEFAULT_PARAMS[k];
-    p[k] = Math.round(p[k] * 10) / 10;
-  }
-  for (const [k, list] of Object.entries(CHOICES)) p[k] = list.includes(raw && raw[k]) ? raw[k] : DEFAULT_PARAMS[k];
-  return p;
-}
-function cleanCells(raw, p) {
-  const out = {};
-  if (raw && typeof raw === "object") {
-    for (const [k, v] of Object.entries(raw)) {
-      const m = /^(\d{1,2}),(\d{1,2})$/.exec(k);
-      if (m && CELL_SET.has(v) && +m[1] < p.floors && +m[2] < p.bays) out[k] = v;
-    }
-  }
-  return out;
-}
+// Tekshiruv io.js dagi ProjectIO bilan bir xil (yagona manba): plan shakli, qanot eni, barcha tom/deraza/material turlari.
+// Avval bu yerda eskirgan nusxa bor edi — u shakl, bir nishabli/piramida tom va yangi deraza turlarini olib tashlardi.
+const cleanParams = raw => ProjectIO.cleanParams(raw);
+const cleanCells = (raw, p) => ProjectIO.cleanCells(raw, p);
 function cleanDesign(d) {
   if (!d || typeof d !== "object") return null;
   // Eski dizaynda bitta uy (params, cells), yangisida 1–3 ta uy (buildings) bo'ladi
@@ -275,7 +251,7 @@ if (window.View3D) { View3D.onMoveItem = (k, x, z) => Site.moveItem(k, x, z); Vi
 
 $("materials").innerHTML = Object.entries(MATERIALS).map(([k, m]) =>
   `<button type="button" data-v="${k}" aria-pressed="false"><i style="background:${m.fill}"></i>${m.label}</button>`).join("");
-$("tools").innerHTML = ["balc", "win", "wide", "arch", "slit", "round", "lattice", "door", "shop", "arcade", "wall", "auto"].map(t =>
+$("tools").innerHTML = ["balc", "win", "wide", "arch", "slit", "round", "lattice", "tall", "square", "triple", "door", "door2", "glassdoor", "archdoor", "garage", "shop", "arcade", "wall", "auto"].map(t =>
   `<button type="button" data-tool="${t}" aria-pressed="${t === tool}">
      <svg viewBox="0 0 40 40" aria-hidden="true">${t === "auto" ? `<text x="20" y="25" text-anchor="middle" font-size="12" fill="${INK}">A</text>` : drawCell(t, 0, 0, 40, 40)}</svg>
      <span>${CELL_LABELS[t]}</span>

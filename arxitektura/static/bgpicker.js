@@ -113,8 +113,11 @@
 
   // ---------- Qo'llash ----------
   const urlOf = b => (b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
-  let state = { id: "peshtoq", op: 9, d3: true };
-  try { state = { ...state, ...JSON.parse(localStorage.getItem(KEY) || "{}") }; } catch {}
+  // Standart: oddiy, qimirlamaydigan 2D chizma. 3D jonli fonni foydalanuvchi o'zi yoqishi mumkin.
+  // v:2 — avval 3D standart bo'lgan: eski saqlangan tanlovda 3D bir marta o'chiriladi
+  const DEF = { id: "peshtoq", op: 9, d3: false, v: 2 };
+  let state = { ...DEF };
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (s.v !== 2) { state.d3 = false; state.v = 2; } } catch {}
   function apply() {
     const b = BGS.find(x => x.id === state.id) || BGS[0], root = document.documentElement.style;
     root.setProperty("--bg-mask", urlOf(b));
@@ -149,7 +152,7 @@
     const t = e.target.closest("[data-bg]");
     if (t) { state.id = t.dataset.bg; apply(); save(); sync(); return; }
     if (e.target.closest(".bgp-x")) { open(false); btn.focus(); }
-    if (e.target.closest(".bgp-reset")) { state = { id: "peshtoq", op: 9, d3: true }; apply(); save(); sync(); }
+    if (e.target.closest(".bgp-reset")) { state = { ...DEF }; apply(); save(); sync(); }
   });
   range.addEventListener("input", () => { state.op = Number(range.value); out.textContent = `${state.op}%`; apply(); });
   range.addEventListener("change", save);

@@ -281,9 +281,7 @@ td select { font: inherit; font-size: .85rem; padding: 4px 6px; background: var(
 @keyframes dlg-in { from { opacity: 0; transform: translateY(16px) scale(.98); } }
 @keyframes build { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
 
-/* Orqa fon: yorug'lik va chizma sekin "nafas oladi" */
-body::before { animation: glow 14s ease-in-out infinite; }
-body::after { transform-origin: 50% 100%; will-change: transform; animation: breathe 42s ease-in-out infinite; }
+/* Orqa fon oddiy va qimirlamaydi: yorug'lik va chizma joyida turadi (avval sekin "nafas olardi") */
 
 /* Bosh sahifa: ketma-ket paydo bo'lish, o'lchov chizig'i chizilishi */
 .hero > div:first-child > * { animation: rise .8s cubic-bezier(.2, .7, .2, 1) backwards; }

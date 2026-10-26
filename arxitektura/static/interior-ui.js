@@ -22,7 +22,7 @@ const InteriorUI = (function () {
   const stairRect = (p, I) => (I.stair && p.floors > 1 ? Interior.stairInfo(p, I.stair, I.g).rect : null);
   function itemOK(I, p, f, it, skip) {
     const ig = I.g, r = Interior.itemRect(it);
-    if (r.x0 < T - 1e-6 || r.x1 > ig.W - T + 1e-6 || r.z0 < T - 1e-6 || r.z1 > ig.D - T + 1e-6) return false;
+    if (!Interior.rectInside(ig, r)) return false;                     // to'rtburchakda devor ichi, shakldor planda — kontur ichi
     const sr = stairRect(p, I);
     if (sr && it[0] !== "carpet" && ov(r, sr)) return false;
     const fd = I.floors[f];
@@ -43,22 +43,13 @@ const InteriorUI = (function () {
 
   // ---------- Xonalar: to'rdagi kataklarni devorlar bo'yicha guruhlash ----------
   function rooms(ig, e) {
-    const seen = new Set(), out = [], key = (i, j) => i + "," + j;
-    const cw = i => Math.min(Interior.lineX(ig, i + 1), ig.W - T) - Math.max(Interior.lineX(ig, i), T);
-    const ch = j => Math.min(Interior.lineZ(ig, j + 1), ig.D - T) - Math.max(Interior.lineZ(ig, j), T);
-    for (let i0 = 0; i0 < ig.gw; i0++) for (let j0 = 0; j0 < ig.gd; j0++) {
-      if (seen.has(key(i0, j0))) continue;
-      const q = [[i0, j0]], cells = []; seen.add(key(i0, j0));
-      while (q.length) {
-        const [i, j] = q.pop(); cells.push([i, j]);
-        const nb = [[i + 1, j, `v:${i + 1},${j}`], [i - 1, j, `v:${i},${j}`], [i, j + 1, `h:${i},${j + 1}`], [i, j - 1, `h:${i},${j}`]];
-        for (const [a, b, k] of nb) if (a >= 0 && b >= 0 && a < ig.gw && b < ig.gd && !e[k] && !seen.has(key(a, b))) { seen.add(key(a, b)); q.push([a, b]); }
-      }
-      const area = cells.reduce((s, [i, j]) => s + cw(i) * ch(j), 0);
+    const out = [];
+    Interior.roomsOf(ig, e).list.forEach(cells => {                     // shakldor planda faqat bino ichidagi kataklar
+      const area = cells.reduce((s, [i, j]) => s + Interior.cellArea(ig, i, j), 0);
       const cx = cells.reduce((s, [i]) => s + (Interior.lineX(ig, i) + Interior.lineX(ig, i + 1)) / 2, 0) / cells.length;
       const cz = cells.reduce((s, [, j]) => s + (Interior.lineZ(ig, j) + Interior.lineZ(ig, j + 1)) / 2, 0) / cells.length;
       out.push({ area, cx, cz, cells });
-    }
+    });
     return out;
   }
 
@@ -166,14 +157,20 @@ const InteriorUI = (function () {
     const rs = rooms(ig, fd.e);
     rs.forEach((r, i) => r.cells.forEach(([a, b]) => {
       const x0 = Interior.lineX(ig, a), x1 = Interior.lineX(ig, a + 1), z0 = Interior.lineZ(ig, b), z1 = Interior.lineZ(ig, b + 1);
-      o.push(`<rect class="io-room" style="fill:hsl(${(i * 47 + 190) % 360} 45% 55% / .16)" x="${x0}" y="${z0}" width="${x1 - x0}" height="${z1 - z0}"/>`);
+      o.push(`<rect class="io-room" style="fill:hsl(${(i * 47 + 190) % 360} 45% 55% / .16)" x="${x0}" y="${z0}" width="${x1 - x0}" height="${z1 - z0}"${ig.outer ? ' clip-path="url(#ioClip)"' : ""}/>`);
     }));
     let grid = "";
     for (let i = 1; i < ig.gw; i++) grid += `M${i} ${T}V${D - T}`;
     for (let j = 1; j < ig.gd; j++) grid += `M${T} ${j}H${W - T}`;
-    o.push(`<path class="io-grid" d="${grid}"/>`);
-    o.push(`<path class="io-outer" d="M0 0H${W}V${D}H0Z M${T} ${T}V${D - T}H${W - T}V${T}Z" fill-rule="evenodd"/>`);
-    o.push(openingsSvg(p, cells, fl, ig));
+    if (ig.outer) {                                                             // shakldor plan: devor kontur bo'ylab, to'r faqat ichkarida
+      const ring = r => "M" + r.map(([x, z]) => `${r2(x)} ${r2(z)}`).join("L") + "Z", inner = ig.inner.map(ring).join("");
+      o.push(`<clipPath id="ioClip"><path d="${inner}" clip-rule="evenodd"/></clipPath><path class="io-grid" d="${grid}" clip-path="url(#ioClip)"/>`);
+      o.push(`<path class="io-outer" d="${ig.outer.map(ring).join("")}${inner}" fill-rule="evenodd"/>`);
+    } else {
+      o.push(`<path class="io-grid" d="${grid}"/>`);
+      o.push(`<path class="io-outer" d="M0 0H${W}V${D}H0Z M${T} ${T}V${D - T}H${W - T}V${T}Z" fill-rule="evenodd"/>`);
+      o.push(openingsSvg(p, cells, fl, ig));
+    }
     for (const [k, s] of Object.entries(fd.e)) {
       const seg = Interior.edgeSeg(ig, k); if (!seg) continue;
       Interior.wallPieces(seg, s).walls.forEach(r => o.push(`<rect class="io-wall" x="${r.x0}" y="${r.z0}" width="${r.x1 - r.x0}" height="${r.z1 - r.z0}"/>`));
@@ -219,11 +216,6 @@ const InteriorUI = (function () {
     if (fl > p.floors - 1) fl = p.floors - 1;
     if (!p.floors || sel && sel.k === "stair" && p.floors < 2) sel = null;
     const many = Site.list.length > 1, who = many ? `${Site.active + 1}-uy · ` : "";
-    if (shapeOf(p) !== "rect") {                                     // shakldor planda xona to'ri hali yo'q; reja o'chmaydi, to'rtburchakka qaytsa chiqadi
-      el("intNote").textContent = `${who}ichki reja: faqat to'rtburchak planda`;
-      body.innerHTML = `<div class="int-empty"><p>Ichki xonalar va mebel hozircha faqat to'rtburchak planda chiziladi. "${esc(SHAPES[shapeOf(p)])}" shaklida bino 3D'da tashqi ko'rinishi bilan quriladi.</p></div>`;
-      return;
-    }
     el("intNote").textContent = b.interior === undefined ? `${who}ichi loyihalanmagan` : `${who}ichki reja yoqilgan`;
     if (b.interior === undefined) {
       body.innerHTML = `<div class="int-empty"><p>${who ? esc(who) : ""}Bu uyning ichi hali loyihalanmagan: 3D ko'rinishda u qorong'i hajm bo'lib turadi. Xonalarga bo'ling, eshik va mebel qo'ying — ichkarini 3D'da ko'rasiz, VR'da esa kirib yurasiz.</p>` +

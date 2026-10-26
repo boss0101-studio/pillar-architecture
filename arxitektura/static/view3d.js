@@ -210,6 +210,8 @@
 
     const upper = upperType(p);
     const sideCols = Math.max(1, Math.round(D / p.bay_w)), sideW = D / sideCols;
+    const floorGs = [], ceilG = new THREE.Group();                 // ichki reja qavatlari va shift (kesimda boshqariladi)
+    const PSI = shapeOf(p) !== "rect" ? planShape(p).rings.map(r => offsetRing(r, -T)) : null;   // shakldor plan: devorlarning ichki konturi
     if (shapeOf(p) !== "rect") return shaped();                    // L, П, T, ichki hovli, aylana va boshqa planlar
 
     // ---------- Shakldor plan: devorlar kontur qirralari bo'ylab, tom — qanotlar bo'yicha yoki qavariq shaklda piramida ----------
@@ -250,9 +252,14 @@
       };
       const grow = d => ps.rings.map(r => offsetRing(r, d));
 
-      const dark = prism(grow(-T + 0.01), Hb, 0, track(new THREE.MeshStandardMaterial({ color: 0x1b2024, roughness: 1 })), false);
-      out.add(dark);
-      for (let f = 1; f < p.floors; f++) out.add(prism(grow(0.08), 0.12, f * p.floor_h - 0.06, ledgeMat));
+      // Ichki reja bo'lsa — xonalar, mebel va zina; bo'lmasa — qorong'i hajm (deraza ortida bo'shliq ko'rinmasin)
+      out.add(ceilG);
+      const coll = interior ? addInterior(interior) : null;
+      const dark = interior ? null : prism(grow(-T + 0.01), Hb, 0, track(new THREE.MeshStandardMaterial({ color: 0x1b2024, roughness: 1 })), false);
+      if (dark) out.add(dark);
+      // Qavat belbog'lari: faqat tashqi devor bo'ylab tasma (ichi bo'sh — kesimda xonalar tepadan ko'rinadi)
+      const bands = ps.rings.map((r, i) => (i ? [offsetRing(r, -0.02), offsetRing(r, 0.08)] : [offsetRing(r, 0.08), offsetRing(r, -0.02)]));
+      for (let f = 1; f < p.floors; f++) bands.forEach(b => out.add(prism(b, 0.12, f * p.floor_h - 0.06, ledgeMat)));
 
       const roofMark = out.children.length;
       out.add(prism(grow(0.25), 0.22, Hb - 0.11, ledgeMat));          // karniz
@@ -329,8 +336,7 @@
       const roofG = new THREE.Group();
       out.children.slice(roofMark).forEach(c => roofG.add(c));
       out.add(roofG);
-      const ceilG = new THREE.Group(); out.add(ceilG);
-      return { group: out, g, roofG, ceilG, floorGs: [], wallGroups: walls, frontG, dark, coll: null };
+      return { group: out, g, roofG, ceilG, floorGs, wallGroups: walls, frontG, dark, coll };
     }
 
     const front = makeWall(p.bays, p.bay_w, (f, b) => cellType(p, cells, f, b));
@@ -363,8 +369,12 @@
 
       // Gorizontal plita (ixtiyoriy teshik bilan): shakl (x, -z) tekisligida, so'ng yotqiziladi
       function slabShape(hole) {
-        const x0 = -W / 2 + T, x1 = W / 2 - T, z0 = -D / 2 + T, z1 = D / 2 - T, s = new THREE.Shape();
-        s.moveTo(x0, -z0); s.lineTo(x1, -z0); s.lineTo(x1, -z1); s.lineTo(x0, -z1); s.closePath();
+        const x0 = -W / 2 + T, x1 = W / 2 - T, z0 = -D / 2 + T, z1 = D / 2 - T;
+        let s = new THREE.Shape();
+        if (PSI) {                                                  // shakldor plan: plita devorlarning ichki konturi bo'yicha (ichki hovli — teshik)
+          s = new THREE.Shape(PSI[0].map(([x, z]) => new THREE.Vector2(X(x), -Z(z))));
+          PSI.slice(1).forEach(r => s.holes.push(new THREE.Path(r.map(([x, z]) => new THREE.Vector2(X(x), -Z(z))))));
+        } else { s.moveTo(x0, -z0); s.lineTo(x1, -z0); s.lineTo(x1, -z1); s.lineTo(x0, -z1); s.closePath(); }
         if (hole) {
           const h = new THREE.Path(), a = X(hole.x0), b = X(hole.x1), c = -Z(hole.z0), d = -Z(hole.z1);
           h.moveTo(a, c); h.lineTo(b, c); h.lineTo(b, d); h.lineTo(a, d); h.closePath(); s.holes.push(h);
@@ -411,7 +421,10 @@
       for (let f = 0; f < N; f++) {
         const G = new THREE.Group(); G.userData.fl = f; out.add(G); floorGs.push(G);
         const base = f * fh + (f === 0 ? 0.06 : 0), top = (f + 1) * fh - SL, fd = I.floors[f];
-        if (f === 0) G.add(box(W - 2 * T, 0.06, D - 2 * T, floorM, 0, 0.03, 0, false));
+        if (f === 0) {
+          if (PSI) { const fm = mk(track(new THREE.ExtrudeGeometry(slabShape(null), { depth: 0.06, bevelEnabled: false })), floorM, 0, 0, 0, false); fm.rotation.x = -Math.PI / 2; G.add(fm); }
+          else G.add(box(W - 2 * T, 0.06, D - 2 * T, floorM, 0, 0.03, 0, false));
+        }
         else {
           const hole = st ? (r => ({ x0: r.x0 - 0.02, x1: r.x1 + 0.02, z0: r.z0 - 0.02, z1: r.z1 + 0.02 }))(upperHalf(st.rect, st.rot)) : null;
           G.add(slab(f * fh - SL, hole)); G.add(floorFinish(f * fh + 0.004, hole));
@@ -453,13 +466,16 @@
 
     // Ichki hajm: ichki reja yo'q bo'lsa — qorong'i hajm (deraza ortida bo'shliq ko'rinmasin), bo'lsa — real xonalar
     let dark = null, coll = null;
-    const floorGs = [], ceilG = new THREE.Group();
     out.add(ceilG);
     if (interior) coll = addInterior(interior);
     else { dark = box(W - 2 * T + 0.02, Hb, D - 2 * T + 0.02, track(new THREE.MeshStandardMaterial({ color: 0x1b2024, roughness: 1 })), 0, Hb / 2, 0, false); out.add(dark); }
 
     // Qavat belbog'lari
-    for (let f = 1; f < p.floors; f++) out.add(box(W + 0.16, 0.12, D + 0.16, ledgeMat, 0, f * p.floor_h, 0));
+    for (let f = 1; f < p.floors; f++) {                           // tasma: to'rt tomonda 10 sm, ichi bo'sh (kesimda xonalar tepadan ko'rinadi)
+      const y = f * p.floor_h;
+      out.add(box(W + 0.16, 0.12, 0.1, ledgeMat, 0, y, D / 2 + 0.03), box(W + 0.16, 0.12, 0.1, ledgeMat, 0, y, -D / 2 - 0.03),
+              box(0.1, 0.12, D, ledgeMat, W / 2 + 0.03, y, 0), box(0.1, 0.12, D, ledgeMat, -W / 2 - 0.03, y, 0));
+    }
 
     const roofMark = out.children.length;                         // shundan keyingi hamma narsa tom (kesimda yashiriladi)
     // ---- Tom ----

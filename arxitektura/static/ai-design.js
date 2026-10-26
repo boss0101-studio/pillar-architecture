@@ -36,7 +36,7 @@ const AIDesign = (function () {
     "material: gisht=red fired brick, oqgisht=white brick, beton=concrete panel, qorabeton=dark concrete, ganch=white plaster, travertin=travertine, tosh=natural stone, koshin=blue glazed tile, yogoch=wood, metall=metal panel. " +
     "window (default on upper floors): oddiy=standard, arkali=arched, panorama=panoramic, tor=narrow vertical, dumaloq=round, panjara=lattice, yoq=none. " +
     "ground: oddiy=windows + middle door, arkada=arcade, vitrina=shop windows. " +
-    "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle, octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans work only for rect. " +
+    "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle, octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans (rooms, doors, furniture, stairs) work for every shape. " +
     "cells: floor 1 = ground floor (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\"); type win=window, wide=panoramic, arch=arched, slit=narrow, round, lattice, balc=balcony, door, shop=shop window, arcade, wall=blank, auto=default. " +
     "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking). interior: mode auto|clear.";
   const TOOL_DESC = "Change the building project open in the Designer: set floors, bays, sizes, roof, material, window type, ground floor; paint facade cells " +
@@ -122,7 +122,6 @@ const AIDesign = (function () {
           case "yard": { const k = setYardItems(a); done.push(`yard ${Site.yard.on ? "on" : "off"}, fence ${Site.yard.fence}, +${k} items`); break; }
           case "interior": {
             const i = pickHouse(a), b = Site.list[i]; Site.sync();
-            if (a.mode !== "clear" && shapeOf(b.params) !== "rect") throw new Error("interior plans work only with the rect shape");
             b.interior = a.mode === "clear" ? undefined : Interior.auto(b.params);
             done.push(`house ${i + 1} interior ${a.mode === "clear" ? "cleared" : "generated"}`);
             break;

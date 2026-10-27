@@ -310,7 +310,7 @@ def validate_interior(raw):
     return out
 
 
-YARD_ITEM_TYPES = ("tree", "bed", "pool", "suri", "car")
+YARD_ITEM_TYPES = ("tree", "bed", "pool", "suri", "car", "garage", "swim", "pine", "fruit", "bush", "fountain", "gazebo", "tandir", "bench", "play", "lamp", "greenhouse")
 FENCE_TYPES = ("devor", "panjara", "yogoch", "yoq")
 MAX_YARD_ITEMS = 40
 
@@ -469,7 +469,7 @@ AI_DESIGN_TOOL = {
                 "cells": {"type": "array", "maxItems": 120, "description": "floor 1 = ground (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\")",
                           "items": {"type": "object", "required": ["floor", "bay", "type"], "properties": {"floor": {}, "bay": {}, "type": {"type": "string", "enum": _CELLS}}}},
                 "on": {"type": "boolean"}, "fence": {"type": "string", "enum": ["devor", "panjara", "yogoch", "yoq"]},
-                "items": {"type": "array", "maxItems": 20, "items": {"type": "string", "enum": ["tree", "bed", "pool", "suri", "car"]}},
+                "items": {"type": "array", "maxItems": 20, "items": {"type": "string", "enum": list(YARD_ITEM_TYPES)}},
                 "clear_items": {"type": "boolean"}, "mode": {"type": "string", "enum": ["auto", "clear"]},
             }}}},
     },

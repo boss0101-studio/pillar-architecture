@@ -221,6 +221,11 @@ const UstunSettings = (function () {
         <div class="st-langs" role="radiogroup" aria-label="Til / Language" translate="no">${I.langs.map(l => `<button type="button" role="radio" data-langset="${l.code}" aria-checked="${I.lang === l.code}"><b>${l.name}</b><small>${l.en}</small></button>`).join("")}</div>
         <p class="muted st-note">Sayt matni va AI yordamchi javoblari tanlangan tilda bo'ladi.</p>
       </div>` : ""}
+      ${window.UstunTour ? `<div class="st-card">
+        <h3>Yordamchi</h3>
+        <p class="muted st-note">Saytga birinchi kirganda bo'limlar qisqacha tanishtiriladi. Uni qayta ko'rish mumkin.</p>
+        <div class="st-row"><button type="button" class="btn-ghost" data-act="tour">Yo'riqnomani qayta ko'rsatish</button></div>
+      </div>` : ""}
       <form class="st-card" data-form="ui">
         <h3>Mavzu</h3>
         <div class="st-themes" role="radiogroup" aria-label="Mavzu">
@@ -261,6 +266,7 @@ const UstunSettings = (function () {
       const t = e.target.closest("[data-tab],[data-color],[data-act],[data-del],[data-fon],[data-open-mine],[data-langset]"); if (!t) return;
       if (t.dataset.tab) { tab = t.dataset.tab; render(); return; }
       if (t.dataset.langset && window.UstunI18n) { window.UstunI18n.set(t.dataset.langset); return; }
+      if (t.dataset.act === "tour" && window.UstunTour) { window.UstunTour.reset(); window.UstunTour.start("bosh"); return; }   // hamma bo'lim yo'riqnomasi qaytadan
       if (t.dataset.color) { el.querySelectorAll("[data-color]").forEach(b => b.setAttribute("aria-checked", String(b === t))); el.querySelector(".st-ava").style.background = t.dataset.color; return; }
       if (t.dataset.fon) { window.UstunFon.set(t.dataset.fon); el.querySelectorAll("[data-fon]").forEach(b => b.setAttribute("aria-checked", String(b === t))); toast("Fon almashtirildi"); return; }
       if (t.dataset.openMine !== undefined) {

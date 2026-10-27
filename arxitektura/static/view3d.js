@@ -891,6 +891,58 @@
     } else if (it.t === "pool") {                                 // hovuz: tosh hoshiya va suv
       ybox(6.6, 0.24, 4.1, M.stone, 0, 0.12, 0, g);
       const w = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(6, 3.5)), M.water); w.rotation.x = -Math.PI / 2; w.position.y = 0.25; g.add(w);
+    } else if (it.t === "garage") {                               // garaj: devorlar, tekis tom va seksiyali darvoza (ko'cha tomonda)
+      const wall = ymat(0xd9d2c3), dark = ymat(0x7d868c, { metalness: 0.4, roughness: 0.5 });
+      ybox(4.2, 2.9, 6.6, wall, 0, 1.45, 0, g); ybox(4.5, 0.2, 6.9, ymat(0x5b6266), 0, 3.0, 0, g);
+      ybox(3.2, 2.3, 0.06, dark, 0, 1.15, 3.31, g, false);
+      for (let i = 1; i < 5; i++) ybox(3.2, 0.03, 0.08, ymat(0x5b6266), 0, i * 0.46, 3.34, g, false);
+    } else if (it.t === "swim") {                                 // suzish basseyni: plitka hoshiya, ko'k suv, zinapoya tutqichi
+      ybox(8.4, 0.2, 4.6, ymat(0xece6da), 0, 0.1, 0, g);
+      const w = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(7.6, 3.8)), ymat(0x2f9fd6, { roughness: 0.08, metalness: 0.2, transparent: true, opacity: 0.88 })); w.rotation.x = -Math.PI / 2; w.position.y = 0.21; g.add(w);
+      [-0.35, 0.35].forEach(z => { const r = ymesh(ytrack(new THREE.TorusGeometry(0.35, 0.03, 6, 12, Math.PI)), ymat(0xc9ced1, { metalness: 0.7 }), 3.6, 0.2, z, g, false); r.rotation.y = Math.PI / 2; });
+    } else if (it.t === "pine") {                                 // archa: konussimon qatlamlar
+      const s = 0.9 + ((k * 29) % 23) / 100;
+      ymesh(M.trunkGeo, M.bark, 0, 0.6 * s, 0, g).scale.set(0.7 * s, 0.6 * s, 0.7 * s);
+      [[1.25, 1.6, 1.4], [0.95, 1.5, 2.5], [0.6, 1.3, 3.5]].forEach(([r, h, y]) => ymesh(ytrack(new THREE.ConeGeometry(r * s, h * s, 9)), ymat(0x2f5f35), 0, y * s, 0, g));
+    } else if (it.t === "fruit") {                                // mevali daraxt: kichikroq toj va mevalar
+      ymesh(M.trunkGeo, M.bark, 0, 0.9, 0, g).scale.setScalar(0.8);
+      ymesh(M.crownGeo, M.leaf, 0, 2.7, 0, g).scale.set(0.85, 0.8, 0.85);
+      const fm = ymat(k % 2 ? 0xd9472b : 0xf0a12a);
+      for (let i = 0; i < 9; i++) { const t = i * 2.4; ymesh(ytrack(new THREE.SphereGeometry(0.13, 8, 6)), fm, Math.cos(t) * 1.25, 2.3 + (i % 3) * 0.35, Math.sin(t) * 1.25, g, false); }
+    } else if (it.t === "bush") {                                 // buta
+      ymesh(ytrack(new THREE.SphereGeometry(0.7, 12, 9)), M.leaf2, 0, 0.5, 0, g).scale.set(1, 0.75, 1);
+    } else if (it.t === "fountain") {                             // favvora: dumaloq hovuz, ustun va kosa
+      const st = M.stone;
+      ymesh(ytrack(new THREE.CylinderGeometry(1.6, 1.6, 0.5, 28)), st, 0, 0.25, 0, g);
+      ymesh(ytrack(new THREE.CylinderGeometry(1.4, 1.4, 0.04, 28)), M.water, 0, 0.5, 0, g, false);
+      ymesh(ytrack(new THREE.CylinderGeometry(0.18, 0.25, 1.2, 12)), st, 0, 1.0, 0, g);
+      ymesh(ytrack(new THREE.CylinderGeometry(0.7, 0.3, 0.25, 20)), st, 0, 1.6, 0, g);
+      ymesh(ytrack(new THREE.SphereGeometry(0.25, 10, 8)), M.water, 0, 1.85, 0, g, false);
+    } else if (it.t === "gazebo") {                               // shiypon: olti ustun, supa va olti qirrali tom
+      ybox(3.6, 0.3, 3.6, M.wood, 0, 0.15, 0, g);
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; ybox(0.14, 2.6, 0.14, M.wood, Math.cos(a) * 1.85, 1.6, Math.sin(a) * 1.85, g); }
+      const roof = ymesh(ytrack(new THREE.ConeGeometry(2.6, 1.3, 6)), ymat(0x6a4a3a), 0, 3.55, 0, g); roof.rotation.y = Math.PI / 6;
+    } else if (it.t === "tandir") {                               // tandir: loy gumbaz va og'zi
+      const clay = ymat(0xc58a5a);
+      ymesh(ytrack(new THREE.CylinderGeometry(0.75, 0.8, 0.5, 18)), ymat(0x9b7b5c), 0, 0.25, 0, g);
+      ymesh(ytrack(new THREE.SphereGeometry(0.7, 18, 12, 0, Math.PI * 2, 0, Math.PI / 2)), clay, 0, 0.5, 0, g).scale.y = 1.25;
+      ymesh(ytrack(new THREE.TorusGeometry(0.22, 0.06, 8, 16)), clay, 0, 1.38, 0, g).rotation.x = Math.PI / 2;
+    } else if (it.t === "bench") {                                // o'rindiq: o'tirgich, suyanchiq va oyoqlar
+      ybox(1.8, 0.08, 0.5, M.wood, 0, 0.45, 0, g); ybox(1.8, 0.4, 0.06, M.wood, 0, 0.75, -0.25, g);
+      [-0.8, 0.8].forEach(x => ybox(0.08, 0.45, 0.5, ymat(0x2a2f33), x, 0.22, 0, g));
+    } else if (it.t === "play") {                                 // bolalar maydonchasi: yumshoq qoplama, tepalik, arg'imchoq
+      const pad = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(5.2, 4.2)), ymat(0xd65f45)); pad.rotation.x = -Math.PI / 2; pad.position.y = 0.02; pad.receiveShadow = true; g.add(pad);
+      ybox(1.2, 1.6, 1.2, ymat(0x3d7fc4), -1.6, 0.8, -0.9, g);
+      const sl = ybox(0.8, 0.08, 2.6, ymat(0xf2c33a), -1.6, 0.85, 0.6, g); sl.rotation.x = -0.55;
+      [[1.2, -1.4], [1.2, 1.4]].forEach(([x, z]) => ybox(0.1, 2.3, 0.1, ymat(0x2a2f33), x, 1.15, z, g));
+      ybox(0.1, 0.1, 2.9, ymat(0x2a2f33), 1.2, 2.3, 0, g); ybox(0.5, 0.05, 0.3, ymat(0xf2c33a), 1.2, 0.5, 0, g);
+    } else if (it.t === "lamp") {                                 // chiroq ustuni
+      ybox(0.12, 3.2, 0.12, ymat(0x2a2f33), 0, 1.6, 0, g);
+      ymesh(ytrack(new THREE.SphereGeometry(0.25, 12, 8)), ymat(0xfff2c2, { emissive: 0xffd77a, emissiveIntensity: 0.8 }), 0, 3.35, 0, g, false);
+    } else if (it.t === "greenhouse") {                           // issiqxona: yarim silindr shaffof qobiq
+      const sh = ymesh(ytrack(new THREE.CylinderGeometry(1.6, 1.6, 6.2, 18, 1, true, -Math.PI / 2, Math.PI)), ymat(0xcfe6e8, { transparent: true, opacity: 0.45, side: THREE.DoubleSide, roughness: 0.1 }), 0, 0, 0, g, false);
+      sh.rotation.x = Math.PI / 2; sh.rotation.z = Math.PI / 2;
+      for (let i = 0; i < 4; i++) ybox(0.9, 0.3, 5.6, M.soil, -0.8 + (i % 2) * 1.6, 0.15, 0, g);
     } else if (it.t === "suri") {                                 // so'ri: supa, gilam, ustunlar va tok bilan qoplangan tepa
       ybox(3, 0.45, 3, M.wood, 0, 0.225, 0, g);
       ybox(2.4, 0.03, 2.4, M.carpet, 0, 0.465, 0, g, false);

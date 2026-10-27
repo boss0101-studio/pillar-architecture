@@ -226,7 +226,7 @@ const Geo = (function () {
     const groups = [{ title: n > 1 ? `Majmua (${n} ta uy)` : "Uchastka", rows }];
     if (R) {
       const P = yardPath(L, R), pathA = P ? P.w * (P.z1 - P.z0) : 0;
-      const hard = Y.items.filter(i => i.t !== "tree" && i.t !== "bed").reduce((s, i) => s + YARD_ITEMS[i.t].w * YARD_ITEMS[i.t].d, 0);
+      const hard = Y.items.filter(i => !YARD_GREEN.includes(i.t)).reduce((s, i) => s + YARD_ITEMS[i.t].w * YARD_ITEMS[i.t].d, 0);
       const green = Math.max(0, plot - built - hard - pathA), gp = (green / plot) * 100;
       const trees = Y.items.filter(i => i.t === "tree").length;
       const out = Y.items.filter(i => { const f = itemFoot(i); return f.cx - f.w / 2 < R.x0 - 0.01 || f.cx + f.w / 2 > R.x1 + 0.01 || f.cz - f.d / 2 < R.z0 - 0.01 || f.cz + f.d / 2 > R.z1 + 0.01; }).length;
@@ -346,6 +346,19 @@ const Geo = (function () {
     if (it.t === "bed") return `<rect class="gy-bed" x="${x}" y="${z}" width="${f.w}" height="${f.d}" rx="0.4"/>` +
       [-0.3, 0, 0.3].map(k => `<circle class="gy-flower" cx="${f.cx + k * f.w * 0.8}" cy="${f.cz + (f.w > f.d ? 0 : k * f.d * 0.8)}" r="0.32"/>`).join("");
     if (it.t === "pool") return `<rect class="gy-pool-rim" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><rect class="gy-pool" x="${x + 0.3}" y="${z + 0.3}" width="${f.w - 0.6}" height="${f.d - 0.6}" rx="0.4"/>`;
+    const R = (cls, extra = "") => `<rect class="${cls}" x="${x}" y="${z}" width="${f.w}" height="${f.d}"${extra}/>`, lbl = (t, k = 0.45) => `<text class="gy-p" x="${f.cx}" y="${f.cz + Math.min(f.w, f.d) * k * 0.35}" text-anchor="middle" font-size="${Math.min(f.w, f.d) * k}">${t}</text>`;
+    if (it.t === "garage") return R("gy-garage") + `<path class="gy-line" d="M${x} ${z} L${f.cx} ${z + f.d / 2} L${x + f.w} ${z} M${x} ${z + f.d} L${f.cx} ${z + f.d / 2} L${x + f.w} ${z + f.d}"/>` + lbl("G");
+    if (it.t === "swim") return R("gy-pool-rim") + `<rect class="gy-swim" x="${x + 0.4}" y="${z + 0.4}" width="${f.w - 0.8}" height="${f.d - 0.8}"/><path class="gy-lane" d="M${x + 0.6} ${f.cz} H${x + f.w - 0.6}"/>`;
+    if (it.t === "pine") return `<polygon class="gy-pine" points="${f.cx},${z} ${x + f.w},${z + f.d} ${x},${z + f.d}"/>`;
+    if (it.t === "fruit") return `<circle class="gy-tree" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/>` + [[-0.25, -0.2], [0.2, -0.1], [0, 0.25], [-0.1, 0.05]].map(([a, b]) => `<circle class="gy-fruit" cx="${f.cx + a * f.w}" cy="${f.cz + b * f.d}" r="0.22"/>`).join("");
+    if (it.t === "bush") return `<circle class="gy-bush" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/>`;
+    if (it.t === "fountain") return `<circle class="gy-pool-rim" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><circle class="gy-pool" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2 - 0.3}"/><circle class="gy-trunk" cx="${f.cx}" cy="${f.cz}" r="0.35"/>`;
+    if (it.t === "gazebo") { const pts = Array.from({ length: 6 }, (_, i) => `${f.cx + Math.cos(i * Math.PI / 3) * f.w / 2},${f.cz + Math.sin(i * Math.PI / 3) * f.d / 2}`).join(" "); return `<polygon class="gy-suri" points="${pts}"/><path class="gy-line" d="${Array.from({ length: 6 }, (_, i) => `M${f.cx} ${f.cz} L${f.cx + Math.cos(i * Math.PI / 3) * f.w / 2} ${f.cz + Math.sin(i * Math.PI / 3) * f.d / 2}`).join("")}"/>`; }
+    if (it.t === "tandir") return `<circle class="gy-tandir" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><circle class="gy-trunk" cx="${f.cx}" cy="${f.cz}" r="0.25"/>`;
+    if (it.t === "bench") return R("gy-suri", ` rx="0.1"`);
+    if (it.t === "play") return R("gy-play", ` rx="0.4"`) + `<path class="gy-line" d="M${x + 0.6} ${z + 0.8} h${f.w * 0.35} M${x + f.w - 1.2} ${z + 0.6} v${f.d - 1.2}"/>` + `<circle class="gy-fruit" cx="${f.cx}" cy="${f.cz + f.d * 0.2}" r="0.4"/>`;
+    if (it.t === "lamp") return `<circle class="gy-lamp" cx="${f.cx}" cy="${f.cz}" r="0.3"/>`;
+    if (it.t === "greenhouse") return R("gy-green", ` rx="0.6"`) + `<path class="gy-line" d="M${f.cx} ${z} V${z + f.d}"/>`;
     if (it.t === "suri") return `<rect class="gy-suri" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><path class="gy-line" d="M${x} ${z} L${x + f.w} ${z + f.d} M${x + f.w} ${z} L${x} ${z + f.d}"/>`;
     return `<rect class="gy-car" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><text class="gy-p" x="${f.cx}" y="${f.cz + Math.min(f.w, f.d) * 0.2}" text-anchor="middle" font-size="${Math.min(f.w, f.d) * 0.55}">P</text>`;
   }

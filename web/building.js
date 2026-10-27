@@ -617,7 +617,20 @@ const YARD_ITEMS = {
   pool: { label: "Hovuz", w: 6.6, d: 4.1 },
   suri: { label: "So'ri", w: 3.4, d: 3.4 },
   car: { label: "Mashina joyi", w: 2.7, d: 5.3 },
+  garage: { label: "Garaj", w: 4.2, d: 6.6 },
+  swim: { label: "Suzish basseyni", w: 8.4, d: 4.6 },
+  pine: { label: "Archa", w: 2.6, d: 2.6 },
+  fruit: { label: "Mevali daraxt", w: 3.2, d: 3.2 },
+  bush: { label: "Buta", w: 1.4, d: 1.4 },
+  fountain: { label: "Favvora", w: 3.2, d: 3.2 },
+  gazebo: { label: "Shiypon", w: 4.2, d: 4.2 },
+  tandir: { label: "Tandir", w: 1.6, d: 1.6 },
+  bench: { label: "O'rindiq", w: 1.9, d: 0.7 },
+  play: { label: "Bolalar maydonchasi", w: 5.2, d: 4.2 },
+  lamp: { label: "Chiroq ustuni", w: 0.6, d: 0.6 },
+  greenhouse: { label: "Issiqxona", w: 3.2, d: 6.2 },
 };
+const YARD_GREEN = ["tree", "bed", "pine", "fruit", "bush"];   // ko'kalamzor (qattiq qoplama emas)
 const FENCES = { devor: "G'isht devor", panjara: "Temir panjara", yogoch: "Yog'och to'siq", yoq: "To'siqsiz" };
 const YARD_GATE = 4, YARD_MAX_ITEMS = 40;
 // Ishonchsiz ma'lumotni (fayl, baza) ruxsat etilgan ko'rinishga keltiradi

@@ -38,7 +38,7 @@ const AIDesign = (function () {
     "ground: oddiy=windows + middle door, arkada=arcade, vitrina=shop windows. " +
     "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle (cylinder), sphere (ball-shaped building), octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans (rooms, doors, furniture, stairs) work for every shape. " +
     "cells: floor 1 = ground floor (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\"); type win=window, wide=panoramic, arch=arched, slit=narrow, round, lattice, tall, square, triple, balc=balcony, door, door2=double door, glassdoor=glass door, archdoor=arched door, garage=garage door, shop=shop window, arcade, wall=blank, auto=default. " +
-    "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking). interior: mode auto|clear.";
+    "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking, garage, swim=swimming pool, pine, fruit=fruit tree, bush, fountain, gazebo, tandir=clay oven, bench, play=playground, lamp, greenhouse). interior: mode auto|clear.";
   const TOOL_DESC = "Change the building project open in the Designer: set floors, bays, sizes, roof, material, window type, ground floor; paint facade cells " +
     "(windows, balconies, doors, shop windows, arcade, blank wall); start a new design with 1–3 houses (use it to build a building from a photo); add/remove/select houses; " +
     "turn the yard on and add trees, pool, daybed, parking; generate or clear the interior plan. The project state is given in <design_state>.";
@@ -76,8 +76,10 @@ const AIDesign = (function () {
   // Faol uy konstruktorning o'zgaruvchilari bilan bir obyekt: joyida o'zgartiramiz, aks holda Site.sync eski qiymatni qaytaradi
   const houseRef = i => (i === Site.active ? { params: host().params(), cells: host().cells(), b: Site.list[i] } : { params: Site.list[i].params, cells: Site.list[i].cells, b: Site.list[i] });
   function setYardItems(a) {
+    const wasOn = Site.yard.on;
     if (a.on !== undefined || a.fence) Site.setYard({ ...(a.on !== undefined ? { on: !!a.on } : {}), ...(a.fence ? { fence: a.fence } : {}) });
-    if (a.clear_items || (Array.isArray(a.items) && a.items.length && Site.yard.items.length && a.on)) Site.yard.items = [];
+    // hovli hozir yoqilgan bo'lsa — boshlang'ich elementlar o'rniga so'ralganlari; mavjud hovliga esa faqat qo'shiladi
+    if (a.clear_items || (!wasOn && Array.isArray(a.items) && a.items.length)) Site.yard.items = [];
     let added = 0;
     (Array.isArray(a.items) ? a.items : []).forEach(t => { if (Site.yard.on && Site.addItem(t)) added++; });
     return added;
@@ -154,6 +156,21 @@ const AIDesign = (function () {
       ["yogoch", /yog'och|wood|дерев|madera|ahşap|bois|holz/], ["metall", /metall|metal/], ["ganch", /ganch|plaster|штукатур|yeso|sıva|plâtre|putz/],
       ["shisha", /shisha|oynak|oyna(dan|li)|glass|стекл|vidrio|cristal|cam |verre|glas/]],
   };
+  // Hovli elementlari so'rovdan: "garaj", "basseyn", "archa"... bo'lmasa — bino turiga mos to'plam
+  const YARD_WORDS = [["garage", /garaj|garage|гараж|garaje|garaj/], ["pool", /hovuz|pond|пруд|estanque|gölet|étang|teich/], ["swim", /basseyn|suzish|swimming|pool|бассейн|piscina|havuz|piscine/], ["pine", /archa|pine|ёлк|ель|sosna|pino|çam|sapin|tanne/],
+    ["fruit", /mevali|meva|olma|o'rik|anor|fruit|фрукт|яблон|frutal|meyve|fruitier|obstbaum/], ["bush", /buta|bush|куст|arbusto|çalı|buisson|busch/], ["fountain", /favvora|fountain|фонтан|fuente|çeşme|fontaine|brunnen/],
+    ["gazebo", /shiypon|ayvon|gazebo|беседк|cenador|kameriye|kiosque|pavillon/], ["tandir", /tandir|tandoor|тандыр|horno/], ["bench", /o'rindiq|skameyka|bench|скамей|banco|bank/],
+    ["play", /bolalar|o'yin maydon|playground|детск|parque infantil|oyun alan|aire de jeux|spielplatz/], ["lamp", /chiroq|lamp|фонар|farola|lamba|lampadaire|laterne/],
+    ["greenhouse", /issiqxona|greenhouse|теплиц|invernadero|sera|serre|gewächshaus/], ["tree", /daraxt|tree|дерев|árbol|ağaç|arbre|baum/], ["car", /mashina joyi|parking|парковк|aparcamiento|otopark/],
+    ["bed", /gulzor|gul|flower|клумб|цвет|flor|çiçek|fleur|blume/], ["suri", /so'ri|daybed|топчан|tarima/]];
+  function yardItems(s, kind) {
+    const asked = YARD_WORDS.filter(([, re]) => re.test(s)).map(([t]) => t);
+    if (asked.length) return asked.flatMap(t => (t === "tree" || t === "fruit" || t === "pine" || t === "bush" ? [t, t] : [t]));
+    return kind === "villa" ? ["garage", "swim", "gazebo", "fruit", "fruit", "pine", "bed", "lamp", "lamp"]
+         : kind === "maktab" ? ["play", "tree", "tree", "bench", "bench", "fountain", "bed"]
+         : ["garage", "fruit", "fruit", "tree", "pool", "suri", "tandir", "bed"];
+  }
+
   function parseCommand(q) {
     const s = String(q).toLowerCase().replace(/[ʻʼ’‘`]/g, "'"), p = {};
     let m = WORDS.floors.exec(s); if (m) p.floors = Number(m[1]);
@@ -162,7 +179,9 @@ const AIDesign = (function () {
     for (const [v, re] of WORDS.material) if (re.test(s)) { p.material = v; break; }
     const acts = Object.keys(p).length ? [{ type: "set_params", params: p }] : [];
     if (/balkon|balcon|балкон|balkon/.test(s) && /(qo'sh|qo'y|add|добав|añad|ekle|ajout|hinzu)/.test(s)) acts.push({ type: "set_cells", cells: [{ floor: "upper", bay: "all", type: "balc" }] });
-    if (/hovli|yard|двор|patio|avlu|cour|hof/.test(s) && /(qo'sh|yoq|add|turn on|добав|включ|añad|activa|ekle|ajout|hinzu)/.test(s)) acts.push({ type: "yard", on: true });
+    const yi = YARD_WORDS.filter(([t, re]) => re.test(s) && !(t === "bed" && /balkon|balcon/.test(s))).map(([t]) => t);
+    if (/(qo'sh|qo'y|qur|yoq|add|put|build|turn on|добав|постав|построй|включ|añad|pon|constru|activa|ekle|koy|ajout|mets|hinzu|bau)/.test(s) && (yi.length || /hovli|yard|двор|patio|avlu|cour|hof/.test(s)))
+      acts.push({ type: "yard", on: true, items: yi });                // "hovliga garaj va basseyn qo'sh" 
     if (/(ichki|ichini|ichi |interior|интерьер|комнат|habitaci|iç mekân|oda|intérieur|pièces|innen|zimmer)/.test(s) && /(avto|auto|yarat|qil|create|generate|созда|crea|genera|oluştur|crée|génère|erstell)/.test(s)) acts.push({ type: "interior", mode: "auto" });
     return acts;
   }
@@ -204,7 +223,7 @@ const AIDesign = (function () {
     const balc = /balkon|balcon|балкон/.test(s) || kind[3].length;
     const cells = /balkon|balcon|балкон/.test(s) && !kind[3].length ? [{ floor: "upper", bay: "all", type: "balc" }] : kind[3];
     const acts = [{ type: "new_design", name: "", houses: [{ params: p, cells }] }];
-    if (yard) acts.push({ type: "yard", on: true, fence: "devor", items: ["tree", "tree", "tree", "pool", "suri", "bed", "car"] });
+    if (yard) acts.push({ type: "yard", on: true, fence: "devor", items: yardItems(s, kind[0]) });
     if (!noInt && p.floors <= 12) acts.push({ type: "interior", mode: "auto" });
     const L = SUM[lang] || SUM.en, mat = MATERIALS[p.material] ? MATERIALS[p.material].label : p.material;
     const tl = lang === "uz" ? "uz" : (window.USTUN_I18N || {})[lang] ? lang : "en";   // lug'ati yo'q til (ru...) — nomlar inglizcha

@@ -1,0 +1,4 @@
+# Server (arxitektura/server.py) faqat Python standart kutubxonasida ishlaydi.
+# anthropic — AI yordamchi uchun (Claude). Kalit: ANTHROPIC_API_KEY muhit o'zgaruvchisi.
+# 1.x: server.py dagi chaqiruvlar (messages.create, xato klasslari) shu versiyalarda tekshirilgan qo'llanma bo'yicha mos.
+anthropic>=1.0,<2

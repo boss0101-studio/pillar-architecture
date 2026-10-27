@@ -1222,3 +1222,23 @@ html.vr-lock .ai-btn, html.vr-lock .ai { display: none; }
 .gy-play { fill: #d65f45; fill-opacity: .7; stroke: #8a3a2a; stroke-width: 1; }
 .gy-lamp { fill: #ffd77a; stroke: #2a2f33; stroke-width: 1; }
 .gy-green { fill: #cfe6e8; fill-opacity: .7; stroke: #6c9aa0; stroke-width: 1; }
+/* Instruktor: personaj va ko'rsatkich qo'l */
+.tour-who { display: flex; align-items: center; gap: 10px; }
+.tour-av { width: 42px; height: 42px; flex: none; animation: av-bob 2.4s ease-in-out infinite; }
+.tour-card.intro { text-align: center; }
+.tour-card.intro .tour-who { flex-direction: column; gap: 6px; }
+.tour-card.intro .tour-av { width: 86px; height: 86px; }
+.av-bg { fill: color-mix(in srgb, var(--accent) 18%, var(--surface)); stroke: var(--accent); stroke-width: 1.5; }
+.av-body { fill: var(--accent); }
+.av-face { fill: #f1c9a5; }
+.av-eye { fill: #22272b; }
+.av-mouth { fill: none; stroke: #22272b; stroke-width: 1.4; stroke-linecap: round; }
+.av-hat { fill: #f2b632; }
+.av-line { stroke: #c98d12; stroke-width: 2; }
+@keyframes av-bob { 50% { transform: translateY(-2px) rotate(-2deg); } }
+.tour-hand { position: fixed; left: 50%; top: 50%; z-index: 2; width: 34px; height: 34px; opacity: 0; pointer-events: none; transform: translate(-8px, -2px); transition: left .6s cubic-bezier(.3, .7, .2, 1), top .6s cubic-bezier(.3, .7, .2, 1), opacity .3s; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .45)); }
+.tour-hand path { fill: #fff; stroke: #22272b; stroke-width: 1.4; stroke-linejoin: round; }
+.tour-hand.on { opacity: 1; }
+.tour-hand.tap { animation: hand-tap .5s ease; }
+@keyframes hand-tap { 40% { transform: translate(-8px, -2px) scale(.82); } }
+@media (prefers-reduced-motion: reduce) { .tour-av, .tour-hand.tap { animation: none; } .tour-hand { transition: none; } }

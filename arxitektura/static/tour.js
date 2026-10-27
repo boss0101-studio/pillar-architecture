@@ -2,6 +2,7 @@
 // 1) Saytga birinchi kirganda (til tanlangandan keyin) — umumiy tanishuv: bo'limlar, AI yordamchi, til, fon, sozlamalar.
 // 2) Har bir bo'limga (Konstruktor, Erkin qurish, Oq qog'oz) birinchi kirganda — shu bo'limning asosiy tugmalari.
 // Ko'rilganlar shu brauzerda eslab qolinadi ("ustun-tour"); navbardagi "?" tugmasi yoki Sozlamalardan qayta ochiladi.
+// Instruktor: kartada personaj, qo'l belgilangan tugmaga uchib borib "bosadi", ba'zi qadamlarda o'zi bosib ko'rsatadi (va qaytaradi).
 // Matnlar o'zbekcha yoziladi, i18n.js ularni tanlangan tilga o'giradi.
 const UstunTour = (function () {
   const KEY = "ustun-tour";
@@ -20,10 +21,23 @@ const UstunTour = (function () {
   const find = sel => (sel ? [...document.querySelectorAll(sel)].find(visible) || null : null);
   const navTo = (view, file) => (isWeb() ? `.nav a[data-view="${view}"]` : `.nav a[href="${file}"]`);
 
+  // ---------- Jonli namoyish: instruktor tugmani o'zi bosadi, keyin avvalgi holatni qaytaradi ----------
+  let undo = null, timers = [];
+  const later = (f, ms) => timers.push(setTimeout(f, ms));
+  function stopDemo() { timers.forEach(clearTimeout); timers = []; if (undo) { const u = undo; undo = null; u(); } }
+  function demoShape() {
+    const box = document.getElementById("shapes"); if (!box) return;
+    const was = box.querySelector('[aria-pressed="true"]'), l = box.querySelector('[data-v="L"]');
+    if (!l || was === l) return;
+    tap(l); l.click();
+    undo = () => { if (was) was.click(); };
+    later(() => { if (was) { tap(was); stopDemo(); } }, 2200);
+  }
+
   // ---------- Qadamlar ----------
   const TOURS = {
     bosh: [
-      { t: "Pillar Architecture'ga xush kelibsiz!", d: "Bu yerda binoni brauzerning o'zida loyihalaysiz: fasad, 3D va VR, ichki xonalar, hovli va smeta. Qisqa tanishuv bir daqiqa oladi." },
+      { t: "Salom! Men — instruktoringizman", d: "Saytni qanday ishlatishni qadamma-qadam ko'rsatib beraman: qayerni bosish, nima qilish kerakligini qo'l bilan ko'rsataman. Bir daqiqa oladi.", nx: "Ha, ko'rsating" },
       { s: () => navTo("konstruktor", "designer.html"), t: "Konstruktor", d: "Tayyor bino qutisi: qavat, plan shakli (L, П, shar...), tom, material va fasaddagi deraza, balkon, eshiklar." },
       { s: () => navTo("erkin", "builder.html"), t: "Erkin qurish", d: "Devorlarni noldan o'zingiz chizasiz: tayyor shakllar, yoy devorlar; fundament, g'isht va smeta o'zi hisoblanadi." },
       { s: () => navTo("qogoz", "paper.html"), t: "Oq qog'oz", d: "Uyni qalam bilan qo'lda chizing — chizg'ich, go'niya, sirkul yordam beradi. Keyin bir bosishda 3D'ga o'tkazasiz." },
@@ -34,7 +48,7 @@ const UstunTour = (function () {
     ],
     konstruktor: [
       { t: "Konstruktor", d: "Chapda o'lchamlar va uslub, o'rtada fasad chizmasi va 3D, o'ngda hisob-kitob. Har bir o'zgarish darhol ko'rinadi." },
-      { s: () => "#shapes", t: "Plan shakli", d: "To'rtburchak, L, П, T, ichki hovlili, silindr, shar va boshqa shakllar. L, П, T uchun qanot enini sozlaysiz." },
+      { s: () => "#shapes", t: "Plan shakli", d: "To'rtburchak, L, П, T, ichki hovlili, silindr, shar va boshqa shakllar. L, П, T uchun qanot enini sozlaysiz.", demo: demoShape },
       { s: () => "#tools", t: "Fasad asboblari", d: "Deraza, balkon yoki eshikni tanlang va fasaddagi katakni bosing yoki ustidan sudrang." },
       { s: () => "#facade", t: "Old fasad", d: "Shu chizmada kataklarni bo'yaysiz. Orqaga — Ctrl+Z." },
       { s: () => ".v3", t: "3D ko'rinish", d: "Sudrab aylantiring. VR — ichiga kirib yurish, Kesim — tom olinib xonalar ko'rinadi." },
@@ -57,13 +71,20 @@ const UstunTour = (function () {
   };
 
   // ---------- Ko'rinish ----------
+  // Instruktor: kaska kiygan me'mor
+  const AVATAR = `<svg class="tour-av" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" class="av-bg"/>
+    <path d="M9 47c1-8 7-12 15-12s14 4 15 12" class="av-body"/><circle cx="24" cy="23" r="9" class="av-face"/>
+    <circle cx="20.5" cy="23" r="1.3" class="av-eye"/><circle cx="27.5" cy="23" r="1.3" class="av-eye"/><path d="M20.5 27.5q3.5 2.6 7 0" class="av-mouth"/>
+    <path d="M13 19.5a11 11 0 0 1 22 0z" class="av-hat"/><rect x="11" y="18.5" width="26" height="3" rx="1.5" class="av-hat"/><path d="M24 9v6" class="av-line"/></svg>`;
   let ui = null, steps = [], at = 0, cur = "";
   function build() {
     ui = document.createElement("div");
     ui.className = "tour"; ui.hidden = true;
     ui.innerHTML = `<div class="tour-hole" aria-hidden="true"></div>
+      <svg class="tour-hand" viewBox="0 0 32 32" aria-hidden="true"><path d="M11 3.5c1.4 0 2.4 1 2.4 2.4v8.3l1-.1c1.1 0 1.9.6 2.2 1.4.5-.5 1.1-.7 1.8-.7 1.1 0 2 .7 2.3 1.6.4-.3 1-.5 1.5-.5 1.4 0 2.4 1 2.4 2.4V24c0 3-2.4 5-5.3 5h-3.6c-1.8 0-3.4-.9-4.4-2.4L6 19.8c-.6-1-.3-2.3.7-2.9.9-.5 2-.3 2.6.5l-.7-.9V5.9C8.6 4.5 9.6 3.5 11 3.5z"/></svg>
       <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tourT">
-        <span class="label tour-n"></span><h3 id="tourT"></h3><p class="tour-d"></p>
+        <div class="tour-who">${AVATAR}<span class="label">Instruktor · <span class="tour-n"></span></span></div>
+        <h3 id="tourT"></h3><p class="tour-d"></p>
         <div class="tour-row"><button type="button" class="btn-ghost" data-tour="skip">O'tkazib yuborish</button><span class="sp"></span>
           <button type="button" class="btn-ghost" data-tour="prev">Oldingisi</button><button type="button" class="btn" data-tour="next">Keyingisi</button></div>
       </div>`;
@@ -87,7 +108,8 @@ const UstunTour = (function () {
   // Belgilangan element atrofida "teshik" va uning yonida karta (sig'magan tomonga emas)
   function place() {
     const el = target(), hole = ui.querySelector(".tour-hole"), card = ui.querySelector(".tour-card");
-    if (!el) { hole.style.cssText = "left:50%;top:50%;width:0;height:0"; card.style.cssText = ""; card.classList.add("center"); return; }
+    const hand = ui.querySelector(".tour-hand");
+    if (!el) { hole.style.cssText = "left:50%;top:50%;width:0;height:0"; card.style.cssText = ""; card.classList.add("center"); hand.classList.remove("on"); return; }
     card.classList.remove("center");
     const r = el.getBoundingClientRect(), pad = 6;
     hole.style.cssText = `left:${r.left - pad}px;top:${r.top - pad}px;width:${r.width + 2 * pad}px;height:${r.height + 2 * pad}px`;
@@ -96,9 +118,24 @@ const UstunTour = (function () {
     if (top < 10 || (top + ch > innerHeight - 10)) top = Math.max(10, innerHeight - ch - 10);
     const left = Math.min(Math.max(12, r.left + r.width / 2 - cw / 2), innerWidth - cw - 12);
     card.style.cssText = `left:${left}px;top:${top}px;width:${cw}px`;
+    if (!undo) pointAt(el);
+  }
+  // Qo'l elementga uchib boradi va "bosadi" (namoyishda — bosilayotgan tugmaga)
+  function pointAt(el) {
+    const hand = ui.querySelector(".tour-hand"), r = el.getBoundingClientRect();
+    hand.style.left = `${Math.min(r.left + Math.min(r.width / 2, 60), innerWidth - 30)}px`;
+    hand.style.top = `${Math.min(r.top + Math.min(r.height / 2, 30), innerHeight - 30)}px`;
+    hand.classList.add("on");
+  }
+  function tap(el) {
+    if (!ui) return;
+    if (el) pointAt(el);
+    const hand = ui.querySelector(".tour-hand");
+    hand.classList.remove("tap"); void hand.offsetWidth; hand.classList.add("tap");
   }
   function show(i) {
     if (i < 0) return;
+    stopDemo();
     while (i < steps.length && steps[i].s && !find(steps[i].s())) i++;   // ko'rinmaydigan element — qadam o'tkaziladi
     if (i >= steps.length) { close(); return; }
     at = i; const st = steps[i], n = steps.length;
@@ -108,21 +145,27 @@ const UstunTour = (function () {
     ui.querySelector('[data-tour="prev"]').hidden = i === 0;
     const next = ui.querySelector('[data-tour="next"], [data-tour="go"]');
     if (st.go) { next.dataset.tour = "go"; next.textContent = st.go[2]; }
-    else { next.dataset.tour = "next"; next.textContent = i === n - 1 ? "Tushunarli" : "Keyingisi"; }
+    else { next.dataset.tour = "next"; next.textContent = st.nx || (i === n - 1 ? "Tushunarli" : "Keyingisi"); }
+    ui.querySelector(".tour-card").classList.toggle("intro", i === 0 && !st.s);
     ui.hidden = false; document.documentElement.classList.add("touring");
     const el = target();
     if (el) { const r = el.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight - 40) el.scrollIntoView({ block: "center", behavior: "instant" }); }
     requestAnimationFrame(() => { place(); next.focus(); });
+    if (el) later(() => tap(null), 650);
+    if (st.demo) later(st.demo, 1400);
   }
   function close() {
     if (!ui || ui.hidden) return;
+    stopDemo(); ui.querySelector(".tour-hand").classList.remove("on");
     ui.hidden = true; document.documentElement.classList.remove("touring");
     seen[cur] = 1; save();
+    if (cur === "bosh") setTimeout(() => start(), 500);              // so'ng ochiq bo'limning o'z yo'riqnomasi
     const h = document.querySelector(".nav-help"); if (h) h.focus();
   }
   function start(key, force) {
-    key = key || page();
+    key = key || (seen.bosh ? page() : "bosh");                       // birinchi kirish: avval instruktor salomlashadi
     if (!TOURS[key] || (!force && seen[key])) return false;
+    if (!force && ui && !ui.hidden) return false;
     if (document.querySelector(".lang-modal")) return false;          // til tanlash oynasi ochiq — keyinroq
     if (!ui) build();
     cur = key; steps = TOURS[key]; show(0);

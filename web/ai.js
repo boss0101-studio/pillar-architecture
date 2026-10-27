@@ -404,5 +404,5 @@
   renderHead();
   window.addEventListener("ustun-til", () => { renderHead(); if (!panel.hidden) { renderLog(); renderChips(); } });
 
-  window.UstunAI = { ask, context, offline: (q) => offline(q, context()), get mode() { return mode; }, get history() { return hist.slice(); } };   // sinov uchun
+  window.UstunAI = { ask, context, open, offline: (q) => offline(q, context()), get mode() { return mode; }, get history() { return hist.slice(); } };   // sinov uchun
 })();

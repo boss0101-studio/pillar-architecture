@@ -225,6 +225,8 @@ const UstunSettings = (function () {
         <h3>Yordamchi</h3>
         <p class="muted st-note">Saytga birinchi kirganda bo'limlar qisqacha tanishtiriladi. Uni qayta ko'rish mumkin.</p>
         <div class="st-row"><button type="button" class="btn-ghost" data-act="tour">Yo'riqnomani qayta ko'rsatish</button></div>
+        ${window.UstunAdvisor ? `<p class="muted st-note">Konstruktorda uy qurayotganingizda AI muammolarni ko'rsatib, tuzatishni taklif qiladi.</p>
+        <div class="mode-sw" role="group" aria-label="AI maslahatlari"><span class="label">AI maslahatlari</span><button type="button" data-advisor="on" aria-pressed="${UstunAdvisor.on}">Yoqilgan</button><button type="button" data-advisor="off" aria-pressed="${!UstunAdvisor.on}">O'chirilgan</button></div>` : ""}
       </div>` : ""}
       ${window.UstunSimple ? `<div class="st-card">
         <h3>Interfeys</h3>

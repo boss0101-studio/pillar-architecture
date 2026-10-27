@@ -1258,3 +1258,20 @@ html:not(.simple) .mode-steps, html:not(.simple) .mode-hint { display: none; }
 .mode-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 1rem; line-height: 1.45; }
 .mode-steps li::marker { color: var(--accent); font-weight: 700; }
 .mode-hint { margin: 0; font-size: .85rem; }
+/* AI maslahatchi (advisor.js): AI tugmasi ustida, sahifani to'smaydigan kichik karta */
+.adv { position: fixed; right: max(14px, env(safe-area-inset-right)); bottom: calc(max(14px, env(safe-area-inset-bottom)) + 56px); z-index: 240; width: min(340px, calc(100vw - 28px)); padding: 12px 14px 10px; background: var(--surface); color: var(--fg); border: 1px solid var(--accent); box-shadow: 0 16px 36px -14px rgba(0, 0, 0, .6); animation: dlg-in .25s cubic-bezier(.2, .7, .2, 1); }
+.adv[hidden] { display: none; }
+.adv-head { display: flex; align-items: center; gap: 8px; }
+.adv-ic { color: var(--accent); }
+.adv-v { margin-left: auto; font-size: .8rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+.adv-x { margin-left: 4px; width: 28px; height: 28px; border: 0; background: transparent; color: var(--muted); font-size: 1.2rem; line-height: 1; cursor: pointer; }
+.adv-v:empty + .adv-x { margin-left: auto; }
+.adv-x:hover, .adv-x:focus-visible { color: var(--fg); outline: none; }
+.adv-t { margin: 6px 0 4px; font-size: 1rem; }
+.adv-d { margin: 0 0 10px; font-size: .86rem; line-height: 1.45; color: var(--muted); }
+.adv-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.adv-row [hidden] { display: none; }
+.adv-row .btn, .adv-row .btn-ghost { padding: 7px 12px; font-size: .82rem; }
+.adv-off { margin-top: 8px; padding: 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: .75rem; text-decoration: underline; cursor: pointer; }
+.adv-off:hover, .adv-off:focus-visible { color: var(--fg); }
+@media (max-width: 560px) { .adv { left: 14px; right: 14px; width: auto; } }

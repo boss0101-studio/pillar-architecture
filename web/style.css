@@ -1260,3 +1260,19 @@ html.vr-lock .ai-btn, html.vr-lock .ai { display: none; }
 .tour-hand.tap { animation: hand-tap .5s ease; }
 @keyframes hand-tap { 40% { transform: translate(-8px, -2px) scale(.82); } }
 @media (prefers-reduced-motion: reduce) { .tour-av, .tour-hand.tap { animation: none; } .tour-hand { transition: none; } }
+/* Sodda rejim (simple.js): ikkinchi darajali boshqaruvlar yashiriladi, To'liq rejimda hammasi ko'rinadi */
+html.simple [data-adv],
+html.simple .rng:has(#floor_h), html.simple .rng:has(#bay_w),
+html.simple fieldset:has([data-name="ground"]), html.simple fieldset:has(#geoAxes), html.simple fieldset:has(#category),
+html.simple .field:has(#dAuthor), html.simple .io-row:has(#exportJson), html.simple #redo,
+html.simple #calcBody, html.simple .calc-note,
+html.simple #tools [data-tool]:not([data-tool="win"]):not([data-tool="wide"]):not([data-tool="arch"]):not([data-tool="balc"]):not([data-tool="door"]):not([data-tool="glassdoor"]):not([data-tool="garage"]):not([data-tool="wall"]) { display: none !important; }
+html:not(.simple) .mode-steps, html:not(.simple) .mode-hint { display: none; }
+.mode-sw { display: inline-flex; align-items: center; border: 1px solid var(--fg); }
+.mode-sw .label { padding: 0 10px; }
+.mode-sw button { font: inherit; font-size: .85rem; padding: 7px 14px; border: 0; border-left: 1px solid var(--fg); background: transparent; color: var(--fg); cursor: pointer; }
+.mode-sw button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.mode-sw button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mode-steps { margin: 0; padding-left: 1.3em; display: grid; gap: 4px; font-size: 1rem; line-height: 1.45; }
+.mode-steps li::marker { color: var(--accent); font-weight: 700; }
+.mode-hint { margin: 0; font-size: .85rem; }

@@ -226,6 +226,11 @@ const UstunSettings = (function () {
         <p class="muted st-note">Saytga birinchi kirganda bo'limlar qisqacha tanishtiriladi. Uni qayta ko'rish mumkin.</p>
         <div class="st-row"><button type="button" class="btn-ghost" data-act="tour">Yo'riqnomani qayta ko'rsatish</button></div>
       </div>` : ""}
+      ${window.UstunSimple ? `<div class="st-card">
+        <h3>Interfeys</h3>
+        <p class="muted st-note">Sodda rejimda faqat asosiy sozlamalar ko'rinadi — yangi boshlovchilar uchun qulay. To'liq rejimda barcha asboblar, formulalar va eksport bor.</p>
+        <div class="mode-sw" role="group" aria-label="Interfeys rejimi"><button type="button" data-mode="simple" aria-pressed="${UstunSimple.simple}">Sodda</button><button type="button" data-mode="full" aria-pressed="${!UstunSimple.simple}">To'liq</button></div>
+      </div>` : ""}
       <form class="st-card" data-form="ui">
         <h3>Mavzu</h3>
         <div class="st-themes" role="radiogroup" aria-label="Mavzu">

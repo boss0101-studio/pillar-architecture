@@ -457,6 +457,69 @@
           add(w, 0.9, dp, 0, 0.45, 0); add(w, 0.04, dp + 0.02, 0, 0.92, 0, itemM("#4a4a4a"));
         } else if (type === "toilet") {
           add(w, 0.4, dp * 0.62, 0, 0.2, dp * 0.19); add(w, 0.5, 0.2, 0, 0.5, -dp / 2 + 0.1);
+        } else if (type === "kidsbed" || type === "cradle") {             // bolalar karavoti / beshik: ikki uchida baland suyanchiq
+          add(w, 0.25, dp, 0, 0.3, 0); add(w * 0.94, 0.12, dp * 0.9, 0, 0.48, 0, itemM("#f5f0e6"));
+          [-1, 1].forEach(s => add(w, h, 0.06, 0, h / 2, s * (dp / 2 - 0.03)));
+          if (type === "cradle") add(0.05, 0.05, dp, 0, h + 0.05, 0);
+        } else if (type === "armchair") {
+          add(w, 0.4, dp, 0, 0.2, 0); add(w, 0.45, 0.18, 0, 0.6, -dp / 2 + 0.09); add(0.16, 0.25, dp, -(w / 2 - 0.08), 0.52, 0); add(0.16, 0.25, dp, w / 2 - 0.08, 0.52, 0);
+        } else if (type === "dining" || type === "ctable" || type === "xontaxta") {
+          add(w, 0.05, dp, 0, h - 0.025, 0);
+          [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, c]) => add(0.06, h - 0.05, 0.06, a * (w / 2 - 0.08), (h - 0.05) / 2, c * (dp / 2 - 0.08)));
+        } else if (type === "korpacha") {
+          add(w, h, dp, 0, h / 2, 0); add(w * 0.8, 0.012, dp * 0.9, 0, h + 0.006, 0, itemM("#e9c46a"));
+        } else if (type === "shelf") {
+          add(w, h, 0.03, 0, h / 2, -dp / 2 + 0.015); [-1, 1].forEach(s => add(0.03, h, dp, s * (w / 2 - 0.015), h / 2, 0));
+          for (let i = 0; i < 5; i++) add(w, 0.03, dp, 0, 0.02 + i * (h - 0.05) / 4, 0);
+          [0.3, 0.75, 1.2, 1.65].forEach((y, i) => add(w * 0.7, 0.28, dp * 0.7, (i % 2 ? 0.08 : -0.08), y + 0.16, 0, itemM(["#a4544a", "#3d6f9c", "#d9b24c", "#5c8a3e"][i])));
+        } else if (type === "dresser" || type === "nightstand" || type === "wardrobe") {
+          add(w, h, dp, 0, h / 2, 0);
+          const n = type === "wardrobe" ? 0 : type === "dresser" ? 3 : 2;
+          for (let i = 0; i < n; i++) add(w * 0.9, 0.012, 0.01, 0, (i + 1) * h / (n + 1), dp / 2 + 0.005, dark);
+          if (type === "wardrobe") add(0.012, h * 0.9, 0.01, 0, h / 2, dp / 2 + 0.005, dark);
+        } else if (type === "stove") {                                    // gaz plitasi: korpus, 4 ta konforka, duxovka oynasi
+          add(w, h, dp, 0, h / 2, 0); add(w, 0.02, dp, 0, h + 0.01, 0, dark);
+          [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([a, c]) => g2.add(mk(track(new THREE.CylinderGeometry(0.07, 0.07, 0.02, 12)), itemM("#5a5f63"), a * w / 4, h + 0.03, c * dp / 4, false)));
+          add(w * 0.75, h * 0.4, 0.01, 0, h * 0.4, dp / 2 + 0.005, dark);
+        } else if (type === "washer" || type === "dishwasher") {
+          add(w, h, dp, 0, h / 2, 0);
+          if (type === "washer") { const door = mk(track(new THREE.CylinderGeometry(0.19, 0.19, 0.03, 20)), dark, 0, h * 0.45, dp / 2 + 0.01, false); door.rotation.x = Math.PI / 2; g2.add(door); }
+          else add(w * 0.85, 0.06, 0.02, 0, h - 0.1, dp / 2 + 0.01, dark);
+        } else if (type === "fridge") {
+          add(w, h, dp, 0, h / 2, 0); add(w, 0.01, 0.01, 0, h * 0.62, dp / 2 + 0.005, dark); add(0.03, 0.4, 0.03, w / 2 - 0.08, h * 0.8, dp / 2 + 0.02, dark);
+        } else if (type === "ac" || type === "boiler" || type === "radiator") {
+          add(w, h, dp, 0, h / 2, 0);
+          if (type === "ac") add(w * 0.85, 0.02, 0.02, 0, 0.06, dp / 2 + 0.005, itemM("#9aa3a8"));
+          if (type === "radiator") for (let i = 0; i < 8; i++) add(0.02, h, 0.02, -w / 2 + 0.06 + i * (w - 0.12) / 7, h / 2, dp / 2 + 0.01, itemM("#d6d8d6"));
+          if (type === "boiler") add(0.1, 0.1, 0.01, 0, h * 0.3, dp / 2 + 0.005, dark);
+        } else if (type === "shower") {                                   // dush: poddon, shisha devorlar, ustidagi dush
+          add(w, 0.1, dp, 0, 0.05, 0, itemM("#f1f1ee"));
+          const gl = itemM("#bcd6e6"); gl.transparent = true; gl.opacity = 0.35;
+          add(w, h, 0.02, 0, h / 2, dp / 2 - 0.01, gl); add(0.02, h, dp, w / 2 - 0.01, h / 2, 0, gl);
+          add(0.04, 0.04, 0.3, -w / 2 + 0.15, h - 0.1, -dp / 2 + 0.15, dark);
+        } else if (type === "sink") {
+          add(w, 0.12, dp, 0, h - 0.06, 0); add(0.12, h - 0.12, 0.12, 0, (h - 0.12) / 2, -dp / 4);
+        } else if (type === "mirror" || type === "painting") {
+          add(w, h, dp, 0, h / 2, 0, itemM(type === "mirror" ? "#7a6a58" : "#5b3f22"));
+          add(w - 0.08, h - 0.08, 0.01, 0, h / 2, dp / 2 + 0.005, itemM(type === "mirror" ? "#dceaf2" : col));
+        } else if (type === "lamp") {                                     // torsher: asos, ustun, abajur
+          add(0.3, 0.03, 0.3, 0, 0.015, 0, dark); add(0.03, h - 0.3, 0.03, 0, (h - 0.3) / 2, 0, dark);
+          g2.add(mk(track(new THREE.CylinderGeometry(0.14, 0.2, 0.3, 14)), itemM(col), 0, h - 0.15, 0, false));
+        } else if (type === "chandelier") {                               // qandil: shiftdan zanjir, gardish va lampochkalar
+          add(0.02, 0.2, 0.02, 0, h - 0.1, 0, dark);
+          const ring = mk(track(new THREE.TorusGeometry(w / 2 - 0.05, 0.02, 6, 24)), itemM(col), 0, h - 0.25, 0, false); ring.rotation.x = Math.PI / 2; g2.add(ring);
+          for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; g2.add(mk(track(new THREE.SphereGeometry(0.06, 8, 6)), itemM("#fff6d6"), Math.cos(a) * (w / 2 - 0.05), h - 0.18, Math.sin(a) * (w / 2 - 0.05), false)); }
+        } else if (type === "curtain") {                                  // parda: karniz va burmalar
+          add(w, 0.04, 0.04, 0, h - 0.02, 0, dark);
+          for (let i = 0; i < 8; i++) add(w / 8 * 0.9, h - 0.1, dp * (i % 2 ? 0.5 : 1), -w / 2 + (i + 0.5) * w / 8, (h - 0.1) / 2, 0);
+        } else if (type === "fireplace") {
+          add(w, h, dp, 0, h / 2, 0); add(w * 0.55, h * 0.5, 0.02, 0, h * 0.3, dp / 2 + 0.01, dark);
+          add(w * 0.35, 0.12, 0.02, 0, 0.18, dp / 2 + 0.02, itemM("#e3732e")); add(w + 0.1, 0.06, dp + 0.08, 0, h + 0.03, 0);
+        } else if (type === "piano") {
+          add(w, h, dp * 0.6, 0, h / 2, -dp * 0.2); add(w, 0.06, dp * 0.4, 0, 0.72, dp * 0.3); add(w * 0.95, 0.02, dp * 0.3, 0, 0.76, dp * 0.32, itemM("#f6f6f2"));
+        } else if (type === "aquarium") {                                 // akvarium: tumba va suvli shisha
+          add(w, 0.7, dp, 0, 0.35, 0, itemM("#2a2f33"));
+          const gl = itemM("#5aa8d8"); gl.transparent = true; gl.opacity = 0.55; add(w, h - 0.7, dp, 0, 0.7 + (h - 0.7) / 2, 0, gl);
         } else add(w, h, dp, 0, h / 2, 0);
         return g2;
       }
@@ -486,9 +549,10 @@
         }
         fd.items.forEach(it => {
           const d = Interior.ITEMS[it[0]], fg = furniture(it[0], d.c);
-          fg.position.set(X(it[1]), base, Z(it[2])); fg.rotation.y = ((it[3] | 0) % 4) * Math.PI / 2;
+          const lift = d.top ? Math.max(0, top - base - d.h - 0.02) : (d.y || 0);   // osma buyumlar: devorda yoki shiftda
+          fg.position.set(X(it[1]), base + lift, Z(it[2])); fg.rotation.y = ((it[3] | 0) % 4) * Math.PI / 2;
           G.add(fg);
-          if (f === 0 && it[0] !== "carpet") rects.push(grow(Interior.itemRect(it), 0.12));
+          if (f === 0 && it[0] !== "carpet" && !d.m) rects.push(grow(Interior.itemRect(it), 0.12));
         });
         if (st && f < N - 1) {                                       // zina: pog'onalar (yo'nalish — ko'tarilish tomoni)
           const n = st.n, rise = (fh - (f === 0 ? 0.06 : 0)) / n, alongZ = !!st.dir[1];
@@ -943,6 +1007,34 @@
       const sh = ymesh(ytrack(new THREE.CylinderGeometry(1.6, 1.6, 6.2, 18, 1, true, -Math.PI / 2, Math.PI)), ymat(0xcfe6e8, { transparent: true, opacity: 0.45, side: THREE.DoubleSide, roughness: 0.1 }), 0, 0, 0, g, false);
       sh.rotation.x = Math.PI / 2; sh.rotation.z = Math.PI / 2;
       for (let i = 0; i < 4; i++) ybox(0.9, 0.3, 5.6, M.soil, -0.8 + (i % 2) * 1.6, 0.15, 0, g);
+    } else if (it.t === "bbq") {                                  // mangal: metall quti, oyoqlar, cho'g'
+      ybox(1.2, 0.3, 0.45, ymat(0x2a2f33), 0, 0.85, 0, g);
+      [[-0.55, -0.18], [0.55, -0.18], [-0.55, 0.18], [0.55, 0.18]].forEach(([x, z]) => ybox(0.05, 0.7, 0.05, ymat(0x2a2f33), x, 0.35, z, g));
+      ybox(1.1, 0.03, 0.38, ymat(0xe3732e, { emissive: 0xb3401a, emissiveIntensity: 0.6 }), 0, 1.0, 0, g, false);
+    } else if (it.t === "lounger") {                              // shezlong: ramka, to'shak, ko'tarilgan suyanchiq
+      ybox(0.7, 0.3, 1.3, M.white, 0, 0.15, 0.3, g); ybox(0.62, 0.08, 1.2, ymat(0x3d7fc4), 0, 0.34, 0.3, g);
+      const back = ybox(0.62, 0.08, 0.7, ymat(0x3d7fc4), 0, 0.55, -0.55, g); back.rotation.x = 0.7;
+    } else if (it.t === "umbrella") {                             // soyabon: ustun va konus soyabon
+      ybox(0.06, 2.4, 0.06, ymat(0x2a2f33), 0, 1.2, 0, g);
+      const top = ymesh(ytrack(new THREE.ConeGeometry(1.3, 0.5, 8, 1, true)), ymat(0xe9c46a, { side: THREE.DoubleSide }), 0, 2.45, 0, g); top.castShadow = true;
+      ybox(0.4, 0.06, 0.4, ymat(0x2a2f33), 0, 0.03, 0, g);
+    } else if (it.t === "pot") {                                  // gul tuvak
+      ymesh(ytrack(new THREE.CylinderGeometry(0.32, 0.24, 0.55, 14)), ymat(0xb5683f), 0, 0.275, 0, g);
+      ymesh(ytrack(new THREE.SphereGeometry(0.34, 12, 8)), M.leaf, 0, 0.75, 0, g);
+      [[0.15, 0.1], [-0.12, 0.18], [0, -0.2]].forEach(([x, z]) => ymesh(ytrack(new THREE.SphereGeometry(0.07, 8, 6)), ymat(0xd6476b), x, 0.95, z, g, false));
+    } else if (it.t === "swing") {                                // arg'imchoq: ramka, arqonlar va o'tirgich
+      [-1.1, 1.1].forEach(x => { [-0.6, 0.6].forEach(z => { const leg = ybox(0.08, 2.3, 0.08, M.wood, x, 1.1, z * 0.6, g); leg.rotation.x = z > 0 ? -0.25 : 0.25; }); });
+      ybox(2.3, 0.08, 0.08, M.wood, 0, 2.2, 0, g);
+      [-0.3, 0.3].forEach(x => ybox(0.02, 1.6, 0.02, ymat(0x2a2f33), x, 1.4, 0, g, false)); ybox(0.7, 0.05, 0.35, M.wood, 0, 0.6, 0, g);
+    } else if (it.t === "doghouse") {                             // it uychasi: quti, nishab tom, eshikcha
+      ybox(0.9, 0.7, 1.1, M.wood, 0, 0.35, 0, g);
+      [-1, 1].forEach(s => { const r = ybox(0.62, 0.05, 1.2, ymat(0x6a5047), s * 0.24, 0.85, 0, g); r.rotation.z = -s * 0.6; });
+      ybox(0.35, 0.45, 0.02, ymat(0x2a2f33), 0, 0.25, 0.56, g, false);
+    } else if (it.t === "ishkom") {                               // ishkom: ustunlar, tok to'ri va uzum bargi
+      [[-1.5, -2.1], [1.5, -2.1], [-1.5, 2.1], [1.5, 2.1], [-1.5, 0], [1.5, 0]].forEach(([x, z]) => ybox(0.12, 2.6, 0.12, M.wood, x, 1.3, z, g));
+      for (let i = 0; i < 5; i++) ybox(3.2, 0.06, 0.06, M.wood, 0, 2.62, -2.2 + i * 1.1, g, false);
+      ybox(3.3, 0.12, 4.5, M.vine, 0, 2.72, 0, g);
+      [[-0.8, -1.2], [0.6, 0.4], [-0.3, 1.5]].forEach(([x, z]) => ymesh(ytrack(new THREE.SphereGeometry(0.12, 8, 6)), ymat(0x6b3a7a), x, 2.5, z, g, false));
     } else if (it.t === "suri") {                                 // so'ri: supa, gilam, ustunlar va tok bilan qoplangan tepa
       ybox(3, 0.45, 3, M.wood, 0, 0.225, 0, g);
       ybox(2.4, 0.03, 2.4, M.carpet, 0, 0.465, 0, g, false);

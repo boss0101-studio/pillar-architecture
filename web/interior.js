@@ -6,23 +6,52 @@ const Interior = (function () {
   const TREAD = 0.24, RISE = 0.19, STAIR_W = 1.1;
   const DOOR_W = 0.9, PART = 0.12;        // eshik kengligi, xona devori qalinligi
 
-  // Mebel katalogi: w — x bo'ylab, d — z bo'ylab (rot=0 da), h — balandlik. Old tomoni rot=0 da +z ga qaraydi.
+  // Mebel va jihozlar katalogi: w — x bo'ylab, d — z bo'ylab (rot=0 da), h — balandlik. Old tomoni rot=0 da +z ga qaraydi.
+  // g — guruh (tanlash panelida), m — devor/shiftga osiladi: polda joy egallamaydi (boshqa buyum ustida tura oladi),
+  // y — poldan balandligi, top — shiftdan osiladi (qandil). Har biri mahsulotlar katalogida "mbl-<tur>" (oshxona — "int-oshxona").
   const ITEMS = {
-    bed:      { n: "Karavot",    w: 1.6,  d: 2.0,  h: 0.55, c: "#b9a28a" },
-    sofa:     { n: "Divan",      w: 2.0,  d: 0.9,  h: 0.8,  c: "#5d7f99" },
-    table:    { n: "Stol",       w: 1.4,  d: 0.8,  h: 0.75, c: "#9a7650" },
-    chair:    { n: "Stul",       w: 0.45, d: 0.45, h: 0.9,  c: "#7a5c3e" },
-    wardrobe: { n: "Shkaf",      w: 1.2,  d: 0.6,  h: 2.1,  c: "#8c6d4f" },
-    kitchen:  { n: "Oshxona",    w: 2.4,  d: 0.65, h: 0.9,  c: "#d8d4c8" },
-    fridge:   { n: "Muzlatkich", w: 0.7,  d: 0.7,  h: 1.9,  c: "#c9ced1" },
-    bath:     { n: "Vanna",      w: 1.7,  d: 0.75, h: 0.55, c: "#f1f1ee" },
-    toilet:   { n: "Unitaz",     w: 0.4,  d: 0.7,  h: 0.7,  c: "#f1f1ee" },
-    sink:     { n: "Lavabo",     w: 0.6,  d: 0.45, h: 0.85, c: "#f1f1ee" },
-    desk:     { n: "Ish stoli",  w: 1.4,  d: 0.7,  h: 0.75, c: "#a98a63" },
-    plant:    { n: "O'simlik",   w: 0.5,  d: 0.5,  h: 1.2,  c: "#4f8a4f" },
-    carpet:   { n: "Gilam",      w: 2.0,  d: 3.0,  h: 0.02, c: "#a4544a" },
-    tv:       { n: "Televizor",  w: 1.2,  d: 0.35, h: 0.9,  c: "#2a2f33" },
+    bed:        { n: "Karavot",          w: 1.6,  d: 2.0,  h: 0.55, c: "#b9a28a", g: "mebel" },
+    kidsbed:    { n: "Bolalar karavoti", w: 0.9,  d: 1.9,  h: 0.5,  c: "#c7a7d8", g: "mebel" },
+    cradle:     { n: "Beshik",           w: 0.6,  d: 1.0,  h: 0.8,  c: "#c49a6c", g: "mebel" },
+    sofa:       { n: "Divan",            w: 2.0,  d: 0.9,  h: 0.8,  c: "#5d7f99", g: "mebel" },
+    armchair:   { n: "Kreslo",           w: 0.85, d: 0.85, h: 0.85, c: "#6f8fa8", g: "mebel" },
+    table:      { n: "Stol",             w: 1.4,  d: 0.8,  h: 0.75, c: "#9a7650", g: "mebel" },
+    dining:     { n: "Ovqat stoli",      w: 1.8,  d: 0.9,  h: 0.75, c: "#8a6440", g: "mebel" },
+    ctable:     { n: "Jurnal stoli",     w: 1.0,  d: 0.6,  h: 0.45, c: "#9a7650", g: "mebel" },
+    xontaxta:   { n: "Xontaxta",         w: 1.2,  d: 0.8,  h: 0.35, c: "#a0683c", g: "mebel" },
+    korpacha:   { n: "Ko'rpacha",        w: 0.7,  d: 1.9,  h: 0.08, c: "#b0413e", g: "mebel" },
+    chair:      { n: "Stul",             w: 0.45, d: 0.45, h: 0.9,  c: "#7a5c3e", g: "mebel" },
+    desk:       { n: "Ish stoli",        w: 1.4,  d: 0.7,  h: 0.75, c: "#a98a63", g: "mebel" },
+    wardrobe:   { n: "Shkaf",            w: 1.2,  d: 0.6,  h: 2.1,  c: "#8c6d4f", g: "mebel" },
+    dresser:    { n: "Komod",            w: 1.0,  d: 0.5,  h: 0.9,  c: "#a98a63", g: "mebel" },
+    nightstand: { n: "Tumbochka",        w: 0.45, d: 0.4,  h: 0.55, c: "#a98a63", g: "mebel" },
+    shelf:      { n: "Kitob javoni",     w: 1.0,  d: 0.35, h: 2.0,  c: "#8c6d4f", g: "mebel" },
+    kitchen:    { n: "Oshxona",          w: 2.4,  d: 0.65, h: 0.9,  c: "#d8d4c8", g: "texnika" },
+    stove:      { n: "Gaz plitasi",      w: 0.6,  d: 0.6,  h: 0.9,  c: "#e4e6e8", g: "texnika" },
+    fridge:     { n: "Muzlatkich",       w: 0.7,  d: 0.7,  h: 1.9,  c: "#c9ced1", g: "texnika" },
+    washer:     { n: "Kir yuvish mashinasi", w: 0.6, d: 0.6, h: 0.85, c: "#eef0f1", g: "texnika" },
+    dishwasher: { n: "Idish yuvish mashinasi", w: 0.6, d: 0.6, h: 0.85, c: "#dfe3e6", g: "texnika" },
+    tv:         { n: "Televizor",        w: 1.2,  d: 0.35, h: 0.9,  c: "#2a2f33", g: "texnika" },
+    ac:         { n: "Konditsioner",     w: 0.9,  d: 0.25, h: 0.3,  c: "#f4f5f5", g: "texnika", m: 1, y: 2.2 },
+    boiler:     { n: "Isitish qozoni",   w: 0.45, d: 0.35, h: 0.75, c: "#f0f0ee", g: "texnika", m: 1, y: 1.2 },
+    radiator:   { n: "Radiator",         w: 1.0,  d: 0.1,  h: 0.6,  c: "#f3f3f1", g: "texnika", m: 1, y: 0.15 },
+    bath:       { n: "Vanna",            w: 1.7,  d: 0.75, h: 0.55, c: "#f1f1ee", g: "hammom" },
+    shower:     { n: "Dush kabinasi",    w: 0.9,  d: 0.9,  h: 2.0,  c: "#bcd6e6", g: "hammom" },
+    toilet:     { n: "Unitaz",           w: 0.4,  d: 0.7,  h: 0.7,  c: "#f1f1ee", g: "hammom" },
+    sink:       { n: "Lavabo",           w: 0.6,  d: 0.45, h: 0.85, c: "#f1f1ee", g: "hammom" },
+    mirror:     { n: "Ko'zgu",           w: 0.8,  d: 0.06, h: 1.1,  c: "#cfe3ee", g: "hammom", m: 1, y: 1.0 },
+    carpet:     { n: "Gilam",            w: 2.0,  d: 3.0,  h: 0.02, c: "#a4544a", g: "bezak" },
+    plant:      { n: "O'simlik",         w: 0.5,  d: 0.5,  h: 1.2,  c: "#4f8a4f", g: "bezak" },
+    lamp:       { n: "Torsher",          w: 0.4,  d: 0.4,  h: 1.7,  c: "#e8d9a8", g: "bezak" },
+    chandelier: { n: "Qandil",           w: 0.8,  d: 0.8,  h: 0.45, c: "#e9c46a", g: "bezak", m: 1, top: 1 },
+    painting:   { n: "Kartina",          w: 1.0,  d: 0.05, h: 0.7,  c: "#c08a4a", g: "bezak", m: 1, y: 1.4 },
+    curtain:    { n: "Parda",            w: 2.0,  d: 0.12, h: 2.5,  c: "#c9b48e", g: "bezak" },
+    fireplace:  { n: "Kamin",            w: 1.4,  d: 0.5,  h: 1.1,  c: "#8c8478", g: "bezak" },
+    piano:      { n: "Pianino",          w: 1.5,  d: 0.6,  h: 1.25, c: "#24282b", g: "bezak" },
+    aquarium:   { n: "Akvarium",         w: 1.2,  d: 0.45, h: 1.3,  c: "#5aa8d8", g: "bezak" },
   };
+  const GROUPS = { mebel: "Mebel", texnika: "Maishiy texnika", hammom: "Hammom", bezak: "Bezak va yoritish" };
+  const mounted = t => !!(ITEMS[t] && ITEMS[t].m);
   const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0]];     // zina ko'tarilish yo'nalishi (rot 0..3)
 
   const round2 = v => Math.round(v * 100) / 100;
@@ -270,22 +299,30 @@ const Interior = (function () {
     }[cat] || KINDS_FALLBACK();
     function KINDS_FALLBACK() { return { front: ["living"], back: ["living"], single: ["living"] }; }
 
+    // Karavot yonidagi tumbochkalar: karavot bosh tomonida, ikki yonida (xonaga sig'sa)
+    const besideBed = r => {
+      const b = items[items.length - 1]; if (!b || b[0] !== "bed") return;
+      [-1, 1].forEach(s => { const x = round2(b[1] + s * 1.08), z = round2(b[2] - 0.78); if (x - 0.25 > r.x0 && x + 0.25 < r.x1) items.push(["nightstand", x, z, 0]); });
+    };
     const furnish = {
-      bedroom(r) { put("bed", 0, r, 0, -1); put("wardrobe", 0, r, -1, 1); put("plant", 0, r, 1, 1); },
-      living(r) { put("tv", 0, r, 0, -1); put("carpet", 0, r, 0, 0.1); put("sofa", 2, r, 0, 1); put("table", 0, r, 0, 0); put("plant", 0, r, -1, -1); },
-      kitchen(r) { put("kitchen", 0, r, -0.4, -1); put("fridge", 0, r, 1, -1); put("table", 0, r, 0, 0.5); put("chair", 0, r, -0.35, 0.15); put("chair", 2, r, -0.35, 0.95); },
-      bath(r) { put("bath", 0, r, -1, -1); put("toilet", 0, r, 1, -1); put("sink", 0, r, 0.35, -1); },
+      bedroom(r) { put("bed", 0, r, 0, -1); besideBed(r); put("wardrobe", 0, r, -1, 1); put("plant", 0, r, 1, 1); put("ac", 2, r, 0, 1); put("chandelier", 0, r, 0, 0); put("curtain", 2, r, 0.5, 1, 0.05); },
+      living(r) { put("tv", 0, r, 0, -1); put("carpet", 0, r, 0, 0.1); put("sofa", 2, r, 0, 1); put("ctable", 0, r, 0, 0.2); put("armchair", 3, r, 1, 0); put("plant", 0, r, -1, -1);
+        put("lamp", 0, r, 1, 1); put("ac", 0, r, 0.7, -1, 0.05); put("chandelier", 0, r, 0, 0); put("painting", 1, r, -1, 0, 0.02); put("curtain", 2, r, -0.5, 1, 0.05); },
+      kitchen(r) { put("kitchen", 0, r, -0.4, -1); put("fridge", 0, r, 1, -1); put("stove", 1, r, -1, 0.2); put("dining", 0, r, 0.15, 0.5); put("chair", 0, r, -0.1, 0.15); put("chair", 2, r, -0.1, 0.95);
+        put("dishwasher", 3, r, 1, 0.25); put("ac", 2, r, 0.6, 1, 0.05); },
+      bath(r) { put("bath", 0, r, -1, -1); put("toilet", 0, r, 1, -1); put("sink", 0, r, 0.35, -1); put("mirror", 0, r, 0.35, -1, 0.02); put("washer", 0, r, -1, 1); },
       toilet(r) { put("sink", 0, r, -0.6, -1); put("sink", 0, r, 0, -1); put("toilet", 0, r, 0.7, -1); },
       office(r) {
+        put("ac", 0, r, 0, -1, 0.05);
         [[-0.5, -0.45], [0.5, -0.45], [-0.5, 0.55], [0.5, 0.55]].forEach(([ax, az]) => {
           const before = items.length; put("desk", 0, r, ax, az, 0.6);
           if (items.length > before) { const d = items[items.length - 1]; items.push(["chair", d[1], round2(d[2] + 0.62), 2]); }
         });
         put("plant", 0, r, 1, 1);
       },
-      meeting(r) { put("table", 0, r, 0, 0); [-0.45, 0.45].forEach(a => { put("chair", 0, r, a, -0.35, 0.3); put("chair", 2, r, a, 0.35, 0.3); }); },
-      reading(r) { put("desk", 0, r, -0.5, -0.5); put("desk", 0, r, 0.5, -0.5); put("desk", 0, r, -0.5, 0.5); put("desk", 0, r, 0.5, 0.5); put("plant", 0, r, 1, 1); },
-      hall(r) { put("carpet", 0, r, 0, 0); put("table", 0, r, 0, 0); put("plant", 0, r, -1, -1); put("plant", 0, r, 1, -1); put("sofa", 2, r, 0, 1); },
+      meeting(r) { put("table", 0, r, 0, 0); [-0.45, 0.45].forEach(a => { put("chair", 0, r, a, -0.35, 0.3); put("chair", 2, r, a, 0.35, 0.3); }); put("ac", 0, r, 0, -1, 0.05); put("chandelier", 0, r, 0, 0); },
+      reading(r) { put("desk", 0, r, -0.5, -0.5); put("desk", 0, r, 0.5, -0.5); put("desk", 0, r, -0.5, 0.5); put("desk", 0, r, 0.5, 0.5); put("plant", 0, r, 1, 1); put("shelf", 0, r, -1, -1, 0.05); put("ac", 0, r, 0.3, -1, 0.05); },
+      hall(r) { put("carpet", 0, r, 0, 0); put("table", 0, r, 0, 0); put("plant", 0, r, -1, -1); put("plant", 0, r, 1, -1); put("sofa", 2, r, 0, 1); put("chandelier", 0, r, 0, 0); put("ac", 0, r, 0, -1, 0.05); },
     };
 
     rows.forEach(([za, zb], ri) => {
@@ -317,6 +354,33 @@ const Interior = (function () {
     return out;
   }
 
+  // ---------- Buyum joyiga sig'adimi: bino ichida, devor/zina/boshqa buyumga kirmaydi (osma buyumlar va gilam boshqalar bilan ustma-ust tura oladi) ----------
+  const ov = (a, b) => a.x0 < b.x1 - 1e-6 && a.x1 > b.x0 + 1e-6 && a.z0 < b.z1 - 1e-6 && a.z1 > b.z0 + 1e-6;
+  function wallRects(g, e) {
+    const out = [];
+    for (const [k, s] of Object.entries(e)) { const seg = edgeSeg(g, k); if (seg) wallPieces(seg, s).walls.forEach(r => out.push(r)); }
+    return out;
+  }
+  function fits(p, I, f, it, skip) {
+    const r = itemRect(it); if (!rectInside(I.g, r)) return false;
+    const sr = I.stair && p.floors > 1 ? stairInfo(p, I.stair, I.g).rect : null, free = it[0] === "carpet" || mounted(it[0]);
+    if (sr && it[0] !== "carpet" && !mounted(it[0]) && ov(r, sr)) return false;
+    if (wallRects(I.g, I.floors[f].e).some(w => ov(r, w))) return false;
+    return I.floors[f].items.every((o, i) => i === skip || free || o[0] === "carpet" || mounted(o[0]) || !ov(r, itemRect(o)));
+  }
+  // AI uchun: buyumni qavatdagi birinchi bo'sh joyga qo'yadi (devor yaqinidan boshlab, 0,25 m qadam bilan, 4 burilishda)
+  function placeFree(p, I, f, type) {
+    if (!ITEMS[type] || I.floors[f].items.length >= 80) return null;
+    const g = I.g, pts = [];
+    for (let z = T + 0.2; z < g.D - T; z += 0.25) for (let x = T + 0.2; x < g.W - T; x += 0.25) pts.push([round2(x), round2(z)]);
+    const edge = ([x, z]) => Math.min(x, g.W - x, z, g.D - z);       // devorga yaqin joylar avval
+    pts.sort((a, b) => edge(a) - edge(b));
+    for (const [x, z] of pts) for (let rot = 0; rot < 4; rot++) {
+      const it = [type, x, z, rot]; if (fits(p, I, f, it, -1)) return it;
+    }
+    return null;
+  }
+
   // Tahrirlash uchun: saqlangan ma'lumot bo'lmasa, normallashtirilgan nusxa yaratiladi (zina aniq yoziladi)
   function editable(p, raw) {
     const n = norm(p, raw), out = { floors: n.floors.map(f => ({ e: { ...f.e }, items: f.items.map(i => i.slice()) })) };
@@ -324,6 +388,6 @@ const Interior = (function () {
     return out;
   }
 
-  return { T, STAIR_W, DOOR_W, PART, ITEMS, DIRS, size, lineX, lineZ, edgeSeg, wallPieces, itemRect, stairDims, stairInfo, defaultStair, fitsStair, norm, clean, auto, editable,
+  return { T, STAIR_W, DOOR_W, PART, ITEMS, GROUPS, mounted, fits, placeFree, DIRS, size, lineX, lineZ, edgeSeg, wallPieces, itemRect, stairDims, stairInfo, defaultStair, fitsStair, norm, clean, auto, editable,
            cellOn, cellArea, rectInside, inRings, roomsOf };
 })();

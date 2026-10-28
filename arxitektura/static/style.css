@@ -1310,3 +1310,7 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .adv::after { content: ""; position: absolute; right: 30px; bottom: -9px; width: 16px; height: 16px; background: var(--surface); border-right: 1px solid var(--accent); border-bottom: 1px solid var(--accent); transform: rotate(45deg); }
 @media (prefers-reduced-motion: reduce) { .robot .rb-light, .robot .rb-eyes, .ai-btn.robot-btn svg.robot, html.robot-talk .robot .rb-mouth { animation: none; } }
 @media (max-width: 480px) { .ai-btn.robot-btn, .ai-btn.robot-btn svg.robot { width: 60px; height: 64px; } }
+/* Ichki jihozlar: guruhlangan tanlash paneli va osma buyumlar (konditsioner, qandil, ko'zgu...) rejada punktir bilan */
+.int-furn .int-grp { flex-basis: 100%; margin-top: 4px; }
+.ip-it.hang rect { fill-opacity: .35; stroke-dasharray: .12 .08; }
+.gy-umb { fill: rgba(233, 196, 106, .75); stroke: #a8802c; stroke-width: 1; }

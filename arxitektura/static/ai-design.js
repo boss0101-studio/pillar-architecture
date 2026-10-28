@@ -22,13 +22,14 @@ const AIDesign = (function () {
     properties: { actions: { type: "array", minItems: 1, maxItems: 20, items: {
       type: "object", required: ["type"],
       properties: {
-        type: { type: "string", enum: ["new_design", "set_params", "set_cells", "clear_cells", "add_house", "remove_house", "select_house", "yard", "interior"] },
+        type: { type: "string", enum: ["new_design", "set_params", "set_cells", "clear_cells", "add_house", "remove_house", "select_house", "yard", "interior", "furnish"] },
         house: { type: "integer" }, name: { type: "string" }, params: P,
         houses: { type: "array", maxItems: 3, items: { type: "object", properties: { params: P, cells: { type: "array", items: CELL } } } },
         cells: { type: "array", maxItems: 120, items: CELL },
         on: { type: "boolean" }, fence: { type: "string", enum: Object.keys(FENCES) },
         items: { type: "array", maxItems: 20, items: { type: "string", enum: Object.keys(YARD_ITEMS) } },
         clear_items: { type: "boolean" }, mode: { type: "string", enum: ["auto", "clear"] },
+        furniture: { type: "array", maxItems: 30, items: { type: "string" } }, floor: { type: "integer" },
       } } } },
   };
   const GUIDE = `apply_design guide: house = 1-based house number (default: active house). Limits: ${LIMITS}. ` +
@@ -38,7 +39,8 @@ const AIDesign = (function () {
     "ground: oddiy=windows + middle door, arkada=arcade, vitrina=shop windows. " +
     "shape (plan): rect, L, U (П, open to the back), T, court (ring with inner courtyard), circle (cylinder), sphere (ball-shaped building), octagon, hexagon, triangle, trapezoid; wing = wing width of L/U/T/court as a share of the smaller side (0.2–0.6). The front facade cells stay on the street side. Interior plans (rooms, doors, furniture, stairs) work for every shape. " +
     "cells: floor 1 = ground floor (or \"all\"/\"upper\"), bay 1 = leftmost (or \"all\"/\"middle\"); type win=window, wide=panoramic, arch=arched, slit=narrow, round, lattice, tall, square, triple, balc=balcony, door, door2=double door, glassdoor=glass door, archdoor=arched door, garage=garage door, shop=shop window, arcade, wall=blank, auto=default. " +
-    "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking, garage, swim=swimming pool, pine, fruit=fruit tree, bush, fountain, gazebo, tandir=clay oven, bench, play=playground, lamp, greenhouse). interior: mode auto|clear.";
+    "new_design: houses[] (1–3, each params + cells) replaces the project — use it to build from a photo. yard: on, fence (devor=brick, panjara=iron, yogoch=wood, yoq=none), items (tree, bed=flower bed, pool, suri=daybed, car=parking, garage, swim=swimming pool, pine, fruit=fruit tree, bush, fountain, gazebo, tandir=clay oven, bench, play=playground, lamp, greenhouse). interior: mode auto|clear. " +
+    `furnish: furniture[] placed into free spots inside the house (floor = 1-based, default 1; makes an auto plan first if there is none): ${Object.keys(Interior.ITEMS).join(", ")}.`;
   const TOOL_DESC = "Change the building project open in the Designer: set floors, bays, sizes, roof, material, window type, ground floor; paint facade cells " +
     "(windows, balconies, doors, shop windows, arcade, blank wall); start a new design with 1–3 houses (use it to build a building from a photo); add/remove/select houses; " +
     "turn the yard on and add trees, pool, daybed, parking; generate or clear the interior plan. The project state is given in <design_state>.";
@@ -122,6 +124,19 @@ const AIDesign = (function () {
           case "remove_house": { const i = pickHouse(a); if (Site.list.length <= 1) throw new Error("the only house can't be removed"); Site.select(i); Site.remove(); done.push(`house ${i + 1} removed`); break; }
           case "select_house": { const i = pickHouse(a); Site.select(i); done.push(`house ${i + 1} selected`); break; }
           case "yard": { const k = setYardItems(a); done.push(`yard ${Site.yard.on ? "on" : "off"}, fence ${Site.yard.fence}, +${k} items`); break; }
+          case "furnish": {                                          // ichki jihozlar: har biri qavatdagi birinchi bo'sh joyga
+            const i = pickHouse(a), b = Site.list[i]; Site.sync();
+            const p = b.params, f = Math.min(p.floors, Math.max(1, Number(a.floor) || 1)) - 1;
+            const int = Interior.editable(p, b.interior || Interior.auto(p));
+            let put = 0, miss = 0;
+            (Array.isArray(a.furniture) ? a.furniture : []).slice(0, 30).forEach(t => {
+              const it = Interior.ITEMS[t] ? Interior.placeFree(p, Interior.norm(p, int), f, t) : null;
+              if (it) { int.floors[f].items.push(it); put++; } else miss++;
+            });
+            b.interior = int;
+            done.push(`house ${i + 1} floor ${f + 1}: +${put} furniture${miss ? `, ${miss} did not fit or unknown` : ""}`);
+            break;
+          }
           case "interior": {
             const i = pickHouse(a), b = Site.list[i]; Site.sync();
             b.interior = a.mode === "clear" ? undefined : Interior.auto(b.params);
@@ -156,13 +171,33 @@ const AIDesign = (function () {
       ["yogoch", /yog'och|wood|дерев|madera|ahşap|bois|holz/], ["metall", /metall|metal/], ["ganch", /ganch|plaster|штукатур|yeso|sıva|plâtre|putz/],
       ["shisha", /shisha|oynak|oyna(dan|li)|glass|стекл|vidrio|cristal|cam |verre|glas/]],
   };
+  // Ichki jihozlar so'rovdan: "divan", "konditsioner", "gaz plita"...
+  const FURN_WORDS = [["sofa", /divan|sofa|диван|sofá|kanepe|canapé/], ["armchair", /kreslo|armchair|кресл|sillón|koltuk|fauteuil|sessel/],
+    ["tv", /televizor|\btv\b|телевизор|televisor|televizyon|téléviseur|fernseh/], ["ac", /konditsioner|kondisioner|konditsioner|air ?condition|кондиционер|aire acondicionado|klima|climatiseur/],
+    ["stove", /gaz plita|plita|stove|cooker|плит|cocina de gas|fogón|ocak|cuisinière|herd/], ["fridge", /muzlatkich|fridge|refrigerator|холодильн|nevera|frigorífico|buzdolab|réfrigérateur|kühlschrank/],
+    ["washer", /kir yuvish|washing machine|стиральн|lavadora|çamaşır|lave-linge|waschmaschine/], ["dishwasher", /idish yuvish|dishwasher|посудомо|lavavajillas|bulaşık|lave-vaisselle|spülmaschine/],
+    ["bed", /karavot|\bbed\b|кроват|\bcama\b|yatak|\blit\b|\bbett\b/], ["wardrobe", /shkaf|wardrobe|шкаф|armario|dolap|armoire|kleiderschrank/],
+    ["dining", /ovqat stoli|dining table|обеденн|mesa de comedor|yemek masas|table à manger|esstisch/], ["chair", /\bstul|\bchair|\bстул|\bsilla\b|sandalye|\bchaise|\bstuhl/],
+    ["desk", /ish stoli|\bdesk|письменн|escritorio|çalışma masas|bureau|schreibtisch/], ["shelf", /javon|bookshelf|shelf|стеллаж|полк|estanter|kitaplık|étagère|regal/],
+    ["dresser", /komod|dresser|комод|cómoda|şifonyer|commode/], ["nightstand", /tumbochka|nightstand|тумбоч|mesita|komodin|chevet|nachttisch/],
+    ["fireplace", /kamin|fireplace|камин|chimenea|şömine|cheminée/], ["piano", /pianino|piano|пианино|фортепиано|klavier/], ["chandelier", /qandil|chandelier|люстр|lámpara de techo|avize|lustre|kronleuchter/],
+    ["lamp", /torsher|floor lamp|торшер|lámpara de pie|lampadaire|stehlampe/], ["mirror", /ko'zgu|mirror|зеркал|espejo|ayna|miroir|spiegel/], ["painting", /kartina|painting|картин|cuadro|tablo|tableau|gemälde/],
+    ["curtain", /parda|curtain|штор|занавес|cortina|perde|rideau|vorhang/], ["aquarium", /akvarium|aquarium|аквариум|acuario|akvaryum/], ["cradle", /beshik|cradle|колыбел|люльк|\bcuna\b|beşik|berceau|wiege/],
+    ["xontaxta", /xontaxta|low table|достархан/], ["korpacha", /ko'rpacha|korpacha|курпач/], ["carpet", /gilam|carpet|\brug\b|ковер|ковёр|alfombra|halı|tapis|teppich/],
+    ["shower", /dush|shower|душ|ducha|duş|douche|dusche/], ["bath", /vanna|bathtub|ванн|bañera|küvet|baignoire|badewanne/], ["toilet", /unitaz|toilet|унитаз|inodoro|klozet|toilettes/],
+    ["boiler", /isitish qozon|kotyol|boiler|котел|котёл|caldera|kombi|chaudière|heizkessel/], ["radiator", /radiator|batareya|радиатор|батаре|radiador|radyatör|radiateur|heizkörper/],
+    ["plant", /o'simlik|houseplant|\bplant|растени|planta|bitki|plante|pflanze/]];
   // Hovli elementlari so'rovdan: "garaj", "basseyn", "archa"... bo'lmasa — bino turiga mos to'plam
   const YARD_WORDS = [["garage", /garaj|garage|гараж|garaje|garaj/], ["pool", /hovuz|pond|пруд|estanque|gölet|étang|teich/], ["swim", /basseyn|suzish|swimming|pool|бассейн|piscina|havuz|piscine/], ["pine", /archa|pine|ёлк|ель|sosna|pino|çam|sapin|tanne/],
     ["fruit", /mevali|meva|olma|o'rik|anor|fruit|фрукт|яблон|frutal|meyve|fruitier|obstbaum/], ["bush", /buta|bush|куст|arbusto|çalı|buisson|busch/], ["fountain", /favvora|fountain|фонтан|fuente|çeşme|fontaine|brunnen/],
     ["gazebo", /shiypon|ayvon|gazebo|беседк|cenador|kameriye|kiosque|pavillon/], ["tandir", /tandir|tandoor|тандыр|horno/], ["bench", /o'rindiq|skameyka|bench|скамей|banco|bank/],
     ["play", /bolalar|o'yin maydon|playground|детск|parque infantil|oyun alan|aire de jeux|spielplatz/], ["lamp", /chiroq|lamp|фонар|farola|lamba|lampadaire|laterne/],
     ["greenhouse", /issiqxona|greenhouse|теплиц|invernadero|sera|serre|gewächshaus/], ["tree", /daraxt|tree|дерев|árbol|ağaç|arbre|baum/], ["car", /mashina joyi|parking|парковк|aparcamiento|otopark/],
-    ["bed", /gulzor|gul|flower|клумб|цвет|flor|çiçek|fleur|blume/], ["suri", /so'ri|daybed|топчан|tarima/]];
+    ["bed", /gulzor|gul(?! ?tuvak)|flower(?! ?pot)|клумб|цвет|flor(?!ero)|çiçek|fleur|blume/], ["suri", /so'ri|daybed|топчан|tarima/],
+    ["bbq", /mangal|barbecue|\bbbq|мангал|barbacoa|barbekü/], ["lounger", /shezlong|lounger|sunbed|шезлонг|tumbona|şezlong|transat|liege/],
+    ["umbrella", /soyabon|umbrella|parasol|зонт|sombrilla|şemsiye/], ["pot", /tuvak|flower ?pot|кашпо|горшок|maceta|saksı|pot de fleurs|blumentopf/],
+    ["swing", /arg'imchoq|swing|качел|columpio|salıncak|balançoire|schaukel/], ["doghouse", /it uycha|dog ?house|kennel|будк|caseta|köpek kulübe|niche|hundehütte/],
+    ["ishkom", /ishkom|tok so'ri|grape|vine ?arbor|виноград|parra|pergola|asma/]];
   function yardItems(s, kind) {
     const asked = YARD_WORDS.filter(([, re]) => re.test(s)).map(([t]) => t);
     if (asked.length) return asked.flatMap(t => (t === "tree" || t === "fruit" || t === "pine" || t === "bush" ? [t, t] : [t]));
@@ -182,6 +217,8 @@ const AIDesign = (function () {
     const yi = YARD_WORDS.filter(([t, re]) => re.test(s) && !(t === "bed" && /balkon|balcon/.test(s))).map(([t]) => t);
     if (/(qo'sh|qo'y|qur|yoq|add|put|build|turn on|добав|постав|построй|включ|añad|pon|constru|activa|ekle|koy|ajout|mets|hinzu|bau)/.test(s) && (yi.length || /hovli|yard|двор|patio|avlu|cour|hof/.test(s)))
       acts.push({ type: "yard", on: true, items: yi });                // "hovliga garaj va basseyn qo'sh" 
+    const fi = FURN_WORDS.filter(([, re]) => re.test(s)).map(([t]) => t);
+    if (fi.length && /(qo'sh|qo'y|add|put|place|добав|постав|añad|pon|coloca|ekle|koy|ajout|mets|hinzu|stell)/.test(s)) acts.push({ type: "furnish", furniture: fi });   // "mehmonxonaga divan va konditsioner qo'y"
     if (/(ichki|ichini|ichi |interior|интерьер|комнат|habitaci|iç mekân|oda|intérieur|pièces|innen|zimmer)/.test(s) && /(avto|auto|yarat|qil|create|generate|созда|crea|genera|oluştur|crée|génère|erstell)/.test(s)) acts.push({ type: "interior", mode: "auto" });
     return acts;
   }

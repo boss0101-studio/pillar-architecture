@@ -50,7 +50,10 @@ DESIGN_SHAPES = {"rect", "L", "U", "T", "court", "circle", "sphere", "octagon", 
 MAX_BUILDINGS = 3   # bitta majmuada eng ko'pi bilan nechta uy
 # Ichki reja: mebel turlari (interior.js katalogi bilan bir xil) va chegaralar
 ITEM_TYPES = {"bed", "sofa", "table", "chair", "wardrobe", "kitchen", "fridge", "bath",
-              "toilet", "sink", "desk", "plant", "carpet", "tv"}
+              "toilet", "sink", "desk", "plant", "carpet", "tv",
+              "kidsbed", "cradle", "armchair", "dining", "ctable", "xontaxta", "korpacha", "dresser", "nightstand", "shelf",
+              "stove", "washer", "dishwasher", "ac", "boiler", "radiator", "shower", "mirror", "lamp", "chandelier",
+              "painting", "curtain", "fireplace", "piano", "aquarium"}
 MAX_EDGES_PER_FLOOR, MAX_ITEMS_PER_FLOOR = 600, 80
 CELL_TYPES = {"win", "wide", "arch", "balc", "door", "wall", "shop", "arcade", "slit", "round", "lattice", "tall", "square", "triple", "door2", "glassdoor", "archdoor", "garage"}
 ORDER_STATUSES = {"yangi", "tasdiqlandi", "yetkazildi", "bekor"}
@@ -310,7 +313,8 @@ def validate_interior(raw):
     return out
 
 
-YARD_ITEM_TYPES = ("tree", "bed", "pool", "suri", "car", "garage", "swim", "pine", "fruit", "bush", "fountain", "gazebo", "tandir", "bench", "play", "lamp", "greenhouse")
+YARD_ITEM_TYPES = ("tree", "bed", "pool", "suri", "car", "garage", "swim", "pine", "fruit", "bush", "fountain", "gazebo", "tandir", "bench", "play", "lamp", "greenhouse",
+                   "bbq", "lounger", "umbrella", "pot", "swing", "doghouse", "ishkom")
 FENCE_TYPES = ("devor", "panjara", "yogoch", "yoq")
 MAX_YARD_ITEMS = 40
 
@@ -461,7 +465,7 @@ AI_DESIGN_TOOL = {
         "properties": {"actions": {"type": "array", "minItems": 1, "maxItems": 20, "items": {
             "type": "object", "required": ["type"],
             "properties": {
-                "type": {"type": "string", "enum": ["new_design", "set_params", "set_cells", "clear_cells", "add_house", "remove_house", "select_house", "yard", "interior"]},
+                "type": {"type": "string", "enum": ["new_design", "set_params", "set_cells", "clear_cells", "add_house", "remove_house", "select_house", "yard", "interior", "furnish"]},
                 "house": {"type": "integer", "description": "1-based; default = active house"},
                 "name": {"type": "string"},
                 "params": _PARAMS_SCHEMA,
@@ -471,6 +475,8 @@ AI_DESIGN_TOOL = {
                 "on": {"type": "boolean"}, "fence": {"type": "string", "enum": ["devor", "panjara", "yogoch", "yoq"]},
                 "items": {"type": "array", "maxItems": 20, "items": {"type": "string", "enum": list(YARD_ITEM_TYPES)}},
                 "clear_items": {"type": "boolean"}, "mode": {"type": "string", "enum": ["auto", "clear"]},
+                "furniture": {"type": "array", "maxItems": 30, "description": "furnish: furniture/appliances placed in free spots", "items": {"type": "string", "enum": sorted(ITEM_TYPES)}},
+                "floor": {"type": "integer", "description": "furnish: 1-based floor, default 1"},
             }}}},
     },
 }
@@ -479,6 +485,7 @@ AI_DESIGN_RULES = ("\n\nDizaynga aralashish (faqat <design_state> berilganda app
                    "- Bino rasmi (surat yoki chizma) yuborilsa: diqqat bilan qara, qavatlar soni (deraza qatorlari), oraliqlar (deraza ustunlari), qavat balandligi, tom shakli, fasad materiali, deraza turi, pastki qavat (do'kon, arkada yoki eshik), balkon va eshiklar joyini aniqla; "
                    "so'ng bitta \"new_design\" amali (params + cells) bilan konstruktor imkon bergancha o'xshatib qur va 2-4 gapda nimani taniganingni va nimani taxminan qilganingni ayt.\n"
                    "- Butun uy yoki bino loyihalashni so'rasa — bitta apply_design chaqiruvida to'liq qil: \"new_design\" (mos qavat, plan shakli, tom, material, deraza, balkon/eshik), uy bo'lsa \"yard\" elementlari bilan, so'ng \"interior\" mode \"auto\" (xonalar, eshiklar, mebel).\n"
+                   "- Ichki jihoz so'ralsa (\"divan, televizor va konditsioner qo'y\") — \"furnish\" amali, furniture ro'yxati bilan (avto reja bo'lmasa o'zi yaratiladi).\n"
                    "- Faqat so'ralganini o'zgartir; qiymatlar asbob ta'rifidagi chegaralarda bo'lsin. Avval qisqa izoh yoz, keyin asbobni chaqir.")
 
 
@@ -575,7 +582,7 @@ def seed_products(conn):
     )
     # faqat ko'rinish uchun maydonlar (rasm belgisi) bazaga yozilmaydi — xotirada turadi
     PRODUCT_LOOK.clear()
-    PRODUCT_LOOK.update({p["id"]: {k: p[k] for k in ("icon", "draw") if p.get(k)} for p in items})
+    PRODUCT_LOOK.update({p["id"]: {k: p[k] for k in ("icon", "draw", "furn", "yard") if p.get(k)} for p in items})
 
 
 PRODUCT_LOOK = {}

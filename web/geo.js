@@ -245,6 +245,10 @@ const Geo = (function () {
   // ---------- Materiallar smetasi (BOQ): loyihadagi mahsulotlar va miqdorlar ----------
   const CELL_PRODUCT = { win: "el-win", wide: "el-wide", arch: "el-arch", slit: "el-slit", round: "el-round", lattice: "el-lattice", balc: "el-balc", door: "el-door", shop: "el-shop",
     tall: "el-win-alu", square: "el-win", triple: "el-win-alu", door2: "el-door-wood", glassdoor: "el-door-glass", archdoor: "el-door-wood", garage: "el-garage" };
+  const YARD_PRODUCT = { tree: "yrd-daraxt", fruit: "yrd-daraxt", pine: "yrd-archa", bush: "yrd-buta", suri: "yrd-suri", lamp: "yrd-chiroq", fountain: "yrd-favvora", gazebo: "yrd-shiypon",
+    tandir: "yrd-tandir", bench: "yrd-orindiq", play: "yrd-bolalar", greenhouse: "yrd-issiqxona", bbq: "yrd-mangal", lounger: "yrd-shezlong", umbrella: "yrd-soyabon", pot: "yrd-tuvak",
+    swing: "yrd-argimchoq", doghouse: "yrd-ituycha", bed: "yrd-gulzor" };
+  const YARD_AREA_PRODUCT = { pool: "yrd-hovuz", swim: "yrd-basseyn", ishkom: "yrd-pergola" };
   const ROOF_PRODUCT = { nishab: "roof-tile", piramida: "roof-tile", bir: "roof-metal", tekis: "roof-flat", terrasa: "roof-flat" };
   function boq(list) {
     const qty = {}, add = (id, q) => { if (id && q > 0) qty[id] = (qty[id] || 0) + q; };
@@ -255,7 +259,11 @@ const Geo = (function () {
       if (b.params.roof === "gumbaz") { add("roof-flat", m.A0); add("roof-dome", m.dome); }
       else add(ROOF_PRODUCT[b.params.roof], m.roofArea);
       add("con-slab", m.slabVol);                                              // qavatlararo yopma
+      if (b.interior && typeof Interior !== "undefined")                       // ichki jihozlar: har biri dona (oshxona — pog. m)
+        Interior.norm(b.params, b.interior).floors.forEach(fl => fl.items.forEach(([t]) => (t === "kitchen" ? add("int-oshxona", Interior.ITEMS.kitchen.w) : add(`mbl-${t}`, 1))));
     });
+    const Y = typeof Site !== "undefined" && Site.yard && Site.yard.on ? Site.yard : null;   // hovli: daraxt, mangal... dona; hovuz, basseyn, ishkom — m²
+    if (Y) Y.items.forEach(i => { const sq = YARD_AREA_PRODUCT[i.t]; if (sq) add(sq, YARD_ITEMS[i.t].w * YARD_ITEMS[i.t].d); else add(YARD_PRODUCT[i.t], 1); });
     return Object.entries(qty).filter(([id]) => G.catalog[id]).map(([id, q]) => {
       const pr = G.catalog[id], qq = pr.unit === "dona" ? Math.round(q) : Math.ceil(q);
       return { id, name: pr.name, unit: pr.unit, qty: qq, price: pr.price, total: qq * pr.price };
@@ -359,6 +367,13 @@ const Geo = (function () {
     if (it.t === "play") return R("gy-play", ` rx="0.4"`) + `<path class="gy-line" d="M${x + 0.6} ${z + 0.8} h${f.w * 0.35} M${x + f.w - 1.2} ${z + 0.6} v${f.d - 1.2}"/>` + `<circle class="gy-fruit" cx="${f.cx}" cy="${f.cz + f.d * 0.2}" r="0.4"/>`;
     if (it.t === "lamp") return `<circle class="gy-lamp" cx="${f.cx}" cy="${f.cz}" r="0.3"/>`;
     if (it.t === "greenhouse") return R("gy-green", ` rx="0.6"`) + `<path class="gy-line" d="M${f.cx} ${z} V${z + f.d}"/>`;
+    if (it.t === "bbq") return R("gy-tandir", ` rx="0.1"`) + `<path class="gy-line" d="M${x + 0.2} ${f.cz} H${x + f.w - 0.2}"/>`;
+    if (it.t === "lounger") return R("gy-suri", ` rx="0.15"`) + `<rect class="gy-umb" x="${x + 0.08}" y="${z + 0.08}" width="${f.w - 0.16}" height="${Math.min(f.w, f.d) * 0.45}"/>`;
+    if (it.t === "umbrella") return `<circle class="gy-umb" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><path class="gy-line" d="${Array.from({ length: 8 }, (_, i) => `M${f.cx} ${f.cz} L${f.cx + Math.cos(i * Math.PI / 4) * f.w / 2} ${f.cz + Math.sin(i * Math.PI / 4) * f.d / 2}`).join("")}"/>`;
+    if (it.t === "pot") return `<circle class="gy-tandir" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><circle class="gy-fruit" cx="${f.cx}" cy="${f.cz}" r="${f.w * 0.25}"/>`;
+    if (it.t === "swing") return `<path class="gy-line" d="M${x} ${f.cz} H${x + f.w}"/>` + R("gy-suri", ` rx="0.05" fill-opacity=".25"`) + `<rect class="gy-suri" x="${f.cx - 0.3}" y="${f.cz - 0.2}" width="0.6" height="0.4"/>`;
+    if (it.t === "doghouse") return R("gy-suri") + `<path class="gy-line" d="M${x} ${z} L${f.cx} ${f.cz} L${x + f.w} ${z}"/>`;
+    if (it.t === "ishkom") return R("gy-suri", ` fill-opacity=".25"`) + `<path class="gy-line" d="${Array.from({ length: 5 }, (_, i) => `M${x} ${z + i * f.d / 4} H${x + f.w}`).join("")}"/>` + [[0.25, 0.3], [0.7, 0.55], [0.4, 0.8]].map(([a, b]) => `<circle class="gy-bush" cx="${x + a * f.w}" cy="${z + b * f.d}" r="0.5"/>`).join("");
     if (it.t === "suri") return `<rect class="gy-suri" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><path class="gy-line" d="M${x} ${z} L${x + f.w} ${z + f.d} M${x + f.w} ${z} L${x} ${z + f.d}"/>`;
     return `<rect class="gy-car" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><text class="gy-p" x="${f.cx}" y="${f.cz + Math.min(f.w, f.d) * 0.2}" text-anchor="middle" font-size="${Math.min(f.w, f.d) * 0.55}">P</text>`;
   }

@@ -24,10 +24,11 @@ const InteriorUI = (function () {
     const ig = I.g, r = Interior.itemRect(it);
     if (!Interior.rectInside(ig, r)) return false;                     // to'rtburchakda devor ichi, shakldor planda — kontur ichi
     const sr = stairRect(p, I);
-    if (sr && it[0] !== "carpet" && ov(r, sr)) return false;
+    if (sr && it[0] !== "carpet" && !Interior.mounted(it[0]) && ov(r, sr)) return false;
     const fd = I.floors[f];
     if (wallRects(ig, fd.e).some(w => ov(r, w))) return false;
-    return fd.items.every((o, i) => i === skip || o[0] === "carpet" || it[0] === "carpet" || !ov(r, Interior.itemRect(o)));
+    const free = it[0] === "carpet" || Interior.mounted(it[0]);      // gilam va osma buyum (konditsioner, qandil...) boshqasi ustida tura oladi
+    return fd.items.every((o, i) => i === skip || free || o[0] === "carpet" || Interior.mounted(o[0]) || !ov(r, Interior.itemRect(o)));
   }
   function edgeOK(I, p, f, key) {
     const seg = Interior.edgeSeg(I.g, key); if (!seg) return false;
@@ -149,7 +150,7 @@ const InteriorUI = (function () {
     const fx = [[0, 1], [1, 0], [0, -1], [-1, 0]][rot];                          // old tomon (ko'rinish yo'nalishi)
     const cx = it[1], cz = it[2], fs = Math.min(0.3, Math.min(r.w, r.d) * 0.4);
     const front = `<line class="ip-front" x1="${cx + fx[0] * r.w * 0.18}" y1="${cz + fx[1] * r.d * 0.18}" x2="${cx + fx[0] * r.w * 0.5}" y2="${cz + fx[1] * r.d * 0.5}"/>`;
-    return `<g class="ip-it${selected ? " sel" : ""}" data-i="${k}"><rect x="${r.x0}" y="${r.z0}" width="${r.w}" height="${r.d}" fill="${d.c}"${it[0] === "carpet" ? ' fill-opacity=".55"' : ""}/>${it[0] === "carpet" ? "" : front}` +
+    return `<g class="ip-it${selected ? " sel" : ""}${d.m ? " hang" : ""}" data-i="${k}"><rect x="${r.x0}" y="${r.z0}" width="${r.w}" height="${r.d}" fill="${d.c}"${it[0] === "carpet" ? ' fill-opacity=".55"' : ""}/>${it[0] === "carpet" ? "" : front}` +
       (r.w >= 0.6 && r.d >= 0.6 ? `<text x="${cx}" y="${cz + fs * 0.35}" text-anchor="middle" font-size="${fs}">${esc(d.n)}</text>` : "") + `<title>${esc(d.n)}</title></g>`;
   }
   function planSvg(p, cells, I) {
@@ -235,7 +236,8 @@ const InteriorUI = (function () {
     body.innerHTML =
       (N > 1 ? `<div class="int-row int-floors" role="tablist" aria-label="Qavatlar">${Array.from({ length: N }, (_, f) => `<button type="button" role="tab" data-ifl="${f}" aria-pressed="${f === fl}">${f + 1}-qavat</button>`).join("")}<button type="button" class="btn-ghost" data-ia="copy" title="Shu qavat rejasini hamma qavatga nusxalaydi">Hamma qavatga nusxalash</button></div>` : "") +
       `<div class="int-row int-tools" role="toolbar" aria-label="Ichki makon asboblari">${edgeTools.map(([t, l]) => tb(t, l)).join("")}${N > 1 ? tb("stair", I.stair ? "Zinani ko'chirish" : "Zina qo'yish") : ""}</div>` +
-      `<div class="int-row int-furn" role="toolbar" aria-label="Mebel">${Object.entries(ITEMS).map(([k, v]) => tb(k, v.n, `<i style="background:${v.c}"></i>`)).join("")}</div>` +
+      Object.entries(Interior.GROUPS).map(([gk, gn]) => `<div class="int-row int-furn" role="toolbar" aria-label="${esc(gn)}"><span class="label int-grp">${esc(gn)}</span>` +
+        Object.entries(ITEMS).filter(([, v]) => v.g === gk).map(([k, v]) => tb(k, v.n, `<i style="background:${v.c}"></i>`)).join("") + `</div>`).join("") +
       `<div class="int-row int-act"><button type="button" class="btn-ghost" data-ia="undo"${undo.length ? "" : " disabled"}>Orqaga</button><button type="button" class="btn-ghost" data-ia="redo"${redo.length ? "" : " disabled"}>Qayta</button>` +
       `<button type="button" class="btn-ghost" data-ia="auto" title="Hamma qavatni avto reja bilan almashtiradi">Avto reja</button><button type="button" class="btn-ghost" data-ia="clear">${N > 1 ? fl + 1 + "-qavatni tozalash" : "Tozalash"}</button>` +
       `<span class="sp"></span>${selItem || (sel && sel.k === "stair") ? `<b>${selItem ? esc(ITEMS[selItem[0]].n) : "Zina"}</b><button type="button" class="btn-ghost" data-ia="rot" title="90° burish (R)">↻ Burish</button><button type="button" class="btn-ghost" data-ia="del" title="Delete">O'chirish</button>` : ""}` +

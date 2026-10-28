@@ -4,7 +4,8 @@
 const Shop = (function () {
   const CART_KEY = "ustun-cart", ORDERS_KEY = "ustun-orders";
   const CATS = { material: "Fasad materiallari", element: "Deraza va eshiklar", tom: "Tom va yopma", qurilish: "Qurilish materiallari",
-    ichki: "Ichki pardoz", muhandislik: "Muhandislik tizimlari", hovli: "Hovli va obodonlashtirish", xizmat: "Xizmatlar" };
+    ichki: "Ichki pardoz", mebel: "Mebel", texnika: "Maishiy texnika", santexnika: "Santexnika va hammom", bezak: "Bezak va yoritish",
+    muhandislik: "Muhandislik tizimlari", hovli: "Hovli va obodonlashtirish", xizmat: "Xizmatlar" };
   const nf = n => Math.round(n).toLocaleString("ru-RU");
   const pf = n => (n < 10 && n % 1 ? n.toLocaleString("ru-RU", { maximumFractionDigits: 2 }) : nf(n));   // g'isht $0,18 — 0 bo'lib qolmasin
   const $ = id => document.getElementById(id);
@@ -112,7 +113,62 @@ const Shop = (function () {
     drop: `<path d="M60 10q-24 30-24 40a24 24 0 0 0 48 0q0-10-24-40z" fill="#4a90d9" ${K}/><path d="M48 50q0 10 10 12" fill="none" stroke="${W}" stroke-width="3"/>`,
     pergola: `${[0, 1, 2].map(i => `<rect x="${16 + i * 40}" y="22" width="8" height="50" fill="#c49a6c" ${K}/>`).join("")}<path d="M10 22h100M10 30h100" stroke="#8a6a46" stroke-width="5"/><circle cx="40" cy="38" r="5" fill="#6a3f8c"/><circle cx="46" cy="44" r="5" fill="#6a3f8c"/><circle cx="82" cy="40" r="5" fill="#3f8f4a"/>`,
   };
+  // Ichki jihoz rasmi: old tomondan ko'rinish (o'lcham va rang Interior.ITEMS dan), turiga qarab bir-ikki belgi
+  function furnIcon(t) {
+    const d = typeof Interior !== "undefined" && Interior.ITEMS[t]; if (!d) return "";
+    const flat = d.h < 0.2, hh = flat ? d.d : d.h + (d.y && d.y < 1 ? d.y : 0), s = Math.min(92 / d.w, 58 / hh), w = d.w * s, h = (flat ? d.d : d.h) * s;
+    const x = 60 - w / 2, y = 72 - h - (d.y && d.y < 1 ? d.y * s : 0), c = d.c, dk = "#2a2f33", o = [];
+    const r = (rx, ry, rw, rh, f, ex = "") => o.push(`<rect x="${rx}" y="${ry}" width="${rw}" height="${rh}" fill="${f}" ${K}${ex}/>`);
+    const legs = (y0, n = 2) => { for (let i = 0; i < n; i++) r(x + 3 + i * (w - 10) / (n - 1), y0, 4, 72 - y0, dk); };
+    if (["table", "desk", "dining", "ctable", "xontaxta"].includes(t)) { r(x, y, w, 5, c); legs(y + 5); }
+    else if (t === "chair") { r(x, y + h * 0.5, w, 4, c); r(x, y, 4, h * 0.5, c); legs(y + h * 0.5 + 4); }
+    else if (t === "sofa" || t === "armchair") { r(x, y + h * 0.35, w, h * 0.4, c); r(x, y, w, h * 0.4, c); r(x - 2, y + h * 0.3, 8, h * 0.5, c); r(x + w - 6, y + h * 0.3, 8, h * 0.5, c); legs(y + h * 0.75); }
+    else if (["bed", "kidsbed", "cradle"].includes(t)) { r(x, y + h * 0.45, w, h * 0.35, c); r(x + 3, y + h * 0.3, w - 6, h * 0.18, "#efece4"); r(x, y, 5, h, c); r(x + w - 5, y + h * 0.15, 5, h * 0.85, c); }
+    else if (t === "tv") { r(x, y, w, h * 0.68, dk); r(x + 3, y + 3, w - 6, h * 0.68 - 6, "#3d6f9c"); r(x + w * 0.2, y + h * 0.7, w * 0.6, h * 0.3, "#5b5f63"); }
+    else if (t === "stove") { r(x, y, w, h, c); [0.25, 0.75].forEach(a => o.push(`<ellipse cx="${x + w * a}" cy="${y + 4}" rx="${w * 0.16}" ry="2.5" fill="${dk}"/>`)); r(x + w * 0.12, y + h * 0.35, w * 0.76, h * 0.45, dk); }
+    else if (t === "washer" || t === "dishwasher") { r(x, y, w, h, c); if (t === "washer") o.push(`<circle cx="60" cy="${y + h * 0.55}" r="${w * 0.3}" fill="#9fb8c8" ${K}/>`); else r(x + 4, y + 6, w - 8, 4, dk); }
+    else if (t === "fridge") { r(x, y, w, h, c); o.push(`<path d="M${x} ${y + h * 0.38}h${w}M${x + w - 5} ${y + 6}v12M${x + w - 5} ${y + h * 0.45}v14" ${K}/>`); }
+    else if (t === "ac") { r(x, y, w, h, c, ' rx="4"'); o.push(`<path d="M${x + 6} ${y + h * 0.75}h${w - 12}" stroke="#9aa3a8" stroke-width="2"/><path d="M${x + w * 0.2} ${y + h + 4}l-3 8M60 ${y + h + 4}v9M${x + w * 0.8} ${y + h + 4}l3 8" stroke="#7fb6d8" stroke-width="2"/>`); }
+    else if (t === "radiator") { for (let i = 0; i < 8; i++) r(x + i * w / 8, y, w / 8 - 1, h, c, ' rx="2"'); }
+    else if (t === "shower") { r(x, y, w, h, "#bcd6e6", ' fill-opacity=".5"'); r(x, 68, w, 4, "#f1f1ee"); o.push(`<path d="M${x + w * 0.3} ${y + 6}h10M${x + w * 0.3 + 5} ${y + 6}v8" ${K}/>`); }
+    else if (t === "bath") { o.push(`<path d="M${x} ${y}h${w}v${h * 0.6}q0 ${h * 0.4} -${w * 0.15} ${h * 0.4}h-${w * 0.7}q-${w * 0.15} 0 -${w * 0.15} -${h * 0.4}z" fill="${c}" ${K}/>`); }
+    else if (t === "toilet") { r(x, y, w, h * 0.45, c); o.push(`<path d="M${x - 4} ${y + h * 0.45}h${w + 8}q0 ${h * 0.3} -${(w + 8) / 2} ${h * 0.3}q-${(w + 8) / 2} 0 -${(w + 8) / 2} -${h * 0.3}z" fill="${c}" ${K}/>`); r(x + w * 0.25, y + h * 0.72, w * 0.5, h * 0.28, c); }
+    else if (t === "sink") { r(x, y, w, h * 0.18, c); r(60 - 6, y + h * 0.18, 12, h * 0.82, c); o.push(`<path d="M60 ${y}v-8h6" ${K} fill="none"/>`); }
+    else if (t === "mirror" || t === "painting") { r(x, y, w, h, t === "mirror" ? "#7a6a58" : "#5b3f22"); r(x + 4, y + 4, w - 8, h - 8, t === "mirror" ? "#dceaf2" : "#e9c46a"); if (t === "painting") o.push(`<path d="M${x + 6} ${y + h - 6}l${w * 0.3} -${h * 0.4} ${w * 0.2} ${h * 0.2} ${w * 0.3} -${h * 0.3}" fill="none" stroke="#3f8f4a" stroke-width="2"/>`); }
+    else if (t === "lamp") { o.push(`<path d="M60 ${y + h * 0.2}V72M52 72h16" ${K}/><path d="M${60 - w * 0.4} ${y + h * 0.2}l${w * 0.12} -${h * 0.2}h${w * 0.56}l${w * 0.12} ${h * 0.2}z" fill="${c}" ${K}/>`); }
+    else if (t === "chandelier") { o.push(`<path d="M60 4v16M${60 - w / 2} 30q${w / 2} 14 ${w} 0" fill="none" ${K}/>`); [0, 0.25, 0.5, 0.75, 1].forEach(a => o.push(`<circle cx="${60 - w / 2 + a * w}" cy="${a === 0 || a === 1 ? 28 : 33}" r="4" fill="#fff2c2" ${K}/>`)); }
+    else if (t === "curtain") { o.push(`<path d="M${x} ${y}h${w}" stroke="${dk}" stroke-width="3"/>`); for (let i = 0; i < 8; i++) r(x + i * w / 8, y + 2, w / 8, h - 2, i % 2 ? c : "#b8a27a"); }
+    else if (t === "fireplace") { r(x, y, w, h, c); r(x + w * 0.22, y + h * 0.35, w * 0.56, h * 0.65, dk); o.push(`<path d="M60 ${72 - h * 0.45}q-8 10 0 ${h * 0.4}q8 -10 0 -${h * 0.4}z" fill="#e3732e"/>`); r(x - 4, y - 4, w + 8, 5, c); }
+    else if (t === "piano") { r(x, y, w, h * 0.6, c); r(x, y + h * 0.6, w, h * 0.12, "#f6f6f2"); for (let i = 1; i < 14; i++) o.push(`<path d="M${x + i * w / 14} ${y + h * 0.6}v${h * 0.12}" stroke="${dk}" stroke-width="1"/>`); legs(y + h * 0.72); }
+    else if (t === "aquarium") { r(x, y + h * 0.45, w, h * 0.55, dk); r(x, y, w, h * 0.45, c, ' fill-opacity=".8"'); o.push(`<path d="M${x + w * 0.3} ${y + h * 0.2}q6 -5 12 0q-6 5 -12 0z" fill="#e3732e"/>`); }
+    else if (t === "plant") { r(60 - w * 0.25, y + h * 0.6, w * 0.5, h * 0.4, "#8a5a35"); o.push(`<circle cx="60" cy="${y + h * 0.35}" r="${Math.min(w, h) * 0.45}" fill="${c}" ${K}/>`); }
+    else if (t === "carpet" || t === "korpacha") { r(x, y, w, h, c); r(x + 5, y + 5, w - 10, h - 10, "none", ' stroke="#e9c46a" stroke-width="2"'); }
+    else if (t === "shelf") { r(x, y, w, h, c); for (let i = 1; i < 5; i++) o.push(`<path d="M${x} ${y + i * h / 5}h${w}" ${K}/>`); ["#a4544a", "#3d6f9c", "#d9b24c", "#5c8a3e"].forEach((f, i) => r(x + 4 + i * 3, y + i * h / 5 + 3, 5, h / 5 - 4, f)); }
+    else { r(x, y, w, h, c); const n = t === "dresser" ? 3 : t === "nightstand" ? 2 : 0; for (let i = 1; i <= n; i++) o.push(`<path d="M${x + 4} ${y + i * h / (n + 1)}h${w - 8}" ${K}/>`); if (t === "wardrobe" || t === "boiler") o.push(`<path d="M60 ${y}v${h}" ${K}/>`); }
+    return o.join("");
+  }
+  // Hovli bezagi rasmlari (yon tomondan)
+  const YARD_ICONS = {
+    bbq: `<rect x="34" y="30" width="52" height="16" fill="#2a2f33"/><path d="M38 46l-6 26M82 46l6 26M60 46v26" stroke="#2a2f33" stroke-width="3"/><path d="M38 30q4-10 8 0q4-10 8 0q4-10 8 0q4-10 8 0q4-10 8 0" fill="none" stroke="#e3732e" stroke-width="3"/>`,
+    lounger: `<path d="M20 52h56l26-24" stroke="#3d7fc4" stroke-width="8" fill="none"/><path d="M26 56v16M70 56v16M98 34v38" stroke="#1f2326" stroke-width="3"/>`,
+    umbrella: `<path d="M20 34q40-34 80 0z" fill="#e9c46a" ${K}/><path d="M60 34v38M48 72h24" stroke="#1f2326" stroke-width="3"/>`,
+    pot: `<path d="M44 46h32l-5 26H49z" fill="#b5683f" ${K}/><circle cx="60" cy="34" r="16" fill="#3f8f4a" ${K}/><circle cx="54" cy="28" r="3" fill="#d6476b"/><circle cx="66" cy="34" r="3" fill="#d6476b"/>`,
+    swing: `<path d="M22 72L38 12h44l16 60M38 12v0M50 12v38M70 12v38" stroke="#8a6a46" stroke-width="3" fill="none"/><rect x="46" y="50" width="28" height="5" fill="#c49a6c" ${K}/>`,
+    doghouse: `<path d="M30 40L60 16l30 24z" fill="#6a5047" ${K}/><rect x="34" y="40" width="52" height="32" fill="#c49a6c" ${K}/><path d="M50 72V58a10 10 0 0 1 20 0v14z" fill="#2a2f33"/>`,
+    pine: `<polygon points="60,8 86,62 34,62" fill="#2f6b3a" ${K}/><rect x="56" y="62" width="8" height="10" fill="#6d4c33"/>`,
+    bush: `<ellipse cx="60" cy="52" rx="34" ry="20" fill="#4f8a3a" ${K}/><circle cx="48" cy="46" r="3" fill="#d6476b"/><circle cx="70" cy="52" r="3" fill="#d6476b"/>`,
+    flowerbed: `<rect x="14" y="54" width="92" height="16" fill="#6d4c33" ${K}/>${[0, 1, 2, 3, 4, 5].map(i => `<path d="M${22 + i * 15} 54v-14" stroke="#3f8f4a" stroke-width="2"/><circle cx="${22 + i * 15}" cy="38" r="5" fill="${["#d6476b", "#f2c33a", "#8a5ad6"][i % 3]}"/>`).join("")}`,
+    fountain: `<ellipse cx="60" cy="64" rx="44" ry="8" fill="#9fb8c8" ${K}/><rect x="54" y="30" width="12" height="34" fill="#c9c3b6" ${K}/><path d="M60 30q-18-14-28 18M60 30q18-14 28 18" fill="none" stroke="#4a90d9" stroke-width="3"/>`,
+    gazebo: `<polygon points="20,32 60,10 100,32" fill="#6a5047" ${K}/><path d="M26 32v40M48 32v40M72 32v40M94 32v40M20 60h80" stroke="#8a6a46" stroke-width="4"/>`,
+    tandir: `<path d="M34 72q-4-44 26-48q30 4 26 48z" fill="#c58a5a" ${K}/><ellipse cx="60" cy="26" rx="10" ry="4" fill="#5b3f22"/>`,
+    bench: `<rect x="18" y="44" width="84" height="6" fill="#c49a6c" ${K}/><rect x="18" y="28" width="84" height="6" fill="#c49a6c" ${K}/><path d="M24 50v22M96 50v22M24 34v10M96 34v10" stroke="#2a2f33" stroke-width="4"/>`,
+    playground: `<rect x="16" y="34" width="26" height="38" fill="#3d7fc4" ${K}/><path d="M42 38l40 34" stroke="#f2c33a" stroke-width="7"/><path d="M84 12v60M108 12v60M84 12h24M96 12v34" stroke="#2a2f33" stroke-width="3"/><rect x="90" y="46" width="12" height="4" fill="#f2c33a"/>`,
+    greenhouse: `<path d="M14 72V40a46 30 0 0 1 92 0v32z" fill="#cfe6e8" fill-opacity=".7" ${K}/><path d="M60 10v62M36 16v56M84 16v56" stroke="#8aa4a8" stroke-width="2"/><path d="M22 66h76" stroke="#3f8f4a" stroke-width="6"/>`,
+    swim: `<rect x="10" y="30" width="100" height="40" fill="#d9d4c8" ${K}/><rect x="16" y="36" width="88" height="28" fill="#4a90d9"/><path d="M60 36v28" stroke="#f7f8f7" stroke-width="2" stroke-dasharray="4 3"/><path d="M98 30V14h8M104 14v16" stroke="#8e99a2" stroke-width="3" fill="none"/>`,
+  };
   function visual(p) {
+    if (p.furn) { const f = furnIcon(p.furn); if (f) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/><path d="M0 72h120" stroke="#b9b2a4" stroke-width="2"/>${f}</svg>`; }
+    if (p.yard && YARD_ICONS[p.yard]) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#cfe0c3"/>${YARD_ICONS[p.yard]}</svg>`;
     if (p.icon && ICONS[p.icon]) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/>${ICONS[p.icon]}</svg>`;
     if (p.draw && typeof drawCell === "function") return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/>${drawCell(p.draw, 30, 2, 60, 76)}</svg>`;
     if (p.mat && typeof MATERIALS !== "undefined" && MATERIALS[p.mat]) {

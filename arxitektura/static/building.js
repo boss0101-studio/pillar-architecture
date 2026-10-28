@@ -629,6 +629,13 @@ const YARD_ITEMS = {
   play: { label: "Bolalar maydonchasi", w: 5.2, d: 4.2 },
   lamp: { label: "Chiroq ustuni", w: 0.6, d: 0.6 },
   greenhouse: { label: "Issiqxona", w: 3.2, d: 6.2 },
+  bbq: { label: "Mangal", w: 1.3, d: 0.7 },
+  lounger: { label: "Shezlong", w: 0.75, d: 1.9 },
+  umbrella: { label: "Soyabon", w: 2.6, d: 2.6 },
+  pot: { label: "Gul tuvak", w: 0.7, d: 0.7 },
+  swing: { label: "Arg'imchoq", w: 2.4, d: 1.5 },
+  doghouse: { label: "It uychasi", w: 1.0, d: 1.2 },
+  ishkom: { label: "Ishkom (tok so'risi)", w: 3.2, d: 4.4 },
 };
 const YARD_GREEN = ["tree", "bed", "pine", "fruit", "bush"];   // ko'kalamzor (qattiq qoplama emas)
 const FENCES = { devor: "G'isht devor", panjara: "Temir panjara", yogoch: "Yog'och to'siq", yoq: "To'siqsiz" };

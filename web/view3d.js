@@ -1511,7 +1511,7 @@
         const dir = new THREE.Vector3();
         renderer.xr.getCamera(camera).getWorldDirection(dir);
         dir.y = 0; if (dir.lengthSq() < 1e-6) return;
-        vr.xrOffset.sub(dir.normalize().multiplyScalar(3));
+        vr.xrOffset.sub(dir.normalize().multiplyScalar(4.5));
         if (group) group.position.copy(vr.xrOffset);
       });
       session.addEventListener("end", () => {
@@ -1565,7 +1565,7 @@
     if (k.has("KeyA") || k.has("ArrowLeft")) s -= 1;
     if (k.has("KeyD") || k.has("ArrowRight")) s += 1;
     if (!f && !s) return;
-    const sp = (k.has("ShiftLeft") || k.has("ShiftRight") ? 4.2 : 1.6) * dt, yw = vr.lookYaw;   // m/s: yurish va tez yurish
+    const sp = (k.has("ShiftLeft") || k.has("ShiftRight") ? 6.3 : 2.4) * dt, yw = vr.lookYaw;   // m/s: yurish va tez yurish (Shift)
     const dx = (-Math.sin(yw) * f + Math.cos(yw) * s) * sp, dz = (-Math.cos(yw) * f - Math.sin(yw) * s) * sp;
     if (!vrBlocked(vr.x + dx, vr.z)) vr.x += dx;
     if (!vrBlocked(vr.x, vr.z + dz)) vr.z += dz;

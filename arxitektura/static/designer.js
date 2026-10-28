@@ -234,6 +234,7 @@ $("clear").addEventListener("click", () => {
 // ---------- VR ichida qurish: 3D ko'rinish so'raydi, holat shu yerda o'zgaradi (orqaga/qayta bilan) ----------
 if (window.View3D) View3D.onVrEdit = (i, op, a) => {
   if (i !== Site.active && Site.list[i]) Site.select(i);          // boshqa uyga qaralgan bo'lsa, avval o'sha uy faol bo'ladi
+  if (/^furn/.test(op)) return typeof InteriorUI !== "undefined" && InteriorUI.vrEdit ? InteriorUI.vrEdit(op, a) : false;   // VR ichki dizayn
   if (op === "paint") {
     const before = cells[a.k];
     if (a.tool === "auto" ? before === undefined : before === a.tool) return;

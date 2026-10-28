@@ -1332,3 +1332,10 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .int-furn .int-grp { flex-basis: 100%; margin-top: 4px; }
 .ip-it.hang rect { fill-opacity: .35; stroke-dasharray: .12 .08; }
 .gy-umb { fill: rgba(233, 196, 106, .75); stroke: #a8802c; stroke-width: 1; }
+/* VR ichki dizayn: jihozlar paneli (rang belgisi bilan), fasad asboblari o'rnida */
+.vr-roomui { display: none !important; }
+.v3.vr-on.vr-room .vr-roomui, .v3.vr-room .vr-roomui { display: grid !important; }
+.v3.vr-room .vr-build:not(.vr-roomui) { display: none !important; }
+.vr-furn { max-height: 132px; overflow-y: auto; }
+.vr-furn button i { width: 26px; height: 18px; border: 1px solid rgba(255, 255, 255, .6); }
+.vr-top button[data-vr="room"][aria-pressed="true"], .vr-top button[data-vr="hq"][aria-pressed="true"] { background: var(--accent); border-color: #fff; }

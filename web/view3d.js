@@ -28,6 +28,41 @@
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
   const disposables = [];
   const track = o => { disposables.push(o); return o; };
+  // Ichki pardoz teksturalari (bir marta yasaladi, hamma sahnada qayta ishlatiladi): parket pol va suvoq devor.
+  // Anizotropik filtr — qiya qaralganda ham pol tiniq ko'rinadi.
+  let texCache = null, lampBudget = 0;
+  function interiorTex() {
+    if (texCache || !renderer) return texCache;
+    const aniso = renderer.capabilities.getMaxAnisotropy();
+    const rnd = (s => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646)(7);
+    const mkTex = (size, draw, rep) => {
+      const c = document.createElement("canvas"); c.width = c.height = size; draw(c.getContext("2d"), size);
+      const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(rep, rep); t.anisotropy = aniso; return t;
+    };
+    texCache = {
+      parquet: mkTex(1024, (x, n) => {                                // 2 × 2 m: 10 qator taxta, har biri o'z tusi va tolalari bilan
+        const rows = 10, h = n / rows;
+        for (let r = 0; r < rows; r++) {
+          let off = -rnd() * n * 0.5;
+          while (off < n) {
+            const L = n * (0.35 + rnd() * 0.3), tone = 150 + rnd() * 40;
+            x.fillStyle = `rgb(${tone + 40 | 0},${tone + 8 | 0},${tone - 35 | 0})`; x.fillRect(off, r * h, L, h);
+            x.strokeStyle = "rgba(60,35,15,.13)"; x.lineWidth = 1.2;
+            for (let g = 0; g < 7; g++) { const y = r * h + 3 + rnd() * (h - 6); x.beginPath(); x.moveTo(off, y); x.bezierCurveTo(off + L * 0.3, y + rnd() * 6 - 3, off + L * 0.6, y + rnd() * 6 - 3, off + L, y); x.stroke(); }
+            x.fillStyle = "rgba(40,22,8,.5)"; x.fillRect(off, r * h, 2, h);
+            off += L;
+          }
+          x.fillStyle = "rgba(40,22,8,.42)"; x.fillRect(0, r * h, n, 2);
+        }
+      }, 0.5),
+      plaster: mkTex(512, (x, n) => {                                  // yengil donador suvoq
+        const im = x.createImageData(n, n), d = im.data;
+        for (let i = 0; i < d.length; i += 4) { const v = 238 + rnd() * 17; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+        x.putImageData(im, 0, 0);
+      }, 1),
+    };
+    return texCache;
+  }
 
   // ---------- Shakllar ----------
   const rectAt = (xa, xb, za, zb) => {
@@ -400,8 +435,9 @@
     // Natija: VR'da yurishdagi to'siqlar (coll) — uyning markazidagi koordinatalarda
     function addInterior(raw) {
       const I = Interior.norm(p, raw), ig = I.g, fh = p.floor_h, N = p.floors, SL = 0.22;
-      const wallM = track(new THREE.MeshStandardMaterial({ color: 0xece8dd, roughness: 0.95 }));
-      const floorM = track(new THREE.MeshStandardMaterial({ color: 0xb99a73, roughness: 0.75 }));
+      const tex = interiorTex();
+      const wallM = track(new THREE.MeshStandardMaterial({ color: 0xf1ede3, roughness: 0.95, map: tex ? tex.plaster : null }));
+      const floorM = track(new THREE.MeshStandardMaterial({ color: tex ? 0xffffff : 0xb99a73, roughness: 0.55, map: tex ? tex.parquet : null }));
       const slabM = track(new THREE.MeshStandardMaterial({ color: 0xe4e0d6, roughness: 0.95 }));
       const stairM = track(new THREE.MeshStandardMaterial({ color: 0xa78662, roughness: 0.8 }));
       const mc = {}, itemM = c => mc[c] || (mc[c] = track(new THREE.MeshStandardMaterial({ color: c, roughness: 0.7 })));
@@ -529,7 +565,8 @@
         const base = f * fh + (f === 0 ? 0.06 : 0), top = (f + 1) * fh - SL, fd = I.floors[f];
         if (f === 0) {
           if (PSI) { const fm = mk(track(new THREE.ExtrudeGeometry(slabShape(null), { depth: 0.06, bevelEnabled: false })), floorM, 0, 0, 0, false); fm.rotation.x = -Math.PI / 2; G.add(fm); }
-          else G.add(box(W - 2 * T, 0.06, D - 2 * T, floorM, 0, 0.03, 0, false));
+          else G.add(box(W - 2 * T, 0.06, D - 2 * T, slabM, 0, 0.03, 0, false));
+          G.add(floorFinish(0.062, null));                         // parket qatlami (tekstura metrda: plita shakli bo'yicha)
         }
         else {
           const hole = st ? (r => ({ x0: r.x0 - 0.02, x1: r.x1 + 0.02, z0: r.z0 - 0.02, z1: r.z1 + 0.02 }))(upperHalf(st.rect, st.rot)) : null;
@@ -547,11 +584,17 @@
             if (hh > 0.02) G.add(box(r.x1 - r.x0, hh, r.z1 - r.z0, wallM, X((r.x0 + r.x1) / 2), base + 2.1 + hh / 2, Z((r.z0 + r.z1) / 2), false));
           }
         }
-        fd.items.forEach(it => {
+        fd.items.forEach((it, n) => {
           const d = Interior.ITEMS[it[0]], fg = furniture(it[0], d.c);
           const lift = d.top ? Math.max(0, top - base - d.h - 0.02) : (d.y || 0);   // osma buyumlar: devorda yoki shiftda
           fg.position.set(X(it[1]), base + lift, Z(it[2])); fg.rotation.y = ((it[3] | 0) % 4) * Math.PI / 2;
+          fg.userData.it = { f, idx: n, flat: d.h < 0.1 };   // gilam, ko'rpacha — ustiga jihoz qo'yiladi                             // VR'da qaralgan jihozni topish uchun
           G.add(fg);
+          if ((d.top || it[0] === "lamp") && lampBudget > 0) {        // qandil va torsher xonani haqiqatan yoritadi (sahnada 8 tagacha)
+            lampBudget--;
+            const L = new THREE.PointLight(0xffd8a8, 0.55, 7, 2);
+            L.position.set(X(it[1]), base + lift + d.h * (d.top ? 0.3 : 0.85), Z(it[2])); G.add(L);
+          }
           if (f === 0 && it[0] !== "carpet" && !d.m) rects.push(grow(Interior.itemRect(it), 0.12));
         });
         if (st && f < N - 1) {                                       // zina: pog'onalar (yo'nalish — ko'tarilish tomoni)
@@ -735,7 +778,8 @@
     if (group) scene.remove(group);
     group = new THREE.Group();
     scene.add(group);
-    plates = []; labels = []; bGroups = [];
+    plates = []; labels = []; bGroups = []; lampBudget = 8;
+    if (vrSel) scene.remove(vrSel);
     activeIdx = clamp(site.active || 0, 0, site.list.length - 1);
 
     const accent = cssColor("--accent", "#2b4acb");
@@ -800,6 +844,14 @@
     markFill.renderOrder = 40; markEdge.renderOrder = 41; markFill.raycast = markEdge.raycast = () => {};
     vrMark.add(markFill, markEdge); vrMark.visible = false;
     vr.aim = null;
+    // VR ichki dizayn: qo'yiladigan jihozning shaffof "arvohi" (yashil — sig'adi, qizil — yo'q) va qaralgan jihoz ramkasi
+    vrGhost = new THREE.Group();
+    const ghostM = track(new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.32, depthWrite: false }));
+    const ghostBox = new THREE.Mesh(track(new THREE.BoxGeometry(1, 1, 1)), ghostM);
+    const ghostEdge = new THREE.LineSegments(track(new THREE.EdgesGeometry(track(new THREE.BoxGeometry(1, 1, 1)))), track(new THREE.LineBasicMaterial({ color: 0xffffff })));
+    ghostBox.raycast = ghostEdge.raycast = () => {}; vrGhost.add(ghostBox, ghostEdge); vrGhost.visible = false; vrGhost.userData.mat = ghostM;
+    vrSel = new THREE.BoxHelper(undefined, 0xffd166); track(vrSel.geometry); track(vrSel.material); vrSel.raycast = () => {}; vrSel.visible = false; scene.add(vrSel);
+    vr.faim = null;
 
     // ---- Kamera va yorug'lik ----
     const R = 0.5 * Math.sqrt(totalW * totalW + Dmax * Dmax + Hmax * Hmax);
@@ -1137,7 +1189,11 @@
   // Shlem (WebXR) bo'lsa — immersiv VR; bo'lmasa — telefon + karton ko'zoynak uchun ikki ko'zli (stereo) ko'rinish.
   const vr = { on: false, stereo: true, x: 0, z: 0, yaw: 0, pitch: 0, dragYaw: 0, lookYaw: 0, eye: 1.65, walk: 0,
                keys: new Set(), gyro: false, devQ: null, yawOffset: null, xr: null, xrOffset: new THREE.Vector3(), ui: null,
-               build: true, tool: "win", aim: null, aimNdc: new THREE.Vector2(), aimKey: "", flash: 0 };
+               build: true, tool: "win", aim: null, aimNdc: new THREE.Vector2(), aimKey: "", flash: 0,
+               room: false, ftype: "sofa", frot: 0, faim: null, fl: 0, fy: 0, hq: true, msg: "", msgT: 0 };
+  const FURN = typeof Interior !== "undefined" ? Object.keys(Interior.ITEMS) : [];
+  const furnName = t => (typeof Interior !== "undefined" && Interior.ITEMS[t] ? Interior.ITEMS[t].n : t);
+  let vrGhost = null, vrSel = null;
   const VR_TOOLS = ["win", "wide", "arch", "balc", "door", "shop", "arcade", "slit", "round", "lattice", "tall", "square", "triple", "door2", "glassdoor", "archdoor", "garage", "wall", "auto"];
   const ROOF_L = { tekis: "Tekis", nishab: "Nishab", bir: "Bir nishab", piramida: "Piramida", gumbaz: "Gumbaz", terrasa: "Terrasa" };
   const toolName = t => (typeof CELL_LABELS !== "undefined" && CELL_LABELS[t]) || t;
@@ -1208,7 +1264,127 @@
 
   // ---------- VR ichida qurish: nishon (ko'z markazi yoki bosilgan nuqta) qaragan old fasad katagi ----------
   const ctr = new THREE.Vector2(), xrPos = new THREE.Vector3(), xrDir = new THREE.Vector3();
+  // Ichki dizayn: nishon qaragan pol nuqtasi (u yerga jihoz qo'yiladi) yoki mavjud jihoz (burish / o'chirish)
+  const wpN = new THREE.Vector3();
+  function vrAimRoom(xrCam) {
+    let fa = null;
+    if (bGroups.length) {
+      if (xrCam) { xrCam.getWorldPosition(xrPos); xrCam.getWorldDirection(xrDir); ray.set(xrPos, xrDir); }
+      else ray.setFromCamera(vr.stereo ? ctr : vr.aimNdc, camera);
+      const hit = ray.intersectObjects(bGroups, true)[0];
+      if (hit && hit.distance < 14) {
+        let o = hit.object, itm = null, fl = null, bi;
+        while (o) { if (!itm && o.userData.it) itm = o; if (fl === null && o.userData.fl !== undefined && o.type === "Group") fl = o.userData.fl; if (o.userData.bIndex !== undefined) { bi = o.userData.bIndex; break; } o = o.parent; }
+        const b = bi !== undefined && lastArgs && lastArgs.site.list[bi];
+        const under = itm && itm.userData.it.flat ? itm.userData.it.idx : -1;   // tekis buyum (gilam) — pol kabi: ustiga qo'yiladi, X uni o'chiradi
+        if (b && itm && under < 0) fa = { kind: "item", i: bi, f: itm.userData.it.f, idx: itm.userData.it.idx, obj: itm };
+        else if (b && fl !== null && hit.face) {
+          wpN.copy(hit.face.normal).transformDirection(hit.object.matrixWorld);
+          if (wpN.y > 0.7) {                                           // faqat pol (yuqoriga qaragan sirt)
+            const p = b.params, Wb = p.bays * p.bay_w, Db = p.depth, L = bGroups[bi].worldToLocal(hit.point.clone());
+            const x = Math.round((L.x + Wb / 2) / 0.25) * 0.25, z = Math.round((L.z + Db / 2) / 0.25) * 0.25;
+            const ck = [bi, fl, x, z, vr.frot, vr.ftype].join();       // sig'ish faqat joy yoki jihoz o'zgarganda qayta hisoblanadi
+            if (ck !== vr.fitCk || vr.fitArgs !== lastArgs) {
+              vr.fitCk = ck; vr.fitArgs = lastArgs;
+              vr.fitOk = fl < p.floors && Interior.fits(p, Interior.norm(p, b.interior || {}), fl, [vr.ftype, x, z, vr.frot], -1);
+            }
+            fa = { kind: "floor", i: bi, f: fl, x, z, ok: vr.fitOk, p, Wb, Db, under };
+          }
+        }
+      }
+    }
+    vr.faim = fa;
+    if (vrGhost) {                                                     // arvoh: haqiqiy o'lcham, burilish va balandlikda
+      vrGhost.visible = !!(fa && fa.kind === "floor");
+      if (vrGhost.visible) {
+        const d = Interior.ITEMS[vr.ftype], odd = vr.frot % 2 === 1, p = fa.p, fh = p.floor_h;
+        const base = fa.f * fh + (fa.f === 0 ? 0.06 : 0), top = (fa.f + 1) * fh - 0.22, lift = d.top ? Math.max(0, top - base - d.h - 0.02) : (d.y || 0);
+        if (vrGhost.parent !== bGroups[fa.i]) bGroups[fa.i].add(vrGhost);
+        vrGhost.position.set(fa.x - fa.Wb / 2, base + lift + Math.max(d.h, 0.04) / 2, fa.z - fa.Db / 2);
+        vrGhost.scale.set(odd ? d.d : d.w, Math.max(d.h, 0.04), odd ? d.w : d.d);
+        vrGhost.userData.mat.color.setHex(fa.ok ? 0x2ecc71 : 0xe74c3c);
+      }
+    }
+    if (vrSel) { vrSel.visible = !!(fa && fa.kind === "item"); if (vrSel.visible) vrSel.setFromObject(fa.obj); }
+    const key = fa ? (fa.kind === "item" ? `i${fa.i}:${fa.f}:${fa.idx}` : `f${fa.ok}:${vr.ftype}`) : "-";
+    if (vr.ui && (key + vr.msg) !== vr.aimKey) {
+      vr.aimKey = key + vr.msg;
+      vr.ui.classList.toggle("aim-on", !!fa && (fa.kind === "item" || fa.ok));
+      const items = lastArgs && fa ? Interior.norm(lastArgs.site.list[fa.i].params, lastArgs.site.list[fa.i].interior || {}).floors[fa.f] : null;
+      const nm = fa && fa.kind === "item" && items && items.items[fa.idx] ? furnName(items.items[fa.idx][0]) : "";
+      vr.ui.querySelector(".vr-aim2").textContent = vr.msg || (!fa ? "Polga qarang: jihoz o'sha joyga qo'yiladi"
+        : fa.kind === "item" ? `${nm} — R: burish · X: o'chirish`
+        : fa.ok ? `${furnName(vr.ftype)} → shu yerga (E)` : `${furnName(vr.ftype)} bu yerga sig'maydi`);
+    }
+  }
+  function vrSay(t) { vr.msg = t; clearTimeout(vr.msgT); vr.msgT = setTimeout(() => { vr.msg = ""; vr.aimKey = ""; }, 1600); vr.aimKey = ""; }
+  function vrRoomPlace() {
+    const fa = vr.faim, edit = window.View3D.onVrEdit; if (!fa || !edit) return false;
+    if (fa.kind === "item") return vrRoomRot();
+    if (!fa.ok) { vrSay(`${furnName(vr.ftype)} bu yerga sig'maydi`); return true; }
+    edit(fa.i, "furn", { f: fa.f, type: vr.ftype, x: fa.x, z: fa.z, rot: vr.frot });
+    vrSay(`${furnName(vr.ftype)} qo'yildi`);
+    return true;
+  }
+  function vrRoomRot() {
+    const fa = vr.faim, edit = window.View3D.onVrEdit;
+    if (fa && fa.kind === "item" && edit) { if (edit(fa.i, "furnRot", { f: fa.f, idx: fa.idx }) === false) vrSay("Burilganda sig'maydi"); return true; }
+    vr.frot = (vr.frot + 1) % 4; vr.aimKey = ""; return true;      // polga qaralsa — qo'yiladigan jihoz buriladi
+  }
+  function vrRoomDel() {
+    const fa = vr.faim, edit = window.View3D.onVrEdit;
+    if (!fa || !edit) return false;
+    const idx = fa.kind === "item" ? fa.idx : fa.under; if (idx === undefined || idx < 0) return false;
+    edit(fa.i, "furnDel", { f: fa.f, idx }); vrSay("O'chirildi"); return true;
+  }
+  function vrSetFurn(t) {
+    vr.ftype = t; vr.aimKey = "";
+    if (vr.ui) vr.ui.querySelectorAll("[data-vf]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.vf === t)));
+  }
+  // Qavat almashtirish: ko'z balandligi o'sha qavat poliga ko'tariladi (shlemda — sahna pastga suriladi)
+  function vrFloor(d) {
+    if (!lastArgs) return;
+    const p = lastArgs.site.list[clamp(activeIdx, 0, lastArgs.site.list.length - 1)].params;
+    vr.fl = clamp(vr.fl + d, 0, p.floors - 1); vr.fy = vr.fl * p.floor_h;
+    if (vr.xr) { vr.xrOffset.y = -vr.fy; if (group) group.position.copy(vr.xrOffset); }
+    const el = vr.ui && vr.ui.querySelector('[data-vo="fl"]'); if (el) el.textContent = vr.fl + 1;
+    vr.aimKey = "";
+  }
+  // Odam biror uyning ichidami (uy burilgan bo'lsa ham)
+  function vrInside() {
+    return lastLayout.some(l => {
+      const th = (l.rot * Math.PI) / 180, dx = vr.x - l.cx, dz = vr.z - l.cz;
+      const xl = dx * Math.cos(th) - dz * Math.sin(th), zl = dx * Math.sin(th) + dz * Math.cos(th);
+      return Math.abs(xl) < l.W / 2 - T && Math.abs(zl) < l.D / 2 - T;
+    });
+  }
+  // Uy ichiga o'tish: faol uyning ichidagi birinchi bo'sh joyga (old eshik tomondan), uyning ichiga qarab
+  function vrGoInside() {
+    const l = lastLayout[clamp(activeIdx, 0, lastLayout.length - 1)]; if (!l) return;
+    const th = (l.rot * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th);
+    for (let zl = l.D / 2 - 1.2; zl > -l.D / 2 + 0.8; zl -= 0.5) for (const xl of [0, 1, -1, 2, -2, 3, -3, 4, -4]) {
+      if (Math.abs(xl) > l.W / 2 - 0.8) continue;
+      const x = l.cx + xl * cs + zl * sn, z = l.cz - xl * sn + zl * cs;
+      if (!vrBlocked(x, z)) {
+        vr.x = x; vr.z = z; vr.yaw = th; vr.pitch = -0.35; vr.dragYaw = 0; vr.yawOffset = null;
+        if (vr.xr) { vr.xrOffset.set(-x, -vr.fy, -z); if (group) group.position.copy(vr.xrOffset); }
+        vr.aimKey = ""; return;
+      }
+    }
+    vrSay("Ichkarida bo'sh joy topilmadi");
+  }
+  // Tiniqlik: yuqori sifatda piksel zichligi 1,5 barobar (supersampling) va soya xaritasi 4096; shlemda framebuffer 1,5×
+  function applyQuality(on) {
+    const dpr = window.devicePixelRatio || 1;
+    renderer.setPixelRatio(on ? Math.min(dpr * 1.5, 3) : Math.min(dpr, 2));
+    const ms = on ? 4096 : 2048;
+    if (sun.shadow.mapSize.x !== ms) { sun.shadow.mapSize.set(ms, ms); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
+    resize();
+  }
+
   function vrAim(xrCam) {
+    if (vr.room) { if (vrMark) vrMark.visible = false; vrAimRoom(xrCam); return; }
+    if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
     let aim = null;
     if (vr.build && bGroups.length) {
       if (xrCam) { xrCam.getWorldPosition(xrPos); xrCam.getWorldDirection(xrDir); ray.set(xrPos, xrDir); }
@@ -1242,6 +1418,7 @@
     }
   }
   function vrPlace() {
+    if (vr.room) return vrRoomPlace();
     if (!vr.aim || !window.View3D.onVrEdit) return false;
     window.View3D.onVrEdit(vr.aim.i, "paint", { k: vr.aim.k, tool: vr.tool });
     vr.flash = performance.now() + 180;
@@ -1267,12 +1444,16 @@
     if (!vr.ui) return;
     vr.ui.querySelector('[data-vr="mode"]').textContent = vr.stereo ? "Bitta ekran" : "Ikki ko'z (VR)";
     vr.ui.querySelector('[data-vr="build"]').setAttribute("aria-pressed", String(vr.build));
+    vr.ui.querySelector('[data-vr="room"]').setAttribute("aria-pressed", String(vr.room));
+    vr.ui.querySelector('[data-vr="hq"]').setAttribute("aria-pressed", String(vr.hq));
     host.classList.toggle("vr-make", vr.build);
+    host.classList.toggle("vr-room", vr.room);
     vr.aimKey = "";
     vr.ui.querySelector(".vr-hint").textContent = vr.gyro
       ? "Boshingizni (telefonni) burang — atrofga qarang · Ekranni bosib turing — oldinga yuring"
       : "Sudrang — atrofga qarang · Bosib turing yoki W/S — yuring · Shift — tezroq" + (window.isSecureContext ? "" : " · Telefon datchigi uchun HTTPS kerak");
-    if (vr.build) vr.ui.querySelector(".vr-hint").textContent += vr.stereo
+    if (vr.room) vr.ui.querySelector(".vr-hint").textContent += " · Polga qarab bosing (E) — jihoz qo'yish · R — burish · X — o'chirish · Q — keyingi jihoz";
+    else if (vr.build) vr.ui.querySelector(".vr-hint").textContent += vr.stereo
       ? " · Nishonni katakka qarating va bosing (E) — qo'yish · Q — keyingi asbob"
       : " · Katakni bosing (E — markazdagi katak) — qo'yish · Q — keyingi asbob";
   }
@@ -1286,6 +1467,7 @@
     stopAuto();
     host.classList.add("vr-on", "stereo"); document.documentElement.classList.add("vr-lock");
     camera.fov = 80; camera.near = 0.05; camera.updateProjectionMatrix();
+    vr.fl = 0; vr.fy = 0; applyQuality(vr.hq);
     setVrScene(true);
     startGyro();
     try { if (host.requestFullscreen) host.requestFullscreen().catch(() => {}); } catch {}
@@ -1299,7 +1481,8 @@
     host.classList.remove("vr-on", "stereo"); document.documentElement.classList.remove("vr-lock");
     camera.fov = 35; camera.near = 0.5; camera.updateProjectionMatrix();
     renderer.setScissorTest(false);
-    vr.aim = null; if (vrMark) vrMark.visible = false;
+    vr.aim = null; vr.faim = null; if (vrMark) vrMark.visible = false; if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
+    vr.fl = 0; vr.fy = 0; applyQuality(false);
     setVrScene(false);
     try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {}
     resize(); request();
@@ -1310,14 +1493,19 @@
     try {
       const session = await navigator.xr.requestSession("immersive-vr", { optionalFeatures: ["local-floor"] });
       vrStartPos();
-      vr.xr = session;
+      vr.xr = session; vr.fl = 0; vr.fy = 0;
       renderer.xr.enabled = true;
       renderer.xr.setReferenceSpaceType("local-floor");
+      if (renderer.xr.setFramebufferScaleFactor) renderer.xr.setFramebufferScaleFactor(vr.hq ? 1.5 : 1);   // shlemda tiniqroq tasvir
+      if (renderer.xr.setFoveation) renderer.xr.setFoveation(vr.hq ? 0 : 1);
       await renderer.xr.setSession(session);
       vr.xrOffset.set(-vr.x, 0, -vr.z);
       if (group) group.position.copy(vr.xrOffset);
       setVrScene(true);
-      session.addEventListener("squeeze", () => vrSetTool(VR_TOOLS[(VR_TOOLS.indexOf(vr.tool) + 1) % VR_TOOLS.length]));
+      session.addEventListener("squeeze", () => {                  // ichki dizaynda: jihozga qaralsa — o'chirish, aks holda keyingi jihoz
+        if (vr.room) { if (!vrRoomDel()) vrSetFurn(FURN[(FURN.indexOf(vr.ftype) + 1) % FURN.length]); return; }
+        vrSetTool(VR_TOOLS[(VR_TOOLS.indexOf(vr.tool) + 1) % VR_TOOLS.length]);
+      });
       session.addEventListener("select", () => {
         if (vrPlace()) return;
         const dir = new THREE.Vector3();
@@ -1329,7 +1517,7 @@
       session.addEventListener("end", () => {
         renderer.setAnimationLoop(null); renderer.xr.enabled = false;
         vr.xr = null; vr.xrOffset.set(0, 0, 0); if (group) group.position.set(0, 0, 0);
-        vr.aim = null; if (vrMark) vrMark.visible = false;
+        vr.aim = null; vr.faim = null; vr.fl = 0; vr.fy = 0; if (vrMark) vrMark.visible = false; if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
         setVrScene(false); resize(); request();
       });
       renderer.setAnimationLoop(() => { vrAim(renderer.xr.getCamera(camera)); renderer.render(scene, camera); });
@@ -1341,7 +1529,7 @@
 
   const yAxis = new THREE.Vector3(0, 1, 0), yawQ = new THREE.Quaternion(), tmpE = new THREE.Euler();
   function vrPlaceCamera() {
-    camera.position.set(vr.x, vr.eye, vr.z);
+    camera.position.set(vr.x, vr.eye + vr.fy, vr.z);
     if (vr.gyro && vr.devQ) {
       if (vr.yawOffset === null) { tmpE.setFromQuaternion(vr.devQ, "YXZ"); vr.yawOffset = vr.yaw - tmpE.y; }   // birinchi o'qishda binoga qaratiladi
       yawQ.setFromAxisAngle(yAxis, vr.yawOffset + vr.dragYaw);
@@ -1416,7 +1604,7 @@
 
   function mount(el) {
     host = el; host.innerHTML = ""; host.classList.add("v3");
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     canvas = renderer.domElement; host.appendChild(canvas);
@@ -1425,7 +1613,7 @@
     camera = new THREE.PerspectiveCamera(35, 1, 0.5, 3000);
     hemi = new THREE.HemisphereLight(0xffffff, 0x8d9296, 0.95); scene.add(hemi);
     sun = new THREE.DirectionalLight(0xfff1dc, 0.9);
-    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005;
+    sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
     scene.add(sun, sun.target);
 
     bar = document.createElement("div"); bar.className = "v3-bar";
@@ -1444,7 +1632,10 @@
     vr.ui = document.createElement("div"); vr.ui.className = "v3-vr";
     const icon = t => typeof drawCell === "function" && t !== "auto"
       ? `<svg viewBox="0 0 40 40" aria-hidden="true">${drawCell(t, 0, 0, 40, 40)}</svg>` : `<svg viewBox="0 0 40 40" aria-hidden="true"><text x="20" y="26" text-anchor="middle" font-size="14" fill="#fff">A</text></svg>`;
-    vr.ui.innerHTML = '<div class="vr-top"><b>VR rejimi</b><span class="sp"></span><button type="button" data-vr="build" aria-pressed="true">Qurish</button><button type="button" data-vr="mode">Bitta ekran</button><button type="button" data-vr="exit">Chiqish ✕</button></div>' +
+    vr.ui.innerHTML = '<div class="vr-top"><b>VR rejimi</b><span class="sp"></span><button type="button" data-vr="build" aria-pressed="true">Qurish</button>' +
+      '<button type="button" data-vr="room" aria-pressed="false" title="Uy ichida turib jihozlarni joylash">Ichki dizayn</button>' +
+      '<button type="button" data-vr="hq" aria-pressed="true" title="Yuqori tiniqlik: kuchliroq qurilma talab qiladi">Tiniq HD</button>' +
+      '<button type="button" data-vr="mode">Bitta ekran</button><button type="button" data-vr="exit">Chiqish ✕</button></div>' +
       '<i class="vr-ret l" aria-hidden="true"></i><i class="vr-ret r" aria-hidden="true"></i>' +
       '<div class="vr-bottom"><div class="vr-build"><p class="vr-aim" aria-live="polite"></p>' +
       '<div class="vr-tools">' + VR_TOOLS.map((t, n) => `<button type="button" data-vt="${t}" aria-pressed="${t === vr.tool}" title="${toolName(t)}${n < 10 ? " (" + ((n + 1) % 10) + ")" : ""}">${icon(t)}<span>${toolName(t)}</span></button>`).join("") + '</div>' +
@@ -1453,6 +1644,12 @@
       '<span class="vr-step">Oraliq <button type="button" data-vs="bays" data-d="-1" aria-label="Oraliqni kamaytirish">−</button><b data-vo="bays"></b><button type="button" data-vs="bays" data-d="1" aria-label="Oraliq qo\'shish">+</button></span>' +
       '<button type="button" data-vc="roof">Tom: <b data-vo="roof"></b> ↻</button><button type="button" data-vc="material">Material: <b data-vo="material"></b> ↻</button>' +
       '<button type="button" data-vu="undo" title="Orqaga (Ctrl+Z)">↶</button><button type="button" data-vu="redo" title="Qayta (Ctrl+Y)">↷</button></div></div>' +
+      '<div class="vr-build vr-roomui"><p class="vr-aim2 vr-aim" aria-live="polite"></p>' +
+      '<div class="vr-tools vr-furn">' + FURN.map(t => `<button type="button" data-vf="${t}" aria-pressed="${t === vr.ftype}" title="${furnName(t)}"><i style="background:${Interior.ITEMS[t].c}"></i><span>${furnName(t)}</span></button>`).join("") + '</div>' +
+      '<div class="vr-params"><button type="button" data-vx="inside">Ichkariga kirish</button>' +
+      '<span class="vr-step">Qavat <button type="button" data-vfl="-1" aria-label="Pastki qavat">−</button><b data-vo="fl">1</b><button type="button" data-vfl="1" aria-label="Yuqori qavat">+</button></span>' +
+      '<button type="button" data-vx="rot" title="R">↻ Burish</button><button type="button" data-vx="del" title="X">O\'chirish</button>' +
+      '<button type="button" data-vx="undo" title="Orqaga">↶</button><button type="button" data-vx="redo" title="Qayta">↷</button></div></div>' +
       '<p class="vr-hint"></p></div>';
     host.appendChild(vr.ui);
     vr.ui.addEventListener("click", e => {
@@ -1461,7 +1658,19 @@
       const d = b.dataset, edit = window.View3D.onVrEdit, i = clamp(activeIdx, 0, Math.max(0, bGroups.length - 1));
       if (d.vr === "exit") exitVR();
       else if (d.vr === "mode") { vr.stereo = !vr.stereo; vr.aimNdc.set(0, 0); host.classList.toggle("stereo", vr.stereo); updateVrUI(); }
-      else if (d.vr === "build") { vr.build = !vr.build; updateVrUI(); }
+      else if (d.vr === "build") { vr.build = !vr.build; if (vr.build) vr.room = false; updateVrUI(); }
+      else if (d.vr === "room") {
+        vr.room = !vr.room; if (vr.room) vr.build = true;
+        if (vr.room && !vrInside()) vrGoInside();                     // tashqarida bo'lsa — ichkariga
+        updateVrUI();
+      }
+      else if (d.vr === "hq") { vr.hq = !vr.hq; applyQuality(vr.hq); updateVrUI(); }
+      else if (d.vf) vrSetFurn(d.vf);
+      else if (d.vfl) vrFloor(Number(d.vfl));
+      else if (d.vx === "inside") vrGoInside();
+      else if (d.vx === "rot") vrRoomRot();
+      else if (d.vx === "del") { if (!vrRoomDel()) vrSay("Avval jihozga qarang"); }
+      else if (d.vx && edit) edit(i, d.vx === "undo" ? "furnUndo" : "furnRedo", {});
       else if (d.vt) vrSetTool(d.vt);
       else if (!edit) return;
       else if (d.vs) edit(i, "step", { name: d.vs, d: Number(d.d) });
@@ -1471,7 +1680,14 @@
     window.addEventListener("keydown", e => {
       if (!vr.on) return;
       if (e.key === "Escape") { exitVR(); return; }
-      if (vr.build && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (vr.room && !e.ctrlKey && !e.metaKey && !e.altKey) {         // ichki dizayn tugmalari
+        if (e.code === "KeyE" || e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (!e.repeat) { vrAim(); vrRoomPlace(); } return; }
+        if (e.code === "KeyR") { e.preventDefault(); if (!e.repeat) { vrAim(); vrRoomRot(); } return; }
+        if (e.code === "KeyX" || e.code === "Delete" || e.code === "Backspace") { e.preventDefault(); vrAim(); vrRoomDel(); return; }
+        if (e.code === "KeyQ") { vrSetFurn(FURN[(FURN.indexOf(vr.ftype) + (e.shiftKey ? FURN.length - 1 : 1)) % FURN.length]); return; }
+        if (e.code === "PageUp" || e.code === "PageDown") { e.preventDefault(); vrFloor(e.code === "PageUp" ? 1 : -1); return; }
+      }
+      if (vr.build && !vr.room && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.code === "KeyE" || e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (!e.repeat) { vrAim(); vrPlace(); } return; }
         if (e.code === "KeyQ") { vrSetTool(VR_TOOLS[(VR_TOOLS.indexOf(vr.tool) + (e.shiftKey ? VR_TOOLS.length - 1 : 1)) % VR_TOOLS.length]); return; }
         const dg = /^Digit(\d)$/.exec(e.code);

@@ -325,5 +325,24 @@ const InteriorUI = (function () {
     else if (k === "escape") { sel = null; tool = "select"; render(); }
   });
 
-  return { render };
+  // VR ichki dizayn: jihoz qo'yish, burish, o'chirish — panel bilan bir xil tekshiruv va "Orqaga" tarixi
+  function vrEdit(op, a) {
+    if (op === "furnUndo") { doUndo(); return true; }
+    if (op === "furnRedo") { doRedo(); return true; }
+    return mutate((int, p, I) => {
+      const items = int.floors[a.f] && int.floors[a.f].items; if (!items) return false;
+      if (op === "furn") {
+        const it = [a.type, r2(a.x), r2(a.z), (a.rot | 0) % 4];
+        if (!ITEMS[a.type] || items.length >= 80 || !Interior.fits(p, I, a.f, it, -1)) return false;
+        items.push(it);
+      } else if (op === "furnRot") {
+        const o = items[a.idx]; if (!o) return false;
+        const t = [o[0], o[1], o[2], (o[3] + 1) % 4];
+        if (!Interior.fits(p, I, a.f, t, a.idx)) return false;
+        items[a.idx] = t;
+      } else if (op === "furnDel") { if (!items[a.idx]) return false; items.splice(a.idx, 1); }
+      else return false;
+    });
+  }
+  return { render, vrEdit };
 })();

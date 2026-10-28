@@ -245,6 +245,8 @@ const Geo = (function () {
   // ---------- Materiallar smetasi (BOQ): loyihadagi mahsulotlar va miqdorlar ----------
   const CELL_PRODUCT = { win: "el-win", wide: "el-wide", arch: "el-arch", slit: "el-slit", round: "el-round", lattice: "el-lattice", balc: "el-balc", door: "el-door", shop: "el-shop",
     tall: "el-win-alu", square: "el-win", triple: "el-win-alu", door2: "el-door-wood", glassdoor: "el-door-glass", archdoor: "el-door-wood", garage: "el-garage" };
+  // Ichki jihozlardan katalogda boshqa bo'limda turganlari: [mahsulot, miqdor] (radiator — seksiyalab sotiladi)
+  const FURN_PRODUCT = { kitchen: ["int-oshxona", 2.4], ac: ["eng-kondi", 1], boiler: ["eng-kotel", 1], radiator: ["eng-radiator", 8] };
   const YARD_PRODUCT = { tree: "yrd-daraxt", fruit: "yrd-daraxt", pine: "yrd-archa", bush: "yrd-buta", suri: "yrd-suri", lamp: "yrd-chiroq", fountain: "yrd-favvora", gazebo: "yrd-shiypon",
     tandir: "yrd-tandir", bench: "yrd-orindiq", play: "yrd-bolalar", greenhouse: "yrd-issiqxona", bbq: "yrd-mangal", lounger: "yrd-shezlong", umbrella: "yrd-soyabon", pot: "yrd-tuvak",
     swing: "yrd-argimchoq", doghouse: "yrd-ituycha", bed: "yrd-gulzor" };
@@ -260,7 +262,7 @@ const Geo = (function () {
       else add(ROOF_PRODUCT[b.params.roof], m.roofArea);
       add("con-slab", m.slabVol);                                              // qavatlararo yopma
       if (b.interior && typeof Interior !== "undefined")                       // ichki jihozlar: har biri dona (oshxona — pog. m)
-        Interior.norm(b.params, b.interior).floors.forEach(fl => fl.items.forEach(([t]) => (t === "kitchen" ? add("int-oshxona", Interior.ITEMS.kitchen.w) : add(`mbl-${t}`, 1))));
+        Interior.norm(b.params, b.interior).floors.forEach(fl => fl.items.forEach(([t]) => { const e = FURN_PRODUCT[t]; if (e) add(e[0], e[1]); else add(`mbl-${t}`, 1); }));
     });
     const Y = typeof Site !== "undefined" && Site.yard && Site.yard.on ? Site.yard : null;   // hovli: daraxt, mangal... dona; hovuz, basseyn, ishkom — m²
     if (Y) Y.items.forEach(i => { const sq = YARD_AREA_PRODUCT[i.t]; if (sq) add(sq, YARD_ITEMS[i.t].w * YARD_ITEMS[i.t].d); else add(YARD_PRODUCT[i.t], 1); });

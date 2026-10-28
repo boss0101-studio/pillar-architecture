@@ -114,14 +114,14 @@
   // ---------- Qo'llash ----------
   const urlOf = b => (b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
   // Standart: oddiy, qimirlamaydigan 2D chizma. 3D jonli fonni foydalanuvchi o'zi yoqishi mumkin.
-  // v:2 — avval 3D standart bo'lgan: eski saqlangan tanlovda 3D bir marta o'chiriladi
-  const DEF = { id: "peshtoq", op: 9, d3: false, v: 2 };
+  // v:2 — avval 3D standart bo'lgan: eski tanlovda 3D bir marta o'chiriladi. v:3 — fon matnga xalaqit bermasin: eski kuchli fon 4% ga tushiriladi
+  const DEF = { id: "peshtoq", op: 4, d3: false, v: 3 };
   let state = { ...DEF };
-  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (s.v !== 2) { state.d3 = false; state.v = 2; } } catch {}
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (!s.v || s.v < 2) state.d3 = false; if (!s.v || s.v < 3) state.op = Math.min(Number(state.op) || 4, 4); state.v = 3; } catch {}
   function apply() {
     const b = BGS.find(x => x.id === state.id) || BGS[0], root = document.documentElement.style;
     root.setProperty("--bg-mask", urlOf(b));
-    root.setProperty("--bg-op", String(Math.min(25, Math.max(3, Number(state.op) || 9)) / 100));
+    root.setProperty("--bg-op", String(Math.min(25, Math.max(2, Number(state.op) || 4)) / 100));
     window.dispatchEvent(new CustomEvent("ustun-fon", { detail: { ...state } }));   // bg3d.js shu hodisani tinglaydi
   }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
@@ -137,7 +137,7 @@
   panel.innerHTML = `<div class="bgp-head"><b>Orqa fon</b><span class="label">faqat arxitektura</span><button type="button" class="bgp-x" aria-label="Yopish">×</button></div>
     <div class="bgp-grid" role="radiogroup" aria-label="Fon rasmi">${BGS.map(b => `<button type="button" role="radio" data-bg="${b.id}"><span class="bgp-th" style="--th:${urlOf(b).replace(/"/g, "'")}"></span><small>${b.n}</small></button>`).join("")}</div>
     <label class="bgp-3d"><input type="checkbox" data-3d> <span><b>3D jonli fon</b><small>Bino 3D'da aylanadi, sichqoncha va skrolga qarab og'adi</small></span></label>
-    <label class="bgp-op">Ko'rinishi <input type="range" min="3" max="25" step="1" aria-label="Fon ko'rinishi, foiz"><output></output></label>
+    <label class="bgp-op">Ko'rinishi <input type="range" min="2" max="25" step="1" aria-label="Fon ko'rinishi, foiz"><output></output></label>
     <button type="button" class="bgp-reset">Asl holiga qaytarish</button>`;
   document.body.append(btn, panel);
   const range = panel.querySelector('input[type="range"]'), out = panel.querySelector("output"), d3 = panel.querySelector("[data-3d]");
@@ -163,7 +163,7 @@
   window.UstunFon = {
     list: BGS.map(b => b.id), items: () => BGS.map(b => ({ id: b.id, n: b.n, url: urlOf(b) })),
     set(id) { if (BGS.some(b => b.id === id)) { state.id = id; apply(); save(); sync(); } },
-    setOp(v) { state.op = Math.min(25, Math.max(3, Math.round(Number(v) || 9))); apply(); save(); sync(); },
+    setOp(v) { state.op = Math.min(25, Math.max(2, Math.round(Number(v) || 4))); apply(); save(); sync(); },
     set3d(v) { state.d3 = !!v; apply(); save(); sync(); },
     get: () => ({ ...state }),
   };

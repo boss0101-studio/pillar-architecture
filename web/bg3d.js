@@ -187,7 +187,7 @@
   }
   function colors() {
     if (!R) return;
-    const st = UstunFon.get(), base = Math.min(0.85, Math.max(0.12, (st.op || 9) / 100 * 2.8)), T = R.T;
+    const st = UstunFon.get(), base = Math.min(0.85, Math.max(0.12, (st.op || 4) / 100 * 2.8)), T = R.T;
     const fg = new T.Color(css("--fg", "#e8eae9")), ac = new T.Color(css("--accent", "#8da2ff")), bg = new T.Color(css("--bg", "#121516"));
     R.mats.line.color = fg; R.mats.line.opacity = base * R.fade;
     R.mats.accent.color = ac; R.mats.accent.opacity = Math.min(1, base * 1.25) * R.fade;

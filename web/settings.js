@@ -249,7 +249,7 @@ const UstunSettings = (function () {
         <h3>Orqa fon <span class="label">faqat arxitektura</span></h3>
         <div class="st-fons" role="radiogroup" aria-label="Orqa fon">${items.map(b => `<button type="button" role="radio" data-fon="${b.id}" aria-checked="${cur && cur.id === b.id}"><span class="bgp-th" style="--th:${b.url.replace(/"/g, "'")}"></span><small>${esc(b.n)}</small></button>`).join("")}</div>
         <label class="st-f st-switch"><input type="checkbox" data-fon3d${cur && cur.d3 === false ? "" : " checked"}><span>3D jonli fon</span><small class="muted">Tanlangan bino 3D'da sekin aylanadi. Sekin kompyuterda o'chirib qo'ying — 2D chizma qoladi.</small></label>
-        <label class="st-f">Ko'rinishi: <output data-out="fonop">${cur ? cur.op : 9}%</output><input type="range" min="3" max="25" step="1" value="${cur ? cur.op : 9}" data-fonop></label>
+        <label class="st-f">Ko'rinishi: <output data-out="fonop">${cur ? cur.op : 4}%</output><input type="range" min="2" max="25" step="1" value="${cur ? cur.op : 4}" data-fonop></label>
       </div>` : ""}
       <div class="st-row"><button type="button" class="btn-ghost" data-act="ui-reset">Ko'rinishni tiklash</button></div>
     </section>`;
@@ -300,7 +300,7 @@ const UstunSettings = (function () {
         Object.keys(DATA_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch {} });
         location.reload();
       } else if (a === "project-reset") { S.project = clean({ project: DEF.project }).project; save(); render(); toast("Standartlar tiklandi"); }
-      else if (a === "ui-reset") { S.ui = { ...DEF.ui }; save(); applyUi(); if (window.UstunFon) window.UstunFon.set("peshtoq"), window.UstunFon.setOp(9); render(); toast("Ko'rinish tiklandi"); }
+      else if (a === "ui-reset") { S.ui = { ...DEF.ui }; save(); applyUi(); if (window.UstunFon) window.UstunFon.set("peshtoq"), window.UstunFon.setOp(4); render(); toast("Ko'rinish tiklandi"); }
     });
     el.addEventListener("submit", e => {
       const f = e.target.closest('[data-form="profile"]'); if (!f) return;

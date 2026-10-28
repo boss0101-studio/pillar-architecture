@@ -1,8 +1,18 @@
-// AI maslahatchi: foydalanuvchi Konstruktorda uy qurayotganda loyihani kuzatadi va muammo PAYDO BO'LGAN zahoti maslahat beradi
-// (eshik yo'q, yorug'lik kam, g'isht juda baland, tekis tom past uyda...). "Tuzat" — AI loyihaga o'zi aralashadi (AIDesign.apply),
-// "Bekor qilish" — AIDesign.undo. Qoidalar sahifaning o'zida: internet va kalitsiz ham ishlaydi; Claude ulangan bo'lsa — "Batafsil so'rash".
-// Bezovta qilmaslik uchun: sahifa ochilgandagi holat uchun maslahat chiqmaydi, har bir maslahat sharti yangidan bajarilgandagina ko'rinadi,
-// yopilgani shu sessiyada qaytmaydi. O'chirish/yoqish — kartadagi tugma yoki Sozlamalar ("ustun-maslahat").
+// AI robotcha: AI yordamchi tugmasi — kichkina robot. U gapirish pufakchasida maslahat beradi:
+// 1) Konstruktorda loyihani kuzatadi va muammo PAYDO BO'LGAN zahoti aytadi (eshik yo'q, yorug'lik kam, g'isht juda baland...).
+//    "Tuzat" — AI loyihaga o'zi aralashadi (AIDesign.apply), "Bekor qilish" — AIDesign.undo. Claude ulangan bo'lsa — "Batafsil so'rash".
+// 2) Vaqti-vaqti bilan ochiq bo'limga mos foydali maslahat ("Bilasizmi?"): avval 20 s dan keyin, so'ng har 3 daqiqada,
+//    o'zi 15 s da yopiladi; 3 marta yopilsa shu sessiyada boshqa chiqmaydi.
+// Bezovta qilmaslik uchun: sahifa ochilgandagi holat uchun muammo aytilmaydi, yopilgan muammo shu sessiyada qaytmaydi,
+// yo'riqnoma, til oynasi yoki AI paneli ochiq bo'lsa jim turadi. O'chirish/yoqish — pufakchadagi tugma yoki Sozlamalar ("ustun-maslahat").
+// Robot rasmi (UstunRobot) shu yerda: ai.js tugmani u bilan chizadi.
+window.UstunRobot = cls => `<svg class="robot ${cls || ""}" viewBox="0 0 64 64" aria-hidden="true">
+  <path d="M32 7v8" class="rb-wire"/><circle cx="32" cy="6" r="3.6" class="rb-light"/>
+  <rect x="5" y="25" width="6" height="11" rx="3" class="rb-ear"/><rect x="53" y="25" width="6" height="11" rx="3" class="rb-ear"/>
+  <rect x="10" y="14" width="44" height="32" rx="11" class="rb-head"/><rect x="16" y="20" width="32" height="20" rx="7" class="rb-face"/>
+  <g class="rb-eyes"><circle cx="25" cy="29" r="3.3" class="rb-eye"/><circle cx="39" cy="29" r="3.3" class="rb-eye"/></g>
+  <path d="M26.5 35q5.5 3.6 11 0" class="rb-mouth"/>
+  <rect x="19" y="48" width="26" height="13" rx="6" class="rb-body"/><circle cx="32" cy="54.5" r="2.4" class="rb-light"/></svg>`;
 const UstunAdvisor = (function () {
   const KEY = "ustun-maslahat";
   let on = true;
@@ -82,11 +92,74 @@ const UstunAdvisor = (function () {
       queue = queue.filter(id => ids.includes(id));                   // tuzalgan muammo navbatdan chiqadi
       prev = ids;
       if (cur && !ids.includes(cur) && !applied) hide();              // foydalanuvchi o'zi tuzatdi
-      if (!cur) showNext();
+      if (!cur || kind === "tip") showNext();
     }, first ? 0 : 800);
   }
 
-  // ---------- Karta ----------
+  // ---------- "Bilasizmi?" — bo'limga mos foydali maslahatlar ----------
+  const TIPS = {
+    all: [
+      "Menga savol bering yoki \"2 qavatli hovli uy loyihalab ber\" deb yozing — uyni o'zim quraman.",
+      "Sayt tilini yuqoridagi 🌐 tugmasi bilan istalgan payt almashtirasiz.",
+      "Yo'riqnomani qayta ko'rish uchun yuqoridagi \"?\" tugmasini bosing.",
+      "Fon xalaqit bersa — chap pastdagi Fon tugmasidan uni susaytiring.",
+      "Meni bossangiz, AI yordamchi oynasi ochiladi: xatolikni ham shu yerdan so'rang.",
+    ],
+    bosh: [
+      "Boshlash uchun Konstruktorni oching: tayyor andozadan boshlash eng oson yo'l.",
+      "Pastdagi kalkulyator maydon va sifatga qarab dastlabki smetani hisoblaydi.",
+    ],
+    konstruktor: [
+      "Fasad kataklari ustidan sudrasangiz, bir nechta derazani birdaniga qo'yasiz.",
+      "Ctrl+Z — oxirgi o'zgarishni bekor qiladi, Ctrl+Y — qaytaradi.",
+      "3D ko'rinishni sichqoncha bilan aylantiring, VR bilan esa uy ichiga kirib yurasiz.",
+      "\"Kesim\" tugmasi tomni olib, ichidagi xonalarni ko'rsatadi.",
+      "Hovlini yoqing: daraxt, basseyn va garajni bosh rejada sudrab joylashtirasiz.",
+      "Loyihani nom berib saqlang — keyin Galereyadan qayta ochasiz.",
+      "Ko'proq sozlama kerakmi? Yuqoridagi To'liq rejimni yoqing.",
+    ],
+    erkin: [
+      "Shift bosib tursangiz, devor faqat to'g'ri burchak ostida chiziladi.",
+      "Enter yoki ikki marta bosish devor chizishni tugatadi.",
+      "Tayyor shakllar bilan L yoki П konturini bir bosishda qo'yasiz.",
+      "Eshik va derazani devor chizig'ining ustiga bosing.",
+    ],
+    qogoz: [
+      "Qiyshiq chizsangiz ham bo'ladi — chiziqlar o'zi to'g'ri devorga aylanadi.",
+      "Chizg'ich va go'niya tekis chizishga yordam beradi.",
+      "Chizib bo'lgach, uyingizni 3D'da ko'ring.",
+    ],
+    galereya: ["Galereyadagi loyihani ochsangiz, nusxasi Konstruktorda ochiladi — asl loyiha o'zgarmaydi."],
+    mahsulotlar: ["Konstruktordagi smetani bir bosishda savatga qo'shasiz."],
+  };
+  let tipTimer = 0, autoTimer = 0, tipsClosed = 0, tipNo = 0, kind = null;
+  const shownTips = new Set();
+  const pageId = () => (window.UstunTour && UstunTour.page ? UstunTour.page() : "bosh");
+  const aiOpen = () => { const ai = document.getElementById("aiPanel"); return !!(ai && !ai.hidden); };
+  const busy = () => document.hidden || aiOpen() || document.documentElement.classList.contains("touring") || !!document.querySelector(".lang-modal, dialog[open]");
+  function scheduleTip(ms) { clearTimeout(tipTimer); if (on && tipsClosed < 3) tipTimer = setTimeout(() => showTip(false), ms); }
+  function pickTip() {
+    const list = [...(TIPS[pageId()] || []), ...TIPS.all];
+    let t = list.find(x => !shownTips.has(x));
+    if (!t) { list.forEach(x => shownTips.delete(x)); t = list[0]; }
+    shownTips.add(t); return t;
+  }
+  function showTip(asked) {
+    if (!on || (cur && kind === "rule")) { scheduleTip(60000); return; }
+    if (!asked && busy()) { scheduleTip(15000); return; }
+    if (!card) build();
+    cur = "tip"; kind = "tip"; applied = false;
+    card.querySelector(".adv-t").textContent = "Bilasizmi?";
+    card.querySelector(".adv-d").textContent = pickTip();
+    card.querySelector(".adv-v").textContent = `${++tipNo}`;
+    ["fix", "undo", "more", "next"].forEach(k => { card.querySelector(`[data-tip="${k}"]`).hidden = true; });
+    card.querySelector('[data-tip="tip"]').hidden = false;
+    sync();
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(() => { if (kind === "tip" && !card.matches(":hover, :focus-within")) { hide(); scheduleTip(180000); } }, 15000);
+  }
+
+  // ---------- Gapirish pufakchasi ----------
   let card = null;
   function build() {
     card = document.createElement("aside");
@@ -95,13 +168,16 @@ const UstunAdvisor = (function () {
         <button type="button" class="adv-x" data-tip="close" aria-label="Yopish" title="Yopish">×</button></div>
       <h4 class="adv-t"></h4><p class="adv-d"></p>
       <div class="adv-row"><button type="button" class="btn" data-tip="fix"></button><button type="button" class="btn-ghost" data-tip="undo" hidden>Bekor qilish</button>
-        <button type="button" class="btn-ghost" data-tip="more" hidden>Batafsil so'rash</button><button type="button" class="btn-ghost" data-tip="next" hidden>Keyingi maslahat</button></div>
+        <button type="button" class="btn-ghost" data-tip="more" hidden>Batafsil so'rash</button><button type="button" class="btn-ghost" data-tip="next" hidden>Keyingi maslahat</button>
+        <button type="button" class="btn-ghost" data-tip="tip" hidden>Yana maslahat</button></div>
       <button type="button" class="adv-off" data-tip="off">Maslahatlarni o'chirish</button>`;
     document.body.appendChild(card);
     card.addEventListener("click", e => {
       const b = e.target.closest("[data-tip]"); if (!b) return;
       const a = b.dataset.tip, r = RULES.find(x => x.id === cur);
-      if (a === "close") { if (cur) dismissed.add(cur); hide(); showNext(); }
+      if (a === "close" && kind === "tip") { tipsClosed++; hide(); scheduleTip(180000); }
+      else if (a === "close") { if (cur) dismissed.add(cur); hide(); showNext(); }
+      else if (a === "tip") { showTip(true); }
       else if (a === "next") { if (cur) dismissed.add(cur); showNext(); }
       else if (a === "off") { set(false); }
       else if (a === "fix" && r && window.AIDesign) {
@@ -122,40 +198,43 @@ const UstunAdvisor = (function () {
   }
   function showNext() {
     while (queue.length && dismissed.has(queue[0])) queue.shift();
-    const id = queue.shift(); if (!id) { hide(); return; }
+    const id = queue.shift(); if (!id) { if (kind === "rule") hide(); return; }
     show(id);
   }
   function show(id) {
     if (!on) return;
     const r = RULES.find(x => x.id === id), st = check(); if (!r || !st) return;
     if (!card) build();
-    cur = id; applied = false;
+    clearTimeout(autoTimer);                                         // loyiha muammosi "Bilasizmi?" dan muhimroq
+    cur = id; kind = "rule"; applied = false;
     card.querySelector(".adv-t").textContent = r.t;
     card.querySelector(".adv-d").textContent = r.d;
     card.querySelector(".adv-v").textContent = r.v ? r.v(st.p, st.c, st.x) : "";
     const canFix = !!(r.fix && r.fix(st.p, st.c, st.x)), fb = card.querySelector('[data-tip="fix"]');
     fb.hidden = !canFix; fb.textContent = r.fl || "Tuzat";
     card.querySelector('[data-tip="undo"]').hidden = true;
+    card.querySelector('[data-tip="tip"]').hidden = true;
     card.querySelector('[data-tip="more"]').hidden = !(window.UstunAI && UstunAI.mode && UstunAI.mode !== "offline");
     card.querySelector('[data-tip="next"]').hidden = !queue.length;
     sync();
   }
-  function hide() { cur = null; applied = false; if (card) card.hidden = true; }
-  // Yo'riqnoma, AI paneli ochiq yoki Konstruktor ko'rinmasa — karta yashiriladi (navbat saqlanadi)
+  function hide() { cur = null; kind = null; applied = false; clearTimeout(autoTimer); if (card) card.hidden = true; document.documentElement.classList.remove("robot-talk"); }
+  // Yo'riqnoma, til oynasi, AI paneli ochiq bo'lsa yoki loyiha muammosi Konstruktor yopiq paytda — pufakcha yashiriladi (navbat saqlanadi)
   function sync() {
     if (!card || !cur) return;
-    const ai = document.getElementById("aiPanel");
-    card.hidden = !on || !designerVisible() || document.documentElement.classList.contains("touring") || !!(ai && !ai.hidden);
+    card.hidden = !on || (kind === "rule" && !designerVisible()) || document.documentElement.classList.contains("touring") || aiOpen() || !!document.querySelector(".lang-modal");
+    document.documentElement.classList.toggle("robot-talk", !card.hidden);
   }
   function set(v) {
     on = !!v;
     try { localStorage.setItem(KEY, on ? "on" : "off"); } catch {}
-    if (!on) hide();
+    if (!on) { hide(); clearTimeout(tipTimer); } else scheduleTip(20000);
     document.querySelectorAll("[data-advisor]").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.advisor === "on") === on)));
   }
   document.addEventListener("click", e => { const b = e.target.closest("[data-advisor]"); if (b) set(b.dataset.advisor === "on"); });
 
   setInterval(() => { tick(); sync(); }, 700);
-  return { get on() { return on; }, set, check: () => { const r = check(); return r ? r.act.map(a => a.id) : []; }, rules: RULES };
+  scheduleTip(20000);
+  return { get on() { return on; }, set, tip: () => showTip(true), check: () => { const r = check(); return r ? r.act.map(a => a.id) : []; }, rules: RULES, tips: TIPS };
 })();
 window.UstunAdvisor = UstunAdvisor;

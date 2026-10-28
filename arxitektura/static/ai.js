@@ -317,8 +317,14 @@
 
   // ---------- Ko'rinish ----------
   const btn = document.createElement("button");
-  btn.type = "button"; btn.className = "ai-btn"; btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-controls", "aiPanel");
-  btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span>AI yordamchi</span><i class="ai-dot" hidden title="Sahifada xatolik yuz berdi"></i>`;
+  btn.type = "button"; btn.setAttribute("aria-expanded", "false"); btn.setAttribute("aria-controls", "aiPanel");
+  if (window.UstunRobot) {                                            // kichkina robot (advisor.js): u maslahatlarni ham aytadi
+    btn.className = "ai-btn robot-btn"; btn.title = "AI yordamchi"; btn.setAttribute("aria-label", "AI yordamchi");
+    btn.innerHTML = `${window.UstunRobot()}<span class="ai-btn-t">AI yordamchi</span><i class="ai-dot" hidden title="Sahifada xatolik yuz berdi"></i>`;
+  } else {
+    btn.className = "ai-btn";
+    btn.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg><span>AI yordamchi</span><i class="ai-dot" hidden title="Sahifada xatolik yuz berdi"></i>`;
+  }
   const panel = document.createElement("section");
   panel.className = "ai"; panel.id = "aiPanel"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI yordamchi");
   panel.innerHTML = `<header class="ai-head"><b>AI yordamchi</b><span class="ai-mode"></span><span class="sp"></span><button type="button" class="ai-ic" data-ai="clear" title="Suhbatni tozalash" aria-label="Suhbatni tozalash">⟲</button><button type="button" class="ai-ic" data-ai="close" aria-label="Yopish">×</button></header>

@@ -1339,3 +1339,5 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .vr-furn { max-height: 132px; overflow-y: auto; }
 .vr-furn button i { width: 26px; height: 18px; border: 1px solid rgba(255, 255, 255, .6); }
 .vr-top button[data-vr="room"][aria-pressed="true"], .vr-top button[data-vr="hq"][aria-pressed="true"] { background: var(--accent); border-color: #fff; }
+/* VR: FHD tugmasida haqiqiy chizish o'lchami */
+.vr-top [data-vr="hq"] small { margin-left: 4px; font: 500 .66rem var(--font-mono, monospace); opacity: .85; }

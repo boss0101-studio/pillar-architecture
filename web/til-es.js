@@ -469,6 +469,7 @@ USTUN_I18N.es = {
  "Foydali maydon ({0}-qavat)": "Superficie útil (planta {0})",
  "Foydali yuk Q": "Sobrecarga de uso Q",
  "Fransuzcha balkon": "Balcón francés",
+ "Full HD: kadr kamida {0}×{1} chiziladi, kuchliroq qurilma talab qiladi": "Full HD: cada fotograma se dibuja al menos a {0}×{1}; requiere un dispositivo más potente",
  "Fundament": "Cimentación",
  "Fundament (lenta)": "Cimentación (corrida)",
  "Fundament (lenta, {0}-qavat devorlari ostida)": "Cimentación (corrida, bajo los muros de la planta {0})",

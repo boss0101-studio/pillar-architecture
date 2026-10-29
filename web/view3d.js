@@ -884,7 +884,10 @@
   function resize() {
     const w = host.clientWidth, h = host.clientHeight;
     if (!w || !h) return;
+    renderer.setPixelRatio(pixelRatioFor(w, h));
     renderer.setSize(w, h, false);
+    const res = vr.ui && vr.ui.querySelector('[data-vo="res"]');
+    if (res) res.textContent = `${renderer.domElement.width}×${renderer.domElement.height}`;
     camera.aspect = w / h; camera.updateProjectionMatrix();
     request();
   }
@@ -1374,9 +1377,16 @@
     vrSay("Ichkarida bo'sh joy topilmadi");
   }
   // Tiniqlik: yuqori sifatda piksel zichligi 1,5 barobar (supersampling) va soya xaritasi 4096; shlemda framebuffer 1,5×
-  function applyQuality(on) {
+  // Piksel zichligi: VR'da FHD yoqilgan bo'lsa kadr ekran o'lchamidan qat'i nazar kamida 1920×1080 chiziladi
+  // (kichik oyna yoki telefonda — supersampling), katta ekranda esa 1,5× zichlik; GPU chegarasidan oshmaydi
+  function pixelRatioFor(w, h) {
     const dpr = window.devicePixelRatio || 1;
-    renderer.setPixelRatio(on ? Math.min(dpr * 1.5, 3) : Math.min(dpr, 2));
+    if (!(vr.on && vr.hq)) return Math.min(dpr, 2);
+    const fhd = Math.max(1920 / Math.max(w, h), 1080 / Math.min(w, h));
+    const gpu = (renderer.capabilities.maxTextureSize || 4096) / Math.max(w, h);
+    return Math.min(Math.max(dpr * 1.5, fhd), 4, gpu);
+  }
+  function applyQuality(on) {
     const ms = on ? 4096 : 2048;
     if (sun.shadow.mapSize.x !== ms) { sun.shadow.mapSize.set(ms, ms); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } }
     resize();
@@ -1634,7 +1644,7 @@
       ? `<svg viewBox="0 0 40 40" aria-hidden="true">${drawCell(t, 0, 0, 40, 40)}</svg>` : `<svg viewBox="0 0 40 40" aria-hidden="true"><text x="20" y="26" text-anchor="middle" font-size="14" fill="#fff">A</text></svg>`;
     vr.ui.innerHTML = '<div class="vr-top"><b>VR rejimi</b><span class="sp"></span><button type="button" data-vr="build" aria-pressed="true">Qurish</button>' +
       '<button type="button" data-vr="room" aria-pressed="false" title="Uy ichida turib jihozlarni joylash">Ichki dizayn</button>' +
-      '<button type="button" data-vr="hq" aria-pressed="true" title="Yuqori tiniqlik: kuchliroq qurilma talab qiladi">Tiniq HD</button>' +
+      '<button type="button" data-vr="hq" aria-pressed="true" title="Full HD: kadr kamida 1920×1080 chiziladi, kuchliroq qurilma talab qiladi">FHD <small data-vo="res"></small></button>' +
       '<button type="button" data-vr="mode">Bitta ekran</button><button type="button" data-vr="exit">Chiqish ✕</button></div>' +
       '<i class="vr-ret l" aria-hidden="true"></i><i class="vr-ret r" aria-hidden="true"></i>' +
       '<div class="vr-bottom"><div class="vr-build"><p class="vr-aim" aria-live="polite"></p>' +

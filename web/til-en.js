@@ -469,6 +469,7 @@ USTUN_I18N.en = {
  "Foydali maydon ({0}-qavat)": "Usable area (floor {0})",
  "Foydali yuk Q": "Live load Q",
  "Fransuzcha balkon": "French balcony",
+ "Full HD: kadr kamida {0}×{1} chiziladi, kuchliroq qurilma talab qiladi": "Full HD: every frame is rendered at least {0}×{1}; needs a more powerful device",
  "Fundament": "Foundation",
  "Fundament (lenta)": "Foundation (strip)",
  "Fundament (lenta, {0}-qavat devorlari ostida)": "Foundation (strip, under floor {0} walls)",

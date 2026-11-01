@@ -166,7 +166,7 @@ const UstunTour = (function () {
     key = key || (seen.bosh ? page() : "bosh");                       // birinchi kirish: avval instruktor salomlashadi
     if (!TOURS[key] || (!force && seen[key])) return false;
     if (!force && ui && !ui.hidden) return false;
-    if (document.querySelector(".lang-modal")) return false;          // til tanlash oynasi ochiq — keyinroq
+    if (document.querySelector(".lang-modal, .auth-modal:not([hidden])")) return false;   // til yoki kirish oynasi ochiq — keyinroq
     if (!ui) build();
     cur = key; steps = TOURS[key]; show(0);
     return true;
@@ -187,6 +187,7 @@ const UstunTour = (function () {
     const go = () => setTimeout(() => { navButton(); start(); }, 600);
     if (window.UstunI18n && !UstunI18n.chosen()) window.addEventListener("ustun-til", go, { once: true });   // avval til tanlanadi
     else go();
+    window.addEventListener("ustun-auth", () => go());                   // Google kirish oynasi yopilgach
     if (isWeb()) {                                                     // web: bo'lim almashganda o'sha bo'limning yo'riqnomasi
       const mo = new MutationObserver(() => { if (!ui || ui.hidden) setTimeout(() => start(), 450); });
       document.querySelectorAll(".view").forEach(v => mo.observe(v, { attributes: true, attributeFilter: ["hidden"] }));

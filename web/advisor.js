@@ -136,7 +136,7 @@ const UstunAdvisor = (function () {
   const shownTips = new Set();
   const pageId = () => (window.UstunTour && UstunTour.page ? UstunTour.page() : "bosh");
   const aiOpen = () => { const ai = document.getElementById("aiPanel"); return !!(ai && !ai.hidden); };
-  const busy = () => document.hidden || aiOpen() || document.documentElement.classList.contains("touring") || !!document.querySelector(".lang-modal, dialog[open]");
+  const busy = () => document.hidden || aiOpen() || document.documentElement.classList.contains("touring") || !!document.querySelector(".lang-modal, .auth-modal:not([hidden]), dialog[open]");
   function scheduleTip(ms) { clearTimeout(tipTimer); if (on && tipsClosed < 3) tipTimer = setTimeout(() => showTip(false), ms); }
   function pickTip() {
     const list = [...(TIPS[pageId()] || []), ...TIPS.all];

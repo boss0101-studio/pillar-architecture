@@ -1355,3 +1355,28 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .nav-acc { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px 3px 3px; border: 1px solid var(--line); background: transparent; color: var(--fg); font: inherit; font-size: .8rem; cursor: pointer; }
 .nav-acc img, .nav-acc b { width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--surface); font-size: .8rem; }
 .nav-acc:hover, .nav-acc:focus-visible { border-color: var(--accent); outline: none; }
+/* Tezkor loyiha ustasi (wizard.js): chapda tanlovlar, o'ngda jonli fasad, hisob va tugma */
+.wiz { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(16px, 3vw, 32px); align-items: start; }
+.wiz-form { display: grid; gap: 14px; }
+.wiz-f { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 6px; }
+.wiz-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.wiz-seg button { font: inherit; font-size: .88rem; padding: 8px 13px; border: 1px solid var(--fg); background: var(--surface); color: var(--fg); cursor: pointer; }
+.wiz-seg button:hover { border-color: var(--accent); }
+.wiz-seg button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.wiz-seg button:focus-visible, .wiz-rng input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wiz-two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.wiz-rng { display: flex; align-items: center; gap: 10px; }
+.wiz-rng input { flex: 1; accent-color: var(--accent); }
+.wiz-rng output { min-width: 2ch; font: 700 1.1rem var(--font-mono); color: var(--accent); text-align: right; }
+.wiz-out { position: sticky; top: 84px; display: grid; gap: 12px; padding: clamp(14px, 2vw, 20px); border: 1px solid var(--fg); background: var(--surface); }
+.wiz-pic { background: #f3f1ec; border: 1px solid var(--line); }
+.wiz-pic svg { display: block; width: 100%; height: auto; }
+.wiz-sum { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.wiz-sum div { padding: 8px 10px; border: 1px solid var(--line); }
+.wiz-sum dt { font-size: .78rem; color: var(--muted); }
+.wiz-sum dd { margin: 2px 0 0; font: 700 1.05rem var(--font-mono); }
+.wiz-go { justify-self: stretch; text-align: center; font-size: 1rem; padding: 12px 18px; }
+.wiz-note { margin: 0; font-size: .82rem; }
+#tezkor .sec-head p { max-width: 46ch; }
+@media (max-width: 860px) { .wiz { grid-template-columns: 1fr; } .wiz-out { position: static; } }
+@media (max-width: 420px) { .wiz-two { grid-template-columns: 1fr; } }

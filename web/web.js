@@ -73,39 +73,9 @@ document.addEventListener("click", e => {
     new Set(PROJECTS.map(p => p.city)).size,
   ];
   document.querySelectorAll("#stats b").forEach((b, i) => { b.textContent = vals[i]; });
-  renderProjects("");
 })();
 
-function renderProjects(cat) {
-  const list = PROJECTS.filter(p => !cat || p.category === cat);
-  $("grid").innerHTML = list.length ? list.map(p => `
-    <button class="card" type="button" data-id="${p.id}">
-      <div class="facade">${facadeSVG(p)}</div>
-      <div class="body">
-        <div class="meta"><span>${esc(CAT_LABEL[p.category])} · ${esc(p.city)}</span><span>${p.year}</span></div>
-        <h3>${esc(p.title)}</h3>
-        <span><span class="pill ${p.status}">${p.status}</span></span>
-      </div>
-    </button>`).join("") : `<p class="empty">Bu kategoriyada hozircha loyiha yo'q.</p>`;
-}
-$("filters").addEventListener("click", e => {
-  const btn = e.target.closest("button"); if (!btn) return;
-  document.querySelectorAll("#filters button").forEach(b => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
-  renderProjects(btn.dataset.cat);
-});
-
 const dlg = $("dlg");
-$("grid").addEventListener("click", e => {
-  const card = e.target.closest(".card"); if (!card) return;
-  const p = PROJECTS.find(x => x.id === +card.dataset.id);
-  $("dFacade").innerHTML = facadeSVG(p);
-  $("dStatus").className = `pill ${p.status}`; $("dStatus").textContent = p.status;
-  $("dTitle").textContent = p.title;
-  $("dDesc").textContent = p.description;
-  $("dSpec").innerHTML = [["Turi", CAT_LABEL[p.category]], ["Shahar", p.city], ["Yil", p.year], ["Maydon", `${nfmt(p.area_m2)} m²`], ["Qavatlar", p.floors]]
-    .map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
-  dlg.showModal();
-});
 $("dClose").addEventListener("click", () => dlg.close());
 dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 

@@ -284,7 +284,19 @@
     if (I18N() && ansLang !== "uz") { await I18N().ensure(ansLang); if (!(window.USTUN_I18N || {})[ansLang]) await I18N().ensure("en"); }
     const img = pendingImg; clearImg();
     busy = true; hist.push({ role: "user", text: q, img: img ? img.thumb : undefined }); renderLog();
-    const ctx = context(), live = { role: "assistant", text: "", src: "", pending: true }; hist.push(live); renderLog();
+    const live = { role: "assistant", text: "", src: "", pending: true }; hist.push(live); renderLog();
+    // Ob-havo, yangiliklar, valyuta kursi: internetdan olinadi; AI'ga kontekst boshida beriladi (server uzun kontekstni oxiridan qisqartiradi)
+    let info = null;
+    if (!img && window.UstunLive) {
+      live.text = T("Internetdan ma'lumot olinmoqda…"); renderLog(true);
+      try { info = await UstunLive.lookup(match ? T(match, 0, ansLang || LANG()) : q, ansLang || LANG()); } catch {}
+      live.text = "";
+    }
+    const ctx = (info && info.data ? `<live_data note="fresh data fetched from the internet just now — answer from it and name the source">
+${info.data}
+</live_data>
+
+` : "") + context();
     let warn = "";
     const out = {};                                                    // apply_design natijasi (bo'lsa)
     try {
@@ -300,6 +312,7 @@
         try { live.text = await askServer(ctx, img, out); live.src = "server"; }
         catch (e) { warn = `${e.message} ${T("Oflayn javob berildi.")}`; live.text = ""; }
       }
+      if (!live.text && !out.res && info) { live.text = info.text; live.src = "offline"; }   // jonli ma'lumot — oflayn ko'rinishda
       if (!live.text && !out.res) {
         const D = designTool(), plan = D && !img && D.designFromText ? D.designFromText(match || q, ansLang || LANG()) : null;   // "uy loyihalab ber" — butun loyiha
         const acts = plan ? plan.acts : D && !img ? D.parseCommand(match || q) : [];
@@ -377,11 +390,13 @@
     const base = { erkin: ["Kontur nega yopilmayapti?", "Fundament qanday hisoblanadi?", "Deraza qanday qo'yiladi?"], qogoz: ["Chizg'ichlardan qanday foydalanaman?", "Chizmani 3D'ga qanday o'tkazaman?"],
       konstruktor: ["VR'da qanday quraman?", "Hovli qanday qo'shiladi?", "Ichki xonalarni qanday chizaman?"], mahsulotlar: ["Buyurtma qanday beriladi?"], sozlamalar: ["Zaxira nusxa nima uchun kerak?"],
       bosh: ["Qayerdan boshlayman?", "Erkin qurish nima?"] }[pg] || ["Qayerdan boshlayman?"];
+    const LIVE = window.UstunLive ? ["🌤 Bugungi ob-havo", "📰 Dunyo yangiliklari", "💱 Valyuta kursi"] : [];   // jonli ma'lumot — har sahifada
     const chips = [...(err ? ["Xatoni tushuntir"] : []), "Bu sahifada nima qila olaman?", ...base].slice(0, 4);
     const design = window.AIDesign && AIDesign.available();            // konstruktor bor sahifada: AI binoni o'zi o'zgartiradi
     if (design && (pg === "konstruktor" || pg === "bosh")) chips.splice(1, 1, "Menga 2 qavatli hovli uy loyihalab ber");
     panel.querySelector(".ai-chips").innerHTML = (design ? `<button type="button" class="pic" data-ai="attach">📷 ${esc("Rasmdan bino qurish")}</button>` : "") +
-      chips.slice(0, design ? 3 : 4).map(c => `<button type="button" data-chip="${esc(c)}"${c === "Xatoni tushuntir" ? ' class="err"' : ""}>${esc(c)}</button>`).join("");
+      chips.slice(0, design ? 3 : 4).map(c => `<button type="button" data-chip="${esc(c)}"${c === "Xatoni tushuntir" ? ' class="err"' : ""}>${esc(c)}</button>`).join("") +
+      LIVE.map(c => `<button type="button" class="live" data-chip="${esc(c)}">${esc(c)}</button>`).join("");
   }
   function open(v) {
     panel.hidden = !v; btn.setAttribute("aria-expanded", String(v));

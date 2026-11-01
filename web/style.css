@@ -1380,3 +1380,5 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 #tezkor .sec-head p { max-width: 46ch; }
 @media (max-width: 860px) { .wiz { grid-template-columns: 1fr; } .wiz-out { position: static; } }
 @media (max-width: 420px) { .wiz-two { grid-template-columns: 1fr; } }
+/* AI: jonli ma'lumot tugmalari (ob-havo, yangiliklar, valyuta) */
+.ai-chips button.live { border-style: dashed; }

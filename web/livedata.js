@@ -1,11 +1,13 @@
 // AI yordamchi uchun jonli ma'lumot: ob-havo (Open-Meteo), dunyo yangiliklari (Vikipediya "In the news") va valyuta kursi (open.er-api.com).
 // Hammasi bepul va kalitsiz; so'rov faqat foydalanuvchi shu mavzuda savol berganda yuboriladi (tashqariga faqat shahar nomi ketadi).
+// Internet qidiruv: Vikipediya API (kalitsiz) + Google qidiruv havolasi; Claude ulangan bo'lsa u web_search asbobi orqali o'zi qidiradi.
 // lookup(savol, til) → { kind, text (oflayn javob, markdown), data (AI uchun ixcham matn) } yoki null (savol bu mavzuda emas).
 // Shablonlar o'zbekcha; tarjimasi til-*.js lug'atidan olinadi ({0}, {1} — qiymatlar o'rni).
 const UstunLive = (function () {
   const RE = {
     weather: /ob-?havo|obhavo|havo (qanday|harorat|qalay)|harorat|yomg'ir yog|qor yog|weather|forecast|temperature|погод|прогноз|температур|clima|tiempo|pronóstico|hava durumu|météo|wetter/,
     news: /yangilik|xabarlar|news|headlines|новост|noticias|haber|actualit|nachricht/,
+    search: /internet|google|gugl|qidir|izla|search|look up|найди|поищи|интернет|гугл|busca|ara[sş]t[iı]r|recherche|such/,
     money: /valyuta|kurs|dollar|yevro|evro|so'm kurs|exchange rate|currency|курс|валют|доллар|tipo de cambio|divisa|döviz|kur |taux de change|wechselkurs/,
   };
   const WMO = [[0, "Ochiq osmon", "☀️"], [1, "Asosan ochiq", "🌤"], [2, "Qisman bulutli", "⛅"], [3, "Bulutli", "☁️"], [48, "Tuman", "🌫"], [57, "Mayda yomg'ir", "🌦"],
@@ -98,15 +100,43 @@ const UstunLive = (function () {
     return { kind: "money", text, data: `exchange rates (open.er-api.com, ${date}): 1 USD = ${uzs} UZS` + rows.slice(1).map(([k, v]) => `, 1 ${k} = ${v.toFixed(1)} UZS`).join("") + (cost ? `; current project cost $${cost}` : "") };
   }
 
+  // ---------- Internet qidiruv: Vikipediya (kalitsiz, istalgan tilda) + Google havolasi ----------
+  const WIKI = { uz: "uz", en: "en", es: "es", ru: "ru", tr: "tr", fr: "fr", de: "de" };
+  const cleanQuery = q => String(q).replace(/[?!.]+\s*$/, "")
+    .replace(/(internet(dan|da)?|google'?(da|dan|ga)?|gugl(da|dan)?|qidirib ber(ing)?|qidir(ing)?|izlab ber|search( for)?|look up|найди|поищи|в интернете|в гугле|buscar? en (internet|google)|buscar?|araştır|recherche|suche)/gi, " ")
+    .replace(/^[\s:,.\-—–]+/, "").replace(/\s+/g, " ").trim();
+  // Vikipediya qidiruvi uchun kalit so'zlar: savol so'zlari olib tashlanadi ("Eyfel minorasi qachon qurilgan" → "Eyfel minorasi")
+  const STOP = /(^|\s)(qachon|qayerda|qayerdan|qaysi|kim|kimlar|nima|nimalar|nega|nechta|necha|qancha|qanday|haqida|ma'lumot|ber|bering|aytib|qurilgan|bo'lgan|edi|mi|what|when|where|who|whom|which|why|how|is|are|was|were|the|a|an|of|about|tell|me|built|designed|invented|founded|created|located|made|does|did|do|mean|means|кто|что|когда|где|как|какой|почему|про|о|расскажи|qué|cuándo|dónde|quién|cómo|cuál|por|el|la|los|las|de|sobre)(?=\s|$)/gi;
+  const keywords = q => q.replace(/[?!.,;:"«»]/g, " ").replace(STOP, " ").replace(STOP, " ").replace(/\s+/g, " ").trim();
+  async function wikiSearch(query, wl) {
+    const d = await getJSON(`https://${wl}.wikipedia.org/w/api.php?action=query&format=json&origin=*&generator=search&gsrsearch=${encodeURIComponent(query)}&gsrlimit=3&prop=extracts|info&exintro=1&explaintext=1&exsentences=3&exlimit=3&inprop=url`);
+    return Object.values((d.query && d.query.pages) || {}).sort((a, b) => a.index - b.index)
+      .map(p => ({ title: p.title, text: (p.extract || "").replace(/\s+/g, " ").trim(), url: p.fullurl })).filter(p => p.text);
+  }
+  async function search(q, lang) {
+    L = lang || (window.UstunI18n ? UstunI18n.lang : "uz");
+    const query = cleanQuery(q) || String(q).trim(), kw = keywords(query) || query, wl = WIKI[L] || "en";
+    let res = [];
+    try { res = await wikiSearch(kw, wl); } catch {}
+    if (res.length < 2 && wl !== "en") { try { res = res.concat(await wikiSearch(kw, "en")); } catch {} }   // o'z tilida kam bo'lsa — inglizcha ham
+    res = res.slice(0, 3);
+    const g = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    const text = [`**${tr("Internetdan: \"{0}\"", query)}** 🔎`,
+      ...(res.length ? res.map(r => `- **${r.title}** — ${r.text.length > 280 ? r.text.slice(0, 280) + "…" : r.text} [${tr("Vikipediya")}](${r.url})`) : [tr("Vikipediyada mos maqola topilmadi.")]),
+      "", `[${tr("Google'da qidirish")} →](${g})`, `_${tr("Manba: Vikipediya. To'liqroq natija uchun Google havolasini oching.")}_`].join("\n");
+    const data = `internet search (Wikipedia) for "${query}":\n` + (res.length ? res.map(r => `- ${r.title} (${r.url}): ${r.text.slice(0, 450)}`).join("\n") : "- no Wikipedia article found") + `\nGoogle search link: ${g}`;
+    return { kind: "search", text, data, google: g };
+  }
+
   // ---------- Kirish nuqtasi ----------
   async function lookup(q, lang) {
     L = lang || (window.UstunI18n ? UstunI18n.lang : "uz");
     const s = String(q).toLowerCase().replace(/[ʻʼ’‘`]/g, "'");
-    const kind = RE.weather.test(s) ? "weather" : RE.news.test(s) ? "news" : RE.money.test(s) ? "money" : null;
+    const kind = RE.weather.test(s) ? "weather" : RE.news.test(s) ? "news" : RE.money.test(s) ? "money" : RE.search.test(s) ? "search" : null;
     if (!kind) return null;
-    try { return await (kind === "weather" ? weather(q) : kind === "news" ? news() : money()); }
+    try { return await (kind === "weather" ? weather(q) : kind === "news" ? news() : kind === "money" ? money() : search(q, L)); }
     catch { return { kind, failed: true, text: tr("Internetdan ma'lumot olib bo'lmadi: aloqa yo'q yoki bu versiyada tashqi manbalar yopiq. Keyinroq urinib ko'ring."), data: "" }; }
   }
-  return { lookup, cityOf };
+  return { lookup, search, cityOf };
 })();
 window.UstunLive = UstunLive;

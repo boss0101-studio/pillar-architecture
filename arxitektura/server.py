@@ -480,6 +480,12 @@ AI_DESIGN_TOOL = {
             }}}},
     },
 }
+# Internet: Anthropic'ning server tomonidagi veb-qidiruvi (alohida kalit kerak emas; har qidiruv alohida haq olinadi).
+# Tashkilotda veb-qidiruv o'chirilgan bo'lsa — so'rov qidiruvsiz qayta yuboriladi.
+WEB_SEARCH_TOOL = {"type": "web_search_20260209", "name": "web_search", "max_uses": 3}
+AI_WEB_RULES = ("\n\nInternet: web_search asbobi bor. Sayt imkoniyatlari haqidagi savolga uni ishlatma; "
+                "lekin dunyo faktlari, yangiliklar, narxlar, qurilish me'yorlari yoki boshqa yangi ma'lumot so'ralsa — qidir, "
+                "qisqa javob ber va manbalarni (sayt nomi) ayt. <live_data> berilgan bo'lsa, avval undan foydalan.")
 AI_DESIGN_RULES = ("\n\nDizaynga aralashish (faqat <design_state> berilganda apply_design asbobi bor):\n"
                    "- Foydalanuvchi binoni o'zgartirish, qurish yoki loyihalashni so'rasa (\"5 qavat qil\", \"balkon qo'sh\", \"gumbaz tom\", \"uy loyihalab ber\") — qo'lda qadamlarni tushuntirish o'rniga apply_design ni chaqir va nima o'zgarganini qisqa ayt.\n"
                    "- Bino rasmi (surat yoki chizma) yuborilsa: diqqat bilan qara, qavatlar soni (deraza qatorlari), oraliqlar (deraza ustunlari), qavat balandligi, tom shakli, fasad materiali, deraza turi, pastki qavat (do'kon, arkada yoki eshik), balkon va eshiklar joyini aniqla; "
@@ -507,18 +513,33 @@ def ai_answer(msgs, context, lang="uz", image=None, design=None):
     params = dict(
         model=AI_MODEL,
         max_tokens=6000,
-        system=[{"type": "text", "text": AI_SYSTEM + AI_DESIGN_RULES, "cache_control": {"type": "ephemeral"}}],
+        system=[{"type": "text", "text": AI_SYSTEM + AI_DESIGN_RULES + AI_WEB_RULES, "cache_control": {"type": "ephemeral"}}],
         output_config={"effort": "medium"},
         messages=msgs,
     )
-    if design:
-        params["tools"] = [AI_DESIGN_TOOL]
+    params["tools"] = [WEB_SEARCH_TOOL] + ([AI_DESIGN_TOOL] if design else [])
+
+    def create(p):
+        try:                                         # xavfsizlik filtri rad etsa — server o'zi boshqa modelda qayta urinadi
+            return client.beta.messages.create(betas=["server-side-fallback-2026-07-01"], fallbacks="default", **p)
+        except TypeError:                            # eski SDK bu parametrni bilmaydi
+            return client.messages.create(**p)
     try:
         client = anthropic.Anthropic()               # kalit muhitdan: ANTHROPIC_API_KEY yoki `ant auth login` profili
-        try:                                         # xavfsizlik filtri rad etsa — server o'zi boshqa modelda qayta urinadi
-            resp = client.beta.messages.create(betas=["server-side-fallback-2026-07-01"], fallbacks="default", **params)
-        except TypeError:                            # eski SDK bu parametrni bilmaydi
-            resp = client.messages.create(**params)
+        try:
+            resp = create(params)
+        except anthropic.BadRequestError as e:       # tashkilotda veb-qidiruv o'chiq — internetsiz javob
+            if "web_search" not in str(e):
+                raise
+            params["tools"] = [t for t in params["tools"] if t is not WEB_SEARCH_TOOL]
+            if not params["tools"]:
+                del params["tools"]
+            resp = create(params)
+        for _ in range(3):                           # uzoq qidiruv "pause_turn" bilan to'xtasa — o'sha javob bilan davom ettiriladi
+            if resp.stop_reason != "pause_turn":
+                break
+            params["messages"] = params["messages"] + [{"role": "assistant", "content": resp.content}]
+            resp = create(params)
     except anthropic.AuthenticationError:
         raise AIUnavailable("AI kaliti noto'g'ri yoki sozlanmagan (ANTHROPIC_API_KEY).")
     except anthropic.PermissionDeniedError:

@@ -59,22 +59,11 @@ CELL_TYPES = {"win", "wide", "arch", "balc", "door", "wall", "shop", "arcade", "
 ORDER_STATUSES = {"yangi", "tasdiqlandi", "yetkazildi", "bekor"}
 MAX_ORDER_ITEMS = 100
 
-SEED = [
-    ("Chilonzor Terrasalari", "turar-joy", "Toshkent", 2024, 18400, 12, "qurildi",
-     "Pog'onali terrasalar bilan 12 qavatli turar-joy majmuasi. Har bir xonadonda janubga qaragan ochiq ayvon bor, hovli esa piyodalar uchun yopiq."),
-    ("Registon Mehmon Markazi", "jamoat", "Samarqand", 2025, 3200, 2, "qurilmoqda",
-     "Tarixiy ansamblga qarab turgan past, og'ir hajmli tashrif markazi. Fasad mahalliy pishiq g'isht va soya beruvchi panjaralar bilan yopilgan."),
-    ("Ipak Ofis Bloki", "tijorat", "Toshkent", 2023, 9600, 8, "qurildi",
-     "Ochiq rejali ofis binosi. Har qavatda atrium orqali tabiiy yorug'lik va havo almashinuvi ta'minlangan."),
-    ("Buxoro Kitob Uyi", "jamoat", "Buxoro", 2026, 1450, 3, "loyihada",
-     "Gumbazli o'quv zali va hovli atrofida joylashgan mahalla kutubxonasi. Qalin devorlar issiq yozda tabiiy sovutish beradi."),
-    ("Yunusobod Villasi", "turar-joy", "Toshkent", 2022, 420, 2, "qurildi",
-     "Ichki hovlili ikki qavatli uy. Ayvon va hovuz an'anaviy o'zbek uyi rejasidan olingan."),
-    ("Kafe 'Ganch'", "interyer", "Farg'ona", 2024, 260, 1, "qurildi",
-     "Qo'lda o'yilgan ganch panellar va zamonaviy beton yuzalarni birlashtirgan kafe interyeri."),
-    ("Nukus Savdo Galereyasi", "tijorat", "Nukus", 2026, 7200, 4, "loyihada",
-     "Cho'l iqlimi uchun ikki qavatli soyabon ostidagi savdo ko'chasi. Tom quyosh panellari bilan qoplanadi."),
-]
+# Avvalgi versiyalar bazaga yozgan namunaviy loyihalar (sayt egasining talabi bilan olib tashlangan).
+# Faqat nomi, shahri va yili aynan mos kelgan yozuvlar o'chiriladi — admin paneldan qo'shilgan haqiqiy loyihalarga tegilmaydi.
+OLD_SAMPLES = [("Chilonzor Terrasalari", "Toshkent", 2024), ("Registon Mehmon Markazi", "Samarqand", 2025), ("Ipak Ofis Bloki", "Toshkent", 2023),
+               ("Buxoro Kitob Uyi", "Buxoro", 2026), ("Yunusobod Villasi", "Toshkent", 2022), ("Kafe 'Ganch'", "Farg'ona", 2024),
+               ("Nukus Savdo Galereyasi", "Nukus", 2026)]
 
 
 @contextmanager
@@ -159,13 +148,7 @@ def init_db():
         # (buyurtmalar o'z narxini items ichida saqlaydi, shuning uchun katalogni yangilash ularga ta'sir qilmaydi)
         conn.execute("DELETE FROM products")
         seed_products(conn)
-        if conn.execute("SELECT COUNT(*) FROM projects").fetchone()[0] == 0:
-            now = now_iso()
-            conn.executemany(
-                "INSERT INTO projects (title, category, city, year, area_m2, floors, status, description, created_at)"
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [row + (now,) for row in SEED],
-            )
+        conn.executemany("DELETE FROM projects WHERE title = ? AND city = ? AND year = ?", OLD_SAMPLES)
 
 
 def now_iso():

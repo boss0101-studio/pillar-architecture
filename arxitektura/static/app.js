@@ -1,6 +1,4 @@
-const CAT_LABEL = { "turar-joy": "Turar-joy", jamoat: "Jamoat", tijorat: "Tijorat", interyer: "Interyer" };
 const nf = n => Number(n).toLocaleString("ru-RU");
-let projects = [];
 
 async function api(path, opts = {}) {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...opts });
@@ -8,20 +6,6 @@ async function api(path, opts = {}) {
   if (!res.ok) throw new Error(data.error || `Server xatosi (${res.status})`);
   return data;
 }
-
-// ---------- Statistika ----------
-async function loadStats() {
-  try {
-    const s = await api("/api/stats");
-    const vals = [s.projects, s.built, nf(s.area), s.cities];
-    document.querySelectorAll("#stats b").forEach((b, i) => { b.textContent = vals[i]; });
-  } catch { /* statistika ixtiyoriy */ }
-}
-
-// ---------- Loyiha oynasi ----------
-const dlg = document.getElementById("dlg");
-document.getElementById("dClose").addEventListener("click", () => dlg.close());
-dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
 // ---------- Smeta ----------
 const estForm = document.getElementById("estForm");
@@ -66,5 +50,4 @@ reqForm.addEventListener("submit", async e => {
   }
 });
 
-loadStats();
 runEstimate();

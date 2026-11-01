@@ -1,28 +1,9 @@
 // Pillar Architecture — brauzer versiyasi.
-// Python serverdagi API o'rnida: portfolio va smeta sahifa ichida, dizaynlar esa artifact bazasida
+// Python serverdagi API o'rnida: smeta sahifa ichida, dizaynlar esa artifact bazasida
 // (bo'lmasa — shu brauzerning localStorage'ida).
 
 const $ = id => document.getElementById(id);
 const nfmt = n => Math.round(n).toLocaleString("ru-RU");
-
-// ================= SAYT MAZMUNI =================
-const CAT_LABEL = { "turar-joy": "Turar-joy", jamoat: "Jamoat", tijorat: "Tijorat", interyer: "Interyer" };
-const PROJECTS = [
-  { id: 1, title: "Chilonzor Terrasalari", category: "turar-joy", city: "Toshkent", year: 2024, area_m2: 18400, floors: 12, status: "qurildi",
-    description: "Pog'onali terrasalar bilan 12 qavatli turar-joy majmuasi. Har bir xonadonda janubga qaragan ochiq ayvon bor, hovli esa piyodalar uchun yopiq." },
-  { id: 2, title: "Registon Mehmon Markazi", category: "jamoat", city: "Samarqand", year: 2025, area_m2: 3200, floors: 2, status: "qurilmoqda",
-    description: "Tarixiy ansamblga qarab turgan past, og'ir hajmli tashrif markazi. Fasad mahalliy pishiq g'isht va soya beruvchi panjaralar bilan yopilgan." },
-  { id: 3, title: "Ipak Ofis Bloki", category: "tijorat", city: "Toshkent", year: 2023, area_m2: 9600, floors: 8, status: "qurildi",
-    description: "Ochiq rejali ofis binosi. Har qavatda atrium orqali tabiiy yorug'lik va havo almashinuvi ta'minlangan." },
-  { id: 4, title: "Buxoro Kitob Uyi", category: "jamoat", city: "Buxoro", year: 2026, area_m2: 1450, floors: 3, status: "loyihada",
-    description: "Gumbazli o'quv zali va hovli atrofida joylashgan mahalla kutubxonasi. Qalin devorlar issiq yozda tabiiy sovutish beradi." },
-  { id: 5, title: "Yunusobod Villasi", category: "turar-joy", city: "Toshkent", year: 2022, area_m2: 420, floors: 2, status: "qurildi",
-    description: "Ichki hovlili ikki qavatli uy. Ayvon va hovuz an'anaviy o'zbek uyi rejasidan olingan." },
-  { id: 6, title: "Kafe 'Ganch'", category: "interyer", city: "Farg'ona", year: 2024, area_m2: 260, floors: 1, status: "qurildi",
-    description: "Qo'lda o'yilgan ganch panellar va zamonaviy beton yuzalarni birlashtirgan kafe interyeri." },
-  { id: 7, title: "Nukus Savdo Galereyasi", category: "tijorat", city: "Nukus", year: 2026, area_m2: 7200, floors: 4, status: "loyihada",
-    description: "Cho'l iqlimi uchun ikki qavatli soyabon ostidagi savdo ko'chasi. Tom quyosh panellari bilan qoplanadi." },
-].sort((a, b) => b.year - a.year || b.id - a.id);
 
 // Smeta — server.py dagi estimate() bilan bir xil formula
 const BASE_PRICE = { "turar-joy": 420, jamoat: 610, tijorat: 540, interyer: 180 };
@@ -63,21 +44,6 @@ document.addEventListener("click", e => {
   e.preventDefault();
   showView(a.dataset.view);
 });
-
-// ================= BOSH SAHIFA =================
-(function initHome() {
-  const vals = [
-    PROJECTS.length,
-    PROJECTS.filter(p => p.status === "qurildi").length,
-    nfmt(PROJECTS.reduce((s, p) => s + p.area_m2, 0)),
-    new Set(PROJECTS.map(p => p.city)).size,
-  ];
-  document.querySelectorAll("#stats b").forEach((b, i) => { b.textContent = vals[i]; });
-})();
-
-const dlg = $("dlg");
-$("dClose").addEventListener("click", () => dlg.close());
-dlg.addEventListener("click", e => { if (e.target === dlg) dlg.close(); });
 
 function runEstimate() {
   const cat = $("estCat").value, q = $("estQ").value;

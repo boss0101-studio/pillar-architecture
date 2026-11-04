@@ -71,31 +71,11 @@ const DEFAULT_PARAMS = {
   roof: "tekis", material: "gisht", window: "oddiy", ground: "oddiy", shape: "rect", wing: 0.4,
 };
 
-// Boshlang'ich nuqtalar: "bosh" — noldan, qolganlari tayyor andoza
+// Boshlang'ich nuqta: "bosh" — noldan (tayyor andozalar olib tashlangan; Sozlamalar "Mening sozlamam"ni qo'shadi)
 const TEMPLATES = {
   bosh: {
     label: "Bo'sh varaq", hint: "1 qavat, derazasiz devor. Hammasini o'zingiz qo'shasiz.",
     params: { category: "turar-joy", floors: 1, bays: 3, floor_h: 3.3, bay_w: 4.2, depth: 10, roof: "tekis", material: "ganch", window: "yoq", ground: "oddiy" },
-    cells: {},
-  },
-  hovli: {
-    label: "Hovli uy", hint: "2 qavat, g'isht, nishab tom.",
-    params: { category: "turar-joy", floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht", window: "oddiy", ground: "oddiy" },
-    cells: { "1,1": "balc", "1,2": "balc" },
-  },
-  turar: {
-    label: "Ko'p qavatli uy", hint: "9 qavat, beton, pastda do'konlar.",
-    params: { category: "turar-joy", floors: 9, bays: 6, floor_h: 3.0, bay_w: 3.9, depth: 14, roof: "tekis", material: "beton", window: "oddiy", ground: "vitrina" },
-    cells: Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].flatMap(f => [[`${f},1`, "balc"], [`${f},4`, "balc"]])),
-  },
-  ofis: {
-    label: "Ofis bloki", hint: "6 qavat, panorama oynalar, tomda terrasa.",
-    params: { category: "tijorat", floors: 6, bays: 8, floor_h: 3.6, bay_w: 4.5, depth: 18, roof: "terrasa", material: "travertin", window: "panorama", ground: "vitrina" },
-    cells: {},
-  },
-  jamoat: {
-    label: "Gumbazli bino", hint: "Arkada, arkali derazalar, koshin gumbaz.",
-    params: { category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" },
     cells: {},
   },
 };

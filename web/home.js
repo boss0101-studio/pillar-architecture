@@ -1,11 +1,16 @@
-// Bosh sahifa: jonli chizma doskasi (andozalar almashib turadi), konstruktor andozalari va tanlangan mahsulotlar.
+// Bosh sahifa: jonli chizma doskasi (namunaviy fasadlar almashib turadi) va tanlangan mahsulotlar.
 (function () {
   const $ = id => document.getElementById(id);
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const f1 = v => (Math.round(v * 10) / 10).toLocaleString("ru-RU");
   const nf = v => Math.round(v).toLocaleString("ru-RU");
   const ROOF = { tekis: "Tekis", nishab: "Nishab", bir: "Bir nishabli", piramida: "Piramida", gumbaz: "Gumbaz", terrasa: "Terrasa" };
-  const web = typeof loadIntoDesigner === "function";          // brauzer versiyasi: konstruktor shu sahifaning ichida
+  // Bosh sahifa chizmalari uchun bino parametrlari (faqat rasm — konstruktorda andoza emas)
+  const SAMPLE = {
+    jamoat: { params: { category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" }, cells: {} },
+    hovli: { params: { category: "turar-joy", floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht", window: "oddiy", ground: "oddiy" }, cells: { "1,1": "balc", "1,2": "balc" } },
+    ofis: { params: { category: "tijorat", floors: 6, bays: 8, floor_h: 3.6, bay_w: 4.5, depth: 18, roof: "terrasa", material: "travertin", window: "panorama", ground: "vitrina" }, cells: {} },
+  };
 
   // ---------- Jonli chizma doskasi ----------
   const SHOW = [{ key: "jamoat", name: "Mahalla markazi" }, { key: "hovli", name: "Hovli uy" }, { key: "ofis", name: "Ofis bloki" }];
@@ -13,7 +18,7 @@
   if (board && sheet && typeof renderFacade === "function") {
     let i = 0;
     const draw = () => {
-      const s = SHOW[i % SHOW.length], t = TEMPLATES[s.key], p = { ...DEFAULT_PARAMS, ...t.params }, g = geometry(p);
+      const s = SHOW[i % SHOW.length], t = SAMPLE[s.key], p = { ...DEFAULT_PARAMS, ...t.params }, g = geometry(p);
       const geo = typeof Geo !== "undefined" ? { axes: true, diag: false, golden: false, angles: true } : null;
       sheet.innerHTML = renderFacade(p, t.cells, { dims: true, geo, uid: "hero" + (i % SHOW.length) });
       $("tbName").textContent = s.name;
@@ -25,23 +30,6 @@
     };
     draw();
     if (!reduce) setInterval(() => { if (!document.hidden && board.getClientRects().length) draw(); }, 7000);
-  }
-
-  // ---------- Konstruktor andozalari ----------
-  const tplBox = $("homeTemplates");
-  if (tplBox && typeof TEMPLATES !== "undefined") {
-    tplBox.innerHTML = ["hovli", "turar", "ofis", "jamoat"].map(k => {
-      const t = TEMPLATES[k], p = { ...DEFAULT_PARAMS, ...t.params };
-      const inner = `<div class="tpl-img">${renderFacade(p, t.cells, { uid: "ht" + k })}</div><b>${t.label}</b><span>${t.hint}</span>`;
-      return web ? `<button type="button" class="tpl" data-home-tpl="${k}">${inner}</button>`
-                 : `<a class="tpl" href="designer.html?tpl=${k}">${inner}</a>`;
-    }).join("");
-    if (web) tplBox.addEventListener("click", e => {
-      const b = e.target.closest("[data-home-tpl]");
-      if (!b) return;
-      const t = TEMPLATES[b.dataset.homeTpl];
-      loadIntoDesigner([{ params: { ...DEFAULT_PARAMS, ...t.params }, cells: { ...t.cells } }], 10, "", `"${t.label}" andozasi ochildi. Uni xohlagancha o'zgartiring.`);
-    });
   }
 
   // ---------- Tanlangan mahsulotlar ----------
@@ -64,8 +52,8 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   // 01-kartochka: jonli fasad chizmasi (konstruktordagi bilan bir xil chizuvchi)
   const bf = document.getElementById("bentoFacade");
-  if (bf && typeof renderFacade === "function" && typeof TEMPLATES !== "undefined") {
-    const t = TEMPLATES.jamoat, p = { ...DEFAULT_PARAMS, ...t.params };
+  if (bf && typeof renderFacade === "function") {
+    const p = { ...DEFAULT_PARAMS, category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" }, t = { cells: {} };
     bf.innerHTML = renderFacade(p, t.cells, { uid: "bento", dims: true });
   }
   // Ko'ringanda: devor chizilishi va raqamlar sanalishi bir marta ishlaydi

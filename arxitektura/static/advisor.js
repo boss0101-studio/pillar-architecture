@@ -106,7 +106,7 @@ const UstunAdvisor = (function () {
       "Meni bossangiz, AI yordamchi oynasi ochiladi: xatolikni ham shu yerdan so'rang.",
     ],
     bosh: [
-      "Boshlash uchun Konstruktorni oching: tayyor andozadan boshlash eng oson yo'l.",
+      "Boshlash uchun Konstruktorni oching yoki bosh sahifadagi tezkor loyiha ustasidan foydalaning.",
       "Pastdagi kalkulyator maydon va sifatga qarab dastlabki smetani hisoblaydi.",
     ],
     konstruktor: [

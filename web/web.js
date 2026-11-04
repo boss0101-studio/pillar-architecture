@@ -156,7 +156,7 @@ async function deleteShared(owner, id) {
 
 // ================= KONSTRUKTOR =================
 const DRAFT_KEY = "ustun-draft";
-let params = { ...DEFAULT_PARAMS };
+let params = { ...DEFAULT_PARAMS, ...TEMPLATES.bosh.params };   // tayyor uy emas — bo'sh varaq (1 qavat, derazasiz devor)
 let cells = {};
 let tool = "balc";
 const undoStack = [], redoStack = [];

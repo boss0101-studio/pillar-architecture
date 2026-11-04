@@ -1,6 +1,6 @@
 // Konstruktor holati: parametrlar, qo'lda bo'yalgan kataklar, tanlangan asbob va "orqaga" tarixi
 const DRAFT_KEY = "ustun-draft";
-let params = { ...DEFAULT_PARAMS };
+let params = { ...DEFAULT_PARAMS, ...TEMPLATES.bosh.params };   // tayyor uy emas — bo'sh varaq (1 qavat, derazasiz devor)
 let cells = {};
 let tool = "balc";
 const undoStack = [], redoStack = [];

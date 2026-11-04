@@ -4,7 +4,7 @@
 const UstunSettings = (function () {
   const KEY = "ustun-sozlamalar";
   const DATA_KEYS = {
-    "ustun-sozlamalar": "Sozlamalar va profil", "ustun-draft": "Konstruktor qoralamasi", "ustun-erkin": "Erkin qurish loyihasi",
+    "ustun-sozlamalar": "Sozlamalar va profil", "ustun-avatar": "Profil rasmi", "ustun-draft": "Konstruktor qoralamasi", "ustun-erkin": "Erkin qurish loyihasi",
     "ustun-my-designs": "Saqlangan dizaynlar", "ustun-cart": "Savat", "ustun-orders": "Buyurtmalar (shu brauzerda)",
     "ustun-qogoz": "Oq qog'oz chizmasi", "ustun-ai": "AI suhbat tarixi", "ustun-geo": "Chizma chiziqlari", "ustun-fon": "Orqa fon", "ustun-view": "Oxirgi ochilgan bo'lim",
   };
@@ -60,6 +60,26 @@ const UstunSettings = (function () {
     TEMPLATES.mening = { label: "Mening sozlamam", hint: `${j.floors} qavat, ${j.bays} oraliq · Sozlamalardagi standart.`,
       params: { category: j.category, quality: j.quality, floors: j.floors, bays: j.bays, floor_h: j.floor_h, bay_w: j.bay_w, depth: j.depth, roof: j.roof, material: j.material, window: j.window, ground: j.ground }, cells: {} };
   }
+  // Profil rasmi: alohida kalitda (sozlamalar JSON'i yengil qoladi); faqat haqiqiy rasm data-URL qabul qilinadi — zaxira faylidan kelgani ham tekshiriladi
+  const AVA_KEY = "ustun-avatar";
+  const photo = () => { try { const v = localStorage.getItem(AVA_KEY) || ""; return /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(v) && v.length < 400000 ? v : ""; } catch { return ""; } };
+  const avaStyle = () => (photo() ? `background:${S.profile.color} url("${photo()}") center/cover no-repeat` : `background:${S.profile.color}`);
+  // Yuklangan rasm markazdan kvadrat qirqiladi va 256×256 JPEG ga kichraytiriladi (~20–40 KB)
+  function loadPhoto(file) {
+    return new Promise((res, rej) => {
+      if (!file || !/^image\//.test(file.type)) return rej(new Error("type"));
+      if (file.size > 15 * 1024 * 1024) return rej(new Error("size"));
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const n = 256, c = document.createElement("canvas"); c.width = c.height = n;
+        const k = Math.min(img.naturalWidth, img.naturalHeight), sx = (img.naturalWidth - k) / 2, sy = (img.naturalHeight - k) / 2, x = c.getContext("2d");
+        x.imageSmoothingQuality = "high"; x.drawImage(img, sx, sy, k, k, 0, 0, n, n);
+        URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("decode")); };
+      img.src = url;
+    });
+  }
   const fullName = () => [S.profile.first, S.profile.last].filter(Boolean).join(" ");
   const initials = () => ((S.profile.first[0] || "") + (S.profile.last[0] || "")).toUpperCase() || "?";
   function prefill() {                                            // bo'sh formalarga profil yoziladi (yozilganini o'zgartirmaydi)
@@ -71,10 +91,13 @@ const UstunSettings = (function () {
     const web = !!document.getElementById("sozlamalar"), here = !!document.getElementById("settingsApp") && !web;
     const li = document.createElement("li");
     li.innerHTML = `<a class="nav-set" ${web ? 'href="#sozlamalar" data-view="sozlamalar"' : 'href="settings.html"'}${here ? ' aria-current="page"' : ""} title="Sozlamalar">` +
-      `<span class="nav-ava" style="background:${S.profile.color}" aria-hidden="true">${esc(fullName() ? initials() : "")}</span><span class="nav-set-t">Sozlamalar</span></a>`;
+      `<span class="nav-ava${photo() ? " has-photo" : ""}" style='${avaStyle()}' aria-hidden="true">${photo() ? "" : esc(fullName() ? initials() : "")}</span><span class="nav-set-t">Sozlamalar</span></a>`;
     ul.appendChild(li);
   }
-  function refreshNav() { const a = document.querySelector(".nav-ava"); if (a) { a.style.background = S.profile.color; a.textContent = fullName() ? initials() : ""; } }
+  function refreshNav() {
+    const a = document.querySelector(".nav-ava"); if (!a) return;
+    a.setAttribute("style", avaStyle()); a.classList.toggle("has-photo", !!photo()); a.textContent = photo() ? "" : (fullName() ? initials() : "");
+  }
   navLink();
 
   // ---------- Sozlamalar oynasi ----------
@@ -120,7 +143,7 @@ const UstunSettings = (function () {
     const p = S.profile, rows = dataRows(), total = rows.reduce((s, r) => s + r.size, 0);
     return `<section class="st-sec">
       <div class="st-card st-profile">
-        <span class="st-ava" style="background:${p.color}">${esc(initials())}</span>
+        <span class="st-ava" style='${avaStyle()}'>${photo() ? "" : esc(initials())}</span>
         <div><b>${esc(fullName() || "Mehmon")}</b><span class="muted">${esc(p.role)}${p.city ? " · " + esc(p.city) : ""}${p.email ? " · " + esc(p.email) : ""}</span></div>
       </div>
       <form class="st-card" data-form="profile" novalidate>
@@ -133,6 +156,11 @@ const UstunSettings = (function () {
           ${field("Kim sifatida", sel("role", ROLES.map(r => [r, r]), p.role))}
           ${field("Shahar", `<input name="city" maxlength="40" autocomplete="address-level2" value="${esc(p.city)}">`)}
         </div>
+        <div class="st-f"><span>Profil rasmi</span><div class="st-photo">
+          <span class="st-ava sm" style='${avaStyle()}'>${photo() ? "" : esc(initials())}</span>
+          <label class="btn-ghost file-btn" for="stPhoto">${photo() ? "Rasmni almashtirish" : "Rasm yuklash"}</label><input type="file" id="stPhoto" accept="image/*" data-act="photo" hidden>
+          ${photo() ? '<button type="button" class="btn-ghost" data-act="photo-del">Olib tashlash</button>' : ""}
+          <span class="muted st-note">JPG yoki PNG; kvadrat qilib qirqiladi.</span></div></div>
         <div class="st-f"><span>Avatar rangi</span><div class="st-colors" role="radiogroup" aria-label="Avatar rangi">${COLORS.map(c => `<button type="button" role="radio" data-color="${c}" aria-checked="${c === p.color}" style="background:${c}" aria-label="${c}"></button>`).join("")}</div></div>
         <p class="muted st-note">Ism va telefon konstruktordagi "Muallif" va buyurtma formalariga o'zi yoziladi. Profil serverga yuborilmaydi — faqat shu brauzerda turadi.</p>
         <p class="msg" data-msg="profile" role="status"></p>
@@ -299,7 +327,8 @@ const UstunSettings = (function () {
         if (t.dataset.armed !== "1") { t.dataset.armed = "1"; t.textContent = "Ishonchingiz komilmi? Yana bir bor bosing"; setTimeout(() => { if (t.isConnected) { t.dataset.armed = ""; t.textContent = "Hisobni va barcha ma'lumotlarni o'chirish"; } }, 3500); return; }
         Object.keys(DATA_KEYS).forEach(k => { try { localStorage.removeItem(k); } catch {} });
         location.reload();
-      } else if (a === "project-reset") { S.project = clean({ project: DEF.project }).project; save(); render(); toast("Standartlar tiklandi"); }
+      } else if (a === "photo-del") { try { localStorage.removeItem(AVA_KEY); } catch {} refreshNav(); render(); toast("Rasm olib tashlandi"); }
+      else if (a === "project-reset") { S.project = clean({ project: DEF.project }).project; save(); render(); toast("Standartlar tiklandi"); }
       else if (a === "ui-reset") { S.ui = { ...DEF.ui }; save(); applyUi(); if (window.UstunFon) window.UstunFon.set("peshtoq"), window.UstunFon.setOp(4); render(); toast("Ko'rinish tiklandi"); }
     });
     el.addEventListener("submit", e => {
@@ -315,6 +344,13 @@ const UstunSettings = (function () {
     });
     el.addEventListener("change", e => {
       const t = e.target;
+      if (t.dataset.act === "photo" && t.files && t.files[0]) {
+        loadPhoto(t.files[0]).then(url => {
+          try { localStorage.setItem(AVA_KEY, url); } catch { toast("Brauzer xotirasi to'la — rasm saqlanmadi", true); return; }
+          refreshNav(); render(); toast("Rasm saqlandi");
+        }).catch(err => toast(err.message === "size" ? "Rasm juda katta (15 MB dan oshmasin)" : "Bu rasm faylini ochib bo'lmadi", true));
+        t.value = ""; return;
+      }
       if (t.dataset.act === "restore" && t.files && t.files[0]) {
         const r = new FileReader();
         r.onload = () => {

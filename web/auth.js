@@ -1,4 +1,4 @@
-// Google orqali kirish: saytga kirganda taklif qilinadi, xizmatdan (Konstruktor, Erkin qurish, Oq qog'oz, Galereya,
+// Google orqali kirish: saytga kirganda taklif qilinadi, xizmatdan (Konstruktor, Erkin qurish, Galereya,
 // Mahsulotlar, AI yordamchi) foydalanmoqchi bo'lganda esa talab qilinadi. Bosh sahifa va Sozlamalar ochiq.
 // Egasidan hech qachon so'ralmaydi: 1) localhost (o'z kompyuteri), 2) Claude artifaktida egasi (user.isOwner),
 // 3) maxfiy egasi havolasi (#owner=...) bir marta ochilgan brauzer. Kodda faqat kalitning SHA-256 xeshi turadi.

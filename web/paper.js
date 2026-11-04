@@ -1,4 +1,4 @@
-// Oq qog'oz: uyni qalam bilan qo'lda chizasiz. Qiyshiq chiziqlar to'g'ri devorlarga aylanadi (RDP soddalashtirish,
+// Erkin qurish → Qo'lda chizish (avvalgi Oq qog'oz): uyni qalam bilan qo'lda chizasiz. Qiyshiq chiziqlar to'g'ri devorlarga aylanadi (RDP soddalashtirish,
 // burchaklarni 0/45/90° ga to'g'rilash, 0,5 m to'rga yopishtirish), uchlar bir-biriga ulanadi, kontur yopiladi.
 // "3D ga o'tkazish" — qog'oz yotadi, devorlar 3D'da qad ko'taradi. Chizmani Erkin qurishga yangi loyiha yoki qo'shimcha sifatida o'tkazish mumkin.
 (function () {
@@ -10,7 +10,7 @@
   const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
   const snapG = v => Math.round(v / GRID) * GRID;
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
-  const web = !!document.getElementById("qogoz") && typeof showView === "function";
+  const web = !!document.getElementById("erkin") && typeof showView === "function";   // web: Erkin qurish bo'limi ichida
 
   // ---------- Holat ----------
   let S = { strokes: [], h: 3, auto: true, raw: true, arc: "full", sides: 6 };
@@ -123,8 +123,8 @@
         <dl class="pp-stats" id="ppStats"></dl>
         <div class="pp-send">
           <span class="label">Dizaynni davom ettirish</span>
-          <button type="button" class="btn" data-ppa="newErkin">Erkin qurishda yangi loyiha</button>
-          <button type="button" class="btn-ghost" data-ppa="mergeErkin" title="Erkin qurishdagi joriy loyihaning 1-qavatiga qo'shiladi">Mavjud loyihaga birlashtirish</button>
+          <button type="button" class="btn" data-ppa="newErkin">Aniq chizishga o'tkazish</button>
+          <button type="button" class="btn-ghost" data-ppa="mergeErkin" title="Aniq chizishdagi joriy loyihaning 1-qavatiga qo'shiladi">Mavjud loyihaga birlashtirish</button>
         </div>
       </div>
     </div>`;
@@ -387,7 +387,7 @@
     const chains = S.strokes.map(s => ({ k: s.k, closed: s.closed, pts: s.pts.map(p => p.slice()) }));
     let model = null;
     try { model = JSON.parse(localStorage.getItem("ustun-erkin") || "null"); } catch {}
-    if (web && window.FreeBuild) model = JSON.parse(JSON.stringify(window.FreeBuild.model));
+    if (window.FreeBuild) model = JSON.parse(JSON.stringify(window.FreeBuild.model));
     if (merge && model && Array.isArray(model.levels) && model.levels.length) {
       model.levels[0].chains = [...(model.levels[0].chains || []), ...chains];      // 1-qavatga qo'shiladi, mavjud devorlar saqlanadi
     } else {
@@ -396,8 +396,11 @@
       if (merge) model.levels[0].h = S.h;
     }
     model.levels[0].h = model.levels[0].h || S.h;
-    if (web && window.FreeBuild) { window.FreeBuild._set(model); try { localStorage.setItem("ustun-erkin", JSON.stringify(window.FreeBuild.model)); } catch {} showView("erkin"); }
-    else { try { localStorage.setItem("ustun-erkin", JSON.stringify(model)); } catch {} location.href = "builder.html"; }
+    if (window.FreeBuild) {                                           // aniq chizish shu sahifada: rejim almashadi
+      window.FreeBuild._set(model); try { localStorage.setItem("ustun-erkin", JSON.stringify(window.FreeBuild.model)); } catch {}
+      if (window.UstunErkin) UstunErkin.set("aniq"); else if (web) showView("erkin");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else { try { localStorage.setItem("ustun-erkin", JSON.stringify(model)); } catch {} location.href = "builder.html?rejim=aniq"; }
   }
 
   // ---------- 3D ----------

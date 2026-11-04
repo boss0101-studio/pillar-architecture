@@ -48,8 +48,11 @@
   window.addEventListener("unhandledrejection", e => { const r = e.reason; if (r && r.stack && /\.js/.test(r.stack) && !r.stack.includes(location.origin)) return; pushErr(r && r.message ? r.message : String(r), "promise"); });
 
   // ---------- Sahifa va uning holati ----------
-  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", qogoz: "Oq qog'oz", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
+  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", qogoz: "Qo'lda chizish", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
   function page() {
+    const r = page0(); return r === "erkin" && window.UstunErkin && UstunErkin.mode === "qolda" ? "qogoz" : r;   // qo'lda chizish — o'z maslahatlari
+  }
+  function page0() {
     if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return v ? v.id : "bosh"; }
     const f = location.pathname.split("/").pop() || "index.html";
     return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" }[f] || "bosh";
@@ -88,7 +91,7 @@
   const GO = {
     kons: { label: "Konstruktorni ochish", view: "konstruktor", href: "designer.html" },
     erkin: { label: "Erkin qurishni ochish", view: "erkin", href: "builder.html" },
-    qogoz: { label: "Oq qog'ozni ochish", view: "qogoz", href: "paper.html" },
+    qogoz: { label: "Qo'lda chizishni ochish", view: "qogoz", href: "builder.html?rejim=qolda" },
     shop: { label: "Mahsulotlarga o'tish", view: "mahsulotlar", href: "shop.html" },
     sets: { label: "Sozlamalarni ochish", view: "sozlamalar", href: "settings.html" },
     gal: { label: "Galereyaga o'tish", view: "galereya", href: "designer.html#galereya" },

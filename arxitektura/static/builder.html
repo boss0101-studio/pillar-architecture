@@ -17,7 +17,6 @@
       <li><a href="index.html#loyihalar">Loyihalar</a></li>
       <li><a href="designer.html">Konstruktor</a></li>
       <li><a href="builder.html" aria-current="page">Erkin qurish</a></li>
-      <li><a href="paper.html">Oq qog'oz</a></li>
       <li><a href="shop.html">Mahsulotlar <span class="cart-badge" data-cart-count hidden>0</span></a></li>
       <li><a href="index.html#aloqa">Aloqa</a></li>
     </ul>
@@ -27,14 +26,16 @@
 <main class="wrap">
   <header class="ds-head">
     <div>
-      <span class="label">Erkin qurish · tayyor fundament yo'q</span>
+      <span class="label">Erkin qurish · qo'lda yoki aniq chizing</span>
       <h1>Noldan qurish</h1>
     </div>
     <div class="ds-head-side">
-      <p>Bo'sh uchastka: tashqi devorlarni nuqtama-nuqta chizing, konturni yoping, ichki devor, eshik va deraza qo'ying, qavat qo'shing. Fundament, pol, yopma, g'isht soni va narx siz chizgan devorlardan hisoblanadi.</p>
+      <p data-erkin-hint="aniq">Bo'sh uchastka: tashqi devorlarni nuqtama-nuqta chizing, konturni yoping, ichki devor, eshik va deraza qo'ying, qavat qo'shing. Fundament, pol, yopma, g'isht soni va narx siz chizgan devorlardan hisoblanadi.</p>
+      <p data-erkin-hint="qolda" hidden>Uyingizni qalam bilan qo'lda chizing: qiyshiq chiziqlar to'g'ri devorlarga aylanadi, uchlari ulanadi. Keyin 3D'da ko'ring yoki "Aniq chizishga o'tkazish" bilan eshik, deraza, qavat qo'shib, smetani oling.</p>
     </div>
   </header>
   <div id="fbApp"></div>
+  <div id="ppApp" hidden></div>
 </main>
 
 <script src="i18n.js"></script>
@@ -44,6 +45,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="settings.js"></script>
 <script src="freebuild.js"></script>
+<script src="paper.js"></script>
+<script src="erkin-mode.js"></script>
 <script src="bgpicker.js"></script>
 <script src="bg3d.js"></script>
 <script src="livedata.js"></script>

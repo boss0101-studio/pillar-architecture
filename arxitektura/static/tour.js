@@ -13,9 +13,10 @@ const UstunTour = (function () {
 
   // Joriy bo'lim: web'da ko'rinib turgan .view, server sahifalarida fayl nomi
   function page() {
-    if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return v ? v.id : "bosh"; }
+    const sub = id => (id === "erkin" && window.UstunErkin && UstunErkin.mode === "qolda" ? "qogoz" : id);   // qo'lda chizish — o'z yo'riqnomasi
+    if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return sub(v ? v.id : "bosh"); }
     const f = location.pathname.split("/").pop() || "index.html";
-    return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar" }[f] || "bosh";
+    return sub({ "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar" }[f] || "bosh");
   }
   const visible = el => !!el && !!(el.offsetParent || el.getClientRects().length) && getComputedStyle(el).visibility !== "hidden";
   const find = sel => (sel ? [...document.querySelectorAll(sel)].find(visible) || null : null);
@@ -39,8 +40,7 @@ const UstunTour = (function () {
     bosh: [
       { t: "Salom! Men — instruktoringizman", d: "Saytni qanday ishlatishni qadamma-qadam ko'rsatib beraman: qayerni bosish, nima qilish kerakligini qo'l bilan ko'rsataman. Bir daqiqa oladi.", nx: "Ha, ko'rsating" },
       { s: () => navTo("konstruktor", "designer.html"), t: "Konstruktor", d: "Tayyor bino qutisi: qavat, plan shakli (L, П, shar...), tom, material va fasaddagi deraza, balkon, eshiklar." },
-      { s: () => navTo("erkin", "builder.html"), t: "Erkin qurish", d: "Devorlarni noldan o'zingiz chizasiz: tayyor shakllar, yoy devorlar; fundament, g'isht va smeta o'zi hisoblanadi." },
-      { s: () => navTo("qogoz", "paper.html"), t: "Oq qog'oz", d: "Uyni qalam bilan qo'lda chizing — chizg'ich, go'niya, sirkul yordam beradi. Keyin bir bosishda 3D'ga o'tkazasiz." },
+      { s: () => navTo("erkin", "builder.html"), t: "Erkin qurish", d: "Devorlarni qo'lda (qalam, chizg'ich, sirkul) yoki nuqtalab aniq chizasiz; fundament, g'isht va smeta o'zi hisoblanadi." },
       { s: () => ".ai-btn", t: "AI yordamchi", d: "Savol bering yoki \"menga 2 qavatli hovli uy loyihalab ber\" deb yozing — uyni o'zi quradi. Xatolik chiqsa ham shu yerdan so'rang." },
       { s: () => ".nav-lang", t: "Til", d: "Sayt tilini istalgan payt shu tugma bilan almashtirasiz." },
       { s: () => ".nav-help", t: "Yordam", d: "Bu tanishuvni qayta ko'rish uchun shu tugmani bosing. Har bir bo'limda o'sha bo'limning yo'riqnomasi ochiladi." },
@@ -188,6 +188,7 @@ const UstunTour = (function () {
     if (window.UstunI18n && !UstunI18n.chosen()) window.addEventListener("ustun-til", go, { once: true });   // avval til tanlanadi
     else go();
     window.addEventListener("ustun-auth", () => go());                   // Google kirish oynasi yopilgach
+    window.addEventListener("ustun-erkin", () => setTimeout(() => start(), 300));   // qo'lda/aniq chizishga birinchi o'tganda
     if (isWeb()) {                                                     // web: bo'lim almashganda o'sha bo'limning yo'riqnomasi
       const mo = new MutationObserver(() => { if (!ui || ui.hidden) setTimeout(() => start(), 450); });
       document.querySelectorAll(".view").forEach(v => mo.observe(v, { attributes: true, attributeFilter: ["hidden"] }));

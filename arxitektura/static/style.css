@@ -1373,3 +1373,15 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .st-ava.sm { width: 48px; height: 48px; font-size: 1rem; }
 .st-photo .st-note { flex-basis: 100%; margin: 0; }
 .nav-ava.has-photo::before { display: none; }
+/* Erkin qurish: qo'lda / aniq chizish almashtirgichi */
+.erkin-sw { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin: 0 0 16px; border: 1px solid var(--fg); }
+.erkin-sw button { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; align-items: center; text-align: left; padding: 12px 16px; border: 0; background: var(--surface); color: var(--fg); font: inherit; cursor: pointer; }
+.erkin-sw button + button { border-left: 1px solid var(--fg); }
+.erkin-sw button span { grid-row: 1 / span 2; font-size: 1.5rem; }
+.erkin-sw button b { font: 800 1.15rem var(--font-display); text-transform: uppercase; }
+.erkin-sw button small { color: var(--muted); font-size: .8rem; }
+.erkin-sw button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+.erkin-sw button[aria-selected="true"] small { color: color-mix(in srgb, var(--bg) 75%, transparent); }
+.erkin-sw button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+#ppApp[hidden], #fbApp[hidden] { display: none !important; }
+@media (max-width: 520px) { .erkin-sw button { padding: 10px; } .erkin-sw button small { display: none; } }

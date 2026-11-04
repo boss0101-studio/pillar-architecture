@@ -20,9 +20,10 @@ function estimate(category, quality, area, floors) {
 }
 
 // ================= BO'LIMLAR =================
-const VIEWS = ["bosh", "konstruktor", "erkin", "qogoz", "galereya", "mahsulotlar", "sozlamalar"];
+const VIEWS = ["bosh", "konstruktor", "erkin", "galereya", "mahsulotlar", "sozlamalar"];
 let firstDesignerVisit = true;
 function showView(v, scroll = true) {
+  if (v === "qogoz") { v = "erkin"; if (window.UstunErkin) UstunErkin.set("qolda"); }   // Oq qog'oz endi Erkin qurish ichida
   if (!VIEWS.includes(v)) v = "bosh";
   VIEWS.forEach(n => { $(n).hidden = n !== v; });
   document.querySelectorAll(".nav ul a").forEach(a => a.toggleAttribute("aria-current", a.dataset.view === v));
@@ -502,6 +503,7 @@ renderGalleries();
 initStore();
 
 let startView = (location.hash || "").slice(1);
+if (startView === "qogoz") startView = "erkin";
 if (!VIEWS.includes(startView)) { try { startView = localStorage.getItem("ustun-view") || "bosh"; } catch { startView = "bosh"; } }
 // Sahifa birinchi ochilganda dialog chiqmasligi uchun: konstruktorni faqat foydalanuvchi o'zi ochganda taklif qilamiz
 if (startView === "konstruktor") firstDesignerVisit = false;

@@ -1420,3 +1420,18 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
   html.gp-printing .gp-sheet { position: fixed; inset: 0; border: 0; box-shadow: none; overflow: visible; }
   html.gp-printing .gp-sheet svg { width: 100%; height: 100%; min-width: 0; }
 }
+/* AR — arxitektura chizmalari: varaq tablari va hammasini chop etish (har varaq alohida A3) */
+.ar-tabs { display: flex; flex-wrap: wrap; gap: 0; border: 1px solid var(--fg); }
+.ar-tabs button { font: inherit; font-size: .82rem; padding: 7px 11px; border: 0; border-right: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.ar-tabs button:last-child { border-right: 0; }
+.ar-tabs button b { font-family: var(--font-mono); font-weight: 600; margin-right: 4px; }
+.ar-tabs button[aria-selected="true"] { background: var(--fg); color: var(--bg); }
+.ar-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.ar-print { display: none; }
+@media print {
+  html.ar-printing body * { visibility: hidden !important; }
+  html.ar-printing .ar-print, html.ar-printing .ar-print * { visibility: visible !important; }
+  html.ar-printing .ar-print { display: block; position: absolute; left: 0; top: 0; width: 100%; }
+  html.ar-printing .ar-page { width: 420mm; height: 297mm; page-break-after: always; break-after: page; }
+  html.ar-printing .ar-page svg { width: 100%; height: 100%; }
+}

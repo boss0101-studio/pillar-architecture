@@ -48,14 +48,14 @@
   window.addEventListener("unhandledrejection", e => { const r = e.reason; if (r && r.stack && /\.js/.test(r.stack) && !r.stack.includes(location.origin)) return; pushErr(r && r.message ? r.message : String(r), "promise"); });
 
   // ---------- Sahifa va uning holati ----------
-  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", gp: "Bosh reja", qogoz: "Qo'lda chizish", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
+  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", gp: "Bosh reja", ar: "Arxitektura chizmalari", qogoz: "Qo'lda chizish", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
   function page() {
     const r = page0(); return r === "erkin" && window.UstunErkin && UstunErkin.mode === "qolda" ? "qogoz" : r;   // qo'lda chizish — o'z maslahatlari
   }
   function page0() {
     if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return v ? v.id : "bosh"; }
     const f = location.pathname.split("/").pop() || "index.html";
-    return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" }[f] || "bosh";
+    return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "ar.html": "ar", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" }[f] || "bosh";
   }
   const visible = el => !!(el.offsetParent || el.getClientRects().length);
   function context() {

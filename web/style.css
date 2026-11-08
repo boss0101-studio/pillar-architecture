@@ -1403,3 +1403,20 @@ html.robot-talk .robot .rb-mouth { animation: rb-talk .35s ease-in-out 6 alterna
 .erkin-sw button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 #ppApp[hidden], #fbApp[hidden] { display: none !important; }
 @media (max-width: 520px) { .erkin-sw button { padding: 10px; } .erkin-sw button small { display: none; } }
+/* GP — Bosh reja: boshqaruv qatori, oq varaq (A3) va chop etish */
+.gp-bar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 14px; margin-bottom: 14px; }
+.gp-bar .sp { flex: 1; }
+.gp-f { display: grid; gap: 4px; font-size: .82rem; color: var(--muted); min-width: min(320px, 100%); }
+.gp-f input { font: inherit; font-size: .92rem; padding: 7px 10px; border: 1px solid var(--fg); background: var(--surface); color: var(--fg); }
+.gp-chk { display: inline-flex; align-items: center; gap: 6px; font-size: .88rem; padding-bottom: 8px; }
+.gp-bar .btn, .gp-bar .btn-ghost { text-decoration: none; }
+.gp-sheet { background: #fff; border: 1px solid var(--fg); box-shadow: 10px 10px 0 -1px color-mix(in srgb, var(--accent) 22%, transparent); overflow: auto; }
+.gp-sheet svg { display: block; width: 100%; height: auto; min-width: 640px; }
+.gp-note { margin-top: 12px; font-size: .85rem; }
+@media print {
+  @page { size: A3 landscape; margin: 0; }
+  html.gp-printing body * { visibility: hidden !important; }
+  html.gp-printing .gp-sheet, html.gp-printing .gp-sheet * { visibility: visible !important; }
+  html.gp-printing .gp-sheet { position: fixed; inset: 0; border: 0; box-shadow: none; overflow: visible; }
+  html.gp-printing .gp-sheet svg { width: 100%; height: 100%; min-width: 0; }
+}

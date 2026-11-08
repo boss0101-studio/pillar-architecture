@@ -16,7 +16,7 @@ const UstunTour = (function () {
     const sub = id => (id === "erkin" && window.UstunErkin && UstunErkin.mode === "qolda" ? "qogoz" : id);   // qo'lda chizish — o'z yo'riqnomasi
     if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return sub(v ? v.id : "bosh"); }
     const f = location.pathname.split("/").pop() || "index.html";
-    return sub({ "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar" }[f] || "bosh");
+    return sub({ "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar" }[f] || "bosh");
   }
   const visible = el => !!el && !!(el.offsetParent || el.getClientRects().length) && getComputedStyle(el).visibility !== "hidden";
   const find = sel => (sel ? [...document.querySelectorAll(sel)].find(visible) || null : null);

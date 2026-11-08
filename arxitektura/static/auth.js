@@ -9,8 +9,8 @@ const UstunAuth = (function () {
   const GOOGLE_CLIENT_ID = "";                                         // Google Cloud Console → Credentials → OAuth client ID (Web)
   const OWNER_HASH = "b7b4b210c2cf73e00342778cd3ba17e7ca49daac50cd601b4f3254b8452f2df4";
   const KEY = "ustun-auth", OWNER_KEY = "ustun-owner", LATER = "ustun-auth-later";
-  const GATED = ["konstruktor", "erkin", "qogoz", "galereya", "mahsulotlar"];
-  const PAGE_VIEW = { "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "qogoz", "shop.html": "mahsulotlar" };
+  const GATED = ["konstruktor", "erkin", "qogoz", "gp", "galereya", "mahsulotlar"];
+  const PAGE_VIEW = { "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "paper.html": "qogoz", "shop.html": "mahsulotlar" };
   const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
   const inArtifact = !!(window.claude && typeof window.claude.use === "function");
   let user = null, owner = local || inArtifact, ready = false;

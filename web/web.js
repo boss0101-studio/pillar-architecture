@@ -20,18 +20,20 @@ function estimate(category, quality, area, floors) {
 }
 
 // ================= BO'LIMLAR =================
-const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "galereya", "mahsulotlar", "sozlamalar"];
+const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "bolimlar", "galereya", "mahsulotlar", "sozlamalar"];
 let firstDesignerVisit = true;
 function showView(v, scroll = true) {
   if (v === "qogoz") { v = "erkin"; if (window.UstunErkin) UstunErkin.set("qolda"); }   // Oq qog'oz endi Erkin qurish ichida
   if (!VIEWS.includes(v)) v = "bosh";
   VIEWS.forEach(n => { $(n).hidden = n !== v; });
   document.querySelectorAll(".nav ul a").forEach(a => a.toggleAttribute("aria-current", a.dataset.view === v));
+  if (v === "gp" || v === "ar") document.querySelectorAll('.nav ul a[data-view="bolimlar"]').forEach(a => a.setAttribute("aria-current", ""));   // GP va AR — loyiha bo'limlari ichida
   document.querySelectorAll(".nav ul a[aria-current]").forEach(a => a.setAttribute("aria-current", "page"));
   if (scroll) window.scrollTo(0, 0);
   try { localStorage.setItem("ustun-view", v); } catch {}
   if (v === "sozlamalar" && typeof UstunSettings !== "undefined") UstunSettings.render();
   if (v === "gp" && window.UstunGP) UstunGP.render();
+  if (v === "bolimlar" && window.UstunRP) UstunRP.render();                               // muhandislik bo'limlari joriy binodan
   if (v === "ar" && window.UstunAR) UstunAR.render();                                     // arxitektura chizmalari joriy binodan                                     // bosh reja joriy loyihadan chiziladi   // saqlangan loyihalar ro'yxati yangilansin
   if (v === "konstruktor") {
     render();

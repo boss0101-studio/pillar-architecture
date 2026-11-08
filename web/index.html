@@ -13,8 +13,7 @@
       <li><a href="#bosh" data-view="bosh">Bosh sahifa</a></li>
       <li><a href="#konstruktor" data-view="konstruktor">Konstruktor</a></li>
       <li><a href="#erkin" data-view="erkin">Erkin qurish</a></li>
-      <li><a href="#gp" data-view="gp">Bosh reja</a></li>
-      <li><a href="#ar" data-view="ar">Arxitektura</a></li>
+      <li><a href="#bolimlar" data-view="bolimlar">Loyiha bo'limlari</a></li>
       <li><a href="#galereya" data-view="galereya">Galereya</a></li>
       <li><a href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar <span class="cart-badge" data-cart-count hidden>0</span></a></li>
     </ul>
@@ -510,6 +509,7 @@
       </div>
       <div class="ds-head-side"><p>Uchastka, binolar joylashuvi, yo'laklar va ko'kalamzorlashtirish — loyiha varag'i ko'rinishida, binolar ekspliktsiyasi va texnik-iqtisodiy ko'rsatkichlar bilan.</p></div>
     </header>
+    <div data-rp-codes="gp"></div>
     <div id="gpApp"></div>
   </main>
 </div>
@@ -524,7 +524,23 @@
       </div>
       <div class="ds-head-side"><p>Fasad, har bir qavat rejasi va kesim — loyiha varaqlari ko'rinishida: o'qlar, o'lchamlar, sath belgilari, xonalar ekspliktsiyasi va deraza-eshiklar spetsifikatsiyasi bilan.</p></div>
     </header>
+    <div data-rp-codes="ar"></div>
     <div id="arApp"></div>
+  </main>
+</div>
+
+<!-- ================= LOYIHA BO'LIMLARI (KR, OV, VK, EOM, GS, SS, PS, TX, POS, OOS, SM) ================= -->
+<div class="view" id="bolimlar" hidden>
+  <main class="wrap">
+    <header class="ds-head">
+      <div>
+        <span class="label">Loyiha · bo'limlar</span>
+        <h1>Loyiha bo'limlari</h1>
+      </div>
+      <div class="ds-head-side"><p>GP va AR'dan tortib smetagacha — 13 ta bo'lim. Konstruksiyalar, isitish va ventilyatsiya, suv, elektr, gaz, aloqa, yong'in xavfsizligi, texnologiya, qurilishni tashkil etish, ekologiya va smeta varaqlari joriy binodan avtomatik tuziladi.</p></div>
+    </header>
+    <div data-rp-codes="self"></div>
+    <div id="rpApp"></div>
   </main>
 </div>
 
@@ -588,7 +604,7 @@
 <footer class="foot">
   <div class="wrap foot-in">
     <div><a class="brand" href="#bosh" data-view="bosh">Pillar<span>.</span></a><p class="muted">Iqlimga mos binolar. Toshkent, 2009 yildan.</p></div>
-    <nav aria-label="Sahifalar"><span class="label">Sahifalar</span><a href="#bosh" data-view="bosh">Bosh sahifa</a><a href="#konstruktor" data-view="konstruktor">Konstruktor</a><a href="#erkin" data-view="erkin">Erkin qurish</a><a href="#gp" data-view="gp">Bosh reja</a><a href="#ar" data-view="ar">Arxitektura</a><a href="#galereya" data-view="galereya">Galereya</a><a href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar</a></nav>
+    <nav aria-label="Sahifalar"><span class="label">Sahifalar</span><a href="#bosh" data-view="bosh">Bosh sahifa</a><a href="#konstruktor" data-view="konstruktor">Konstruktor</a><a href="#erkin" data-view="erkin">Erkin qurish</a><a href="#gp" data-view="gp">Bosh reja</a><a href="#ar" data-view="ar">Arxitektura</a><a href="#bolimlar" data-view="bolimlar">Loyiha bo'limlari</a><a href="#galereya" data-view="galereya">Galereya</a><a href="#mahsulotlar" data-view="mahsulotlar">Mahsulotlar</a></nav>
     <div><span class="label">Aloqa</span><span class="mono">+998 71 200 00 00</span><span>Toshkent, Mirobod tumani (namuna)</span><span class="muted">Dushanba–shanba, 9:00–18:00</span></div>
   </div>
   <div class="wrap foot-bottom"><span>© 2026 Pillar Architecture — namunaviy loyiha</span><span class="mono">Bino konstruktori · brauzer versiyasi</span></div>
@@ -620,6 +636,7 @@
 <script src="erkin-mode.js"></script>
 <script src="gp.js"></script>
 <script src="ar.js"></script>
+<script src="bolimlar.js"></script>
 <script src="bgpicker.js"></script>
 <script src="bg3d.js"></script>
 <script src="ai-design.js"></script>

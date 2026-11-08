@@ -1522,3 +1522,17 @@ html.menu-open .nav-burger i::after { transform: translateY(-6px) rotate(-45deg)
 }
 @keyframes menu-in { from { opacity: 0; transform: translateY(-8px); } }
 @media (prefers-reduced-motion: reduce) { html.menu-open .nav.has-burger ul { animation: none; } }
+
+/* ---------- LOYIHA BO'LIMLARI: kodlar paneli (GP, AR, KR … SM) ---------- */
+.rp-codes { display: flex; gap: 0; overflow-x: auto; border: 1px solid var(--fg); margin-bottom: 16px; scrollbar-width: thin; background: var(--surface); }
+.rp-codes a { flex: none; display: grid; gap: 2px; padding: 8px 12px; min-width: 92px; max-width: 170px; border-right: 1px solid var(--line); color: var(--fg); text-decoration: none; }
+.rp-codes a:last-child { border-right: 0; }
+.rp-codes a b { font: 600 .8rem var(--font-mono); letter-spacing: .02em; white-space: nowrap; }
+.rp-codes a span { font-size: .7rem; line-height: 1.25; color: var(--muted); white-space: normal; }
+.rp-codes a:hover { background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
+.rp-codes a[aria-current="page"] { background: var(--fg); color: var(--bg); }
+.rp-codes a[aria-current="page"] span { color: color-mix(in srgb, var(--bg) 75%, transparent); }
+.rp-codes a:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+.rp-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 1.05rem; }
+.rp-head b { font-family: var(--font-mono); color: var(--accent); }
+.gp-sel select, .gp-sel input { font: inherit; padding: 4px 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }

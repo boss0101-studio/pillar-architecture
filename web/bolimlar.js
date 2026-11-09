@@ -1109,7 +1109,8 @@ const UstunRP = (function () {
   });
   if (!web()) { const go = () => { fillCodes(); if ($("rpApp")) render(); }; if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go(); }
   else { if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fillCodes); else fillCodes(); }
-  return { render, fillCodes, SECTIONS, model: () => { const pr = project(); return pr.list.length ? model(pr, pr.list[0]) : null; },
+  const go = k => { if (!SEC[k] || SEC[k].view) return false; st.sec = k; sheetIdx = 0; save(); render(); return true; };   // AI yordamchi: "smeta bo'limiga o't"
+  return { render, fillCodes, go, SECTIONS, model: () => { const pr = project(); return pr.list.length ? model(pr, pr.list[0]) : null; },
     sheetsOf: (b, sec) => { const M = model({ name: "", list: [b] }, b); return sheetsFor(M, sec).map(s => ({ t: s.t, svg: s.make() })); } };   // tekshirish va eksport uchun
 })();
 window.UstunRP = UstunRP;

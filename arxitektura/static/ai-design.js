@@ -167,7 +167,7 @@ const AIDesign = (function () {
       ["bir", /bir nishab|single.?pitch|shed roof|односкат|una vertiente|tek eğim|monopente|pultdach/], ["nishab", /nishab|gable|pitched|двускат|скатн|dos aguas|beşik|deux pentes|satteldach/], ["tekis", /tekis tom|flat roof|плоск|techo plano|düz çatı|toit plat|flachdach/]],
     material: [["oqgisht", /oq g'isht|white brick|бел\w* кирпич|ladrillo blanco|beyaz tuğla|brique blanche|weiße?r? ziegel/], ["gisht", /g'isht|brick|кирпич|ladrillo|tuğla|brique|ziegel/],
       ["qorabeton", /qora beton|dark concrete|черн\w* бетон|hormigón negro|siyah beton|béton noir|dunkle?r? beton/], ["beton", /beton|concrete|бетон|hormigón/],
-      ["travertin", /travertin/], ["tosh", /tosh|stone|камен|piedra|taş|pierre|stein/], ["koshin", /koshin|tile|изразц|azulejo|çini|faïence/],
+      ["travertin", /travertin/], ["tosh", /(^|[^a-z'])tosh(?!kent)|stone|камен|piedra|taş|pierre|stein/], ["koshin", /koshin|tile|изразц|azulejo|çini|faïence/],
       ["yogoch", /yog'och|wood|дерев|madera|ahşap|bois|holz/], ["metall", /metall|metal/], ["ganch", /ganch|plaster|штукатур|yeso|sıva|plâtre|putz/],
       ["shisha", /shisha|oynak|oyna(dan|li)|glass|стекл|vidrio|cristal|cam |verre|glas/]],
   };
@@ -208,6 +208,10 @@ const AIDesign = (function () {
 
   function parseCommand(q) {
     const s = String(q).toLowerCase().replace(/[ʻʼ’‘`]/g, "'"), p = {};
+    // savol ("… qanday?", "qancha turadi?") buyruq fe'lisiz bo'lsa — loyiha o'zgartirilmaydi
+    const isQ = /\?|qanday|qancha|nega|nima|qaysi|qayer|\bhow\b|\bwhat\b|\bwhy\b|\bwhich\b|\bwhere\b|как|сколько|почему|что|cómo|cuánto|qué|por qué/.test(s);
+    const CMD = /qil|qo'y|qo'sh|o'zgartir|almashtir|bo'lsin|aylantir|\bmake\b|\bset\b|change|\buse\b|\badd\b|\bput\b|сдела|помен|постав|добав|измени|\bhaz\b|\bpon\b|cambia|\busa\b|añad/;
+    if (isQ && !CMD.test(s)) return [];
     let m = WORDS.floors.exec(s); if (m) p.floors = Number(m[1]);
     m = WORDS.bays.exec(s); if (m) p.bays = Number(m[1]);
     for (const [v, re] of WORDS.roof) if (re.test(s)) { p.roof = v; break; }

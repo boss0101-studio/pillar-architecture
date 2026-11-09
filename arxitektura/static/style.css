@@ -1536,3 +1536,43 @@ html.menu-open .nav-burger i::after { transform: translateY(-6px) rotate(-45deg)
 .sz-wrap.sz-max { position: fixed; inset: 0; z-index: 400; }
 .sz-wrap.sz-full .gp-sheet, .sz-wrap.sz-max .gp-sheet { max-height: none; height: 100%; box-shadow: none; }
 @media (max-width: 640px) { .sz-hint, .sz-bar button span:not([data-sz-val]) { display: none; } }
+
+/* ---------- MENYU: fotosuratli kartochkalar to'ri (gamburger ochilganda) ---------- */
+@media (max-width: 1099px) {
+  html.menu-open .nav.has-burger ul { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-flow: row dense; align-content: start; gap: 12px;
+    padding: calc(var(--nav-h, 64px) + 14px) max(16px, 3vw) 28px; }
+  html.menu-open .nav.has-burger ul > li { grid-column: span 2; min-width: 0; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(6n + 1) { grid-column: span 4; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a {
+    position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-start; gap: 10px; height: clamp(150px, 30vh, 300px); padding: clamp(16px, 2.4vw, 28px);
+    border-radius: 16px; color: #fff; text-decoration: none; font: 500 clamp(1.25rem, 2.6vw, 2.1rem) / 1.15 var(--font-body); text-transform: none; letter-spacing: 0; background: #1b2024; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a::before { content: ""; position: absolute; inset: 0; z-index: -2; background: var(--tile-img, url("hero/1.jpg")) var(--tile-pos, center) / cover no-repeat; transform: var(--tile-flip, none) scale(1.01); transition: transform .7s cubic-bezier(.2, .7, .2, 1); }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(10, 12, 14, .58) 0%, rgba(10, 12, 14, .28) 45%, rgba(10, 12, 14, .12) 100%); transition: background .3s; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a:hover::before, html.menu-open .nav.has-burger ul > li.nav-tile > a:focus-visible::before { transform: var(--tile-flip, none) scale(1.07); }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a:hover::after { background: linear-gradient(180deg, rgba(10, 12, 14, .7) 0%, rgba(10, 12, 14, .35) 60%, rgba(10, 12, 14, .2) 100%); }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a[aria-current="page"] { box-shadow: inset 0 0 0 3px var(--accent); text-decoration: none; color: #fff; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a[aria-current="page"]::after { background: linear-gradient(180deg, rgba(20, 30, 80, .62) 0%, rgba(10, 12, 14, .2) 100%); }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a .cart-badge { font-size: .9rem; }
+  /* rasmlar: 5 ta foto, takrorlanganda boshqa kesim yoki ko'zgu aksi */
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 1) > a { --tile-img: url("hero/1.jpg"); --tile-pos: 50% 60%; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 2) > a { --tile-img: url("hero/5.jpg"); --tile-pos: 60% 40%; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 3) > a { --tile-img: url("hero/4.jpg"); --tile-pos: 30% 50%; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 4) > a { --tile-img: url("hero/3.jpg"); --tile-pos: 50% 45%; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 5) > a { --tile-img: url("hero/2.jpg"); --tile-pos: 50% 70%; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 6) > a { --tile-img: url("hero/4.jpg"); --tile-pos: 85% 80%; --tile-flip: scaleX(-1); }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(7n + 7) > a { --tile-img: url("hero/5.jpg"); --tile-pos: 10% 75%; --tile-flip: scaleX(-1); }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a > * { position: relative; }
+  /* kichik tugmalar (yordam, til, kirish) — kartochkalar ostida bitta qatorda */
+  html.menu-open .nav.has-burger ul > li:not(.nav-tile) { grid-column: span 1; align-self: center; margin: 4px 0 0; }
+  html.menu-open .nav.has-burger ul > li:not(.nav-tile) > a { font: 600 .9rem var(--font-body); text-transform: none; }
+}
+@media (max-width: 640px) {
+  html.menu-open .nav.has-burger ul { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  html.menu-open .nav.has-burger ul > li.nav-tile, html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(6n + 1) { grid-column: span 1; }
+  html.menu-open .nav.has-burger ul > li.nav-tile:nth-child(5n + 1) { grid-column: span 2; }
+  html.menu-open .nav.has-burger ul > li.nav-tile > a { height: clamp(110px, 19vh, 170px); border-radius: 12px; font-size: 1.15rem; }
+  html.menu-open .nav.has-burger ul > li:not(.nav-tile) { grid-column: span 1; }
+}
+@media (prefers-reduced-motion: reduce) { html.menu-open .nav.has-burger ul > li.nav-tile > a::before { transition: none; } }
+html.menu-open .ai-btn, html.menu-open .bgp-btn, html.menu-open .ai { display: none !important; }   /* menyu ochiq: suzuvchi tugmalar kartochkalarni to'smasin */

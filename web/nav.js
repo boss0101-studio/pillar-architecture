@@ -10,6 +10,9 @@
   b.setAttribute("aria-controls", ul.id); b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-label", "Menyu");
   b.innerHTML = '<i aria-hidden="true"></i>';
   wrap.appendChild(b); nav.classList.add("has-burger");
+  // bo'lim havolalari — fotosuratli kartochka; yordam, til va kirish tugmalari — kichik qatorda (keyin qo'shilganlari ham)
+  const mark = () => ul.querySelectorAll(":scope > li").forEach(li => li.classList.toggle("nav-tile", !!li.querySelector(":scope > a") && !li.classList.contains("nav-user")));
+  mark(); new MutationObserver(mark).observe(ul, { childList: true });
   const set = open => {
     root.classList.toggle("menu-open", open); b.setAttribute("aria-expanded", String(open));
     if (open) { const f = ul.querySelector("a, button"); if (f) f.focus(); }

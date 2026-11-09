@@ -1518,3 +1518,21 @@ html.menu-open .nav-burger i::after { transform: translateY(-6px) rotate(-45deg)
 .rp-head { display: flex; align-items: baseline; gap: 10px; margin: 0 0 10px; font-size: 1.05rem; }
 .rp-head b { font-family: var(--font-mono); color: var(--accent); }
 .gp-sel select, .gp-sel input { font: inherit; padding: 4px 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+
+/* ---------- CHIZMA VARAQLARINI YAQINLASHTIRISH (sheetzoom.js) ---------- */
+.sz-wrap { position: relative; display: grid; gap: 8px; }
+.sz-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; font-size: .82rem; }
+.sz-bar button { min-width: 38px; height: 34px; padding: 0 10px; border: 1px solid var(--fg); background: var(--surface); color: var(--fg); font: 600 .95rem var(--font-mono); cursor: pointer; }
+.sz-bar button:hover { background: var(--fg); color: var(--bg); }
+.sz-bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sz-bar button span { font-size: .78rem; }
+.sz-hint { color: var(--muted); font-size: .76rem; margin-left: 6px; }
+.gp-sheet[data-sz] svg { width: calc(100% * var(--sz, 1)); min-width: calc(640px * var(--sz, 1)); max-width: none; user-select: none; -webkit-user-select: none; }
+.gp-sheet[data-sz] { touch-action: pan-x pan-y; }
+.gp-sheet[data-sz]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.gp-sheet.sz-on { max-height: 78vh; cursor: grab; overscroll-behavior: contain; }
+.gp-sheet.sz-drag { cursor: grabbing; }
+.sz-wrap.sz-full, .sz-wrap.sz-max { background: var(--bg); padding: 10px; grid-template-rows: auto minmax(0, 1fr); }
+.sz-wrap.sz-max { position: fixed; inset: 0; z-index: 400; }
+.sz-wrap.sz-full .gp-sheet, .sz-wrap.sz-max .gp-sheet { max-height: none; height: 100%; box-shadow: none; }
+@media (max-width: 640px) { .sz-hint, .sz-bar button span:not([data-sz-val]) { display: none; } }

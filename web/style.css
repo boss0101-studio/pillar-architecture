@@ -1658,3 +1658,17 @@ html.menu-open .ai-btn, html.menu-open .bgp-btn, html.menu-open .ai { display: n
   html.rz-printing .rz-out { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
   html.rz-printing .rz-actions { display: none; }
 }
+
+/* ---------- ORQA FON: haqiqiy uy fotosurati (bgpicker.js, html.bg-photo) ---------- */
+html.bg-photo body::after {
+  -webkit-mask: none; mask: none;
+  background: var(--bg-photo) center / cover no-repeat; opacity: var(--bg-op, .22);
+  filter: saturate(.9);
+}
+.bgp-th.photo, .st-fons .bgp-th.photo { -webkit-mask: none; mask: none; background: var(--th) center / cover no-repeat; opacity: 1; }
+.bgp-grid button[aria-checked="true"] .bgp-th.photo, .st-fons button[aria-checked="true"] .bgp-th.photo { background: var(--th) center / cover no-repeat; }
+.bgp { max-height: calc(100vh - 90px); overflow: auto; }
+.bgp-sub { font: 600 .7rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.bgp-credit { margin: -2px 0 0; font: .72rem var(--font-mono); color: var(--muted); }
+.bgp-credit:empty { display: none; }
+.bgp-credit a { color: inherit; }

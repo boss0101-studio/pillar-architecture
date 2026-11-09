@@ -1,5 +1,5 @@
-// Orqa fonni tanlash: faqat arxitekturaga oid chizmalar (chiziqli SVG, chizma uslubida).
-// Rasm CSS niqob (mask) sifatida ishlatiladi, shuning uchun rangi qorong'i/yorug' mavzuga o'zi moslashadi.
+// Orqa fonni tanlash: haqiqiy uylar fotosuratlari (Unsplash, bepul litsenziya) va arxitektura chizmalari (chiziqli SVG).
+// Foto — yarim shaffof rasm (shaffofligi alohida sozlanadi); chizma — CSS niqob, rangi qorong'i/yorug' mavzuga o'zi moslashadi.
 // Tanlov shu brauzerda eslab qolinadi (localStorage "ustun-fon") va saytning hamma sahifasiga qo'llanadi.
 (function () {
   const KEY = "ustun-fon";
@@ -15,7 +15,22 @@
   const pointed = (l, r, base, s) => { const w = r - l, c = (l + r) / 2, top = s - w * 0.866; return `M${l} ${base}V${s}A${w} ${w} 0 0 1 ${c} ${top}A${w} ${w} 0 0 1 ${r} ${s}V${base}`; };
   const dims = (x0, x1, y) => P(`M${x0} ${y}H${x1}M${x0} ${y - 12}V${y + 12}M${x1} ${y - 12}V${y + 12}`, ' stroke-width="1.2" stroke-opacity=".6"');
 
-  const BGS = [
+  // Haqiqiy uylar (Unsplash, bepul litsenziya; muallif fon oynasida ko'rsatiladi). th — tanlash oynasi uchun kichik nusxa
+  const PHOTOS = [
+    { id: "u5", n: "Kechki zamonaviy uy", photo: "fon/u5.jpg", th: "fon/u5-k.jpg", by: "Brian Babb", pid: "XbwHrt87mQ0" },
+    { id: "h1", n: "Chiroqli villa", photo: "hero/1.jpg", th: "fon/h1-k.jpg", by: "Arthur BAUDRY", pid: "4vioYQ9Nn9Y" },
+    { id: "u1", n: "O'rta yer dengizi villasi", photo: "fon/u1.jpg", th: "fon/u1-k.jpg", by: "Frames For Your Heart", pid: "mR1CIDduGLc" },
+    { id: "u2", n: "Oq-jigarrang uy", photo: "fon/u2.jpg", th: "fon/u2-k.jpg", by: "Ярослав Алексеенко", pid: "_TPTXZd9mOo" },
+    { id: "h2", n: "Basseynli hovli", photo: "hero/2.jpg", th: "fon/h2-k.jpg", by: "Avi Werde", pid: "hHz4yrvxwlA" },
+    { id: "u3", n: "Basseynli villa", photo: "fon/u3.jpg", th: "fon/u3-k.jpg", by: "Frames For Your Heart", pid: "2d4lAQAlbDA" },
+    { id: "u4", n: "Yog'och uy", photo: "fon/u4.jpg", th: "fon/u4-k.jpg", by: "vu anh", pid: "TiVPTYCG_3E" },
+    { id: "u6", n: "Bog'dagi oq uy", photo: "fon/u6.jpg", th: "fon/u6-k.jpg", by: "Wes Fischer", pid: "g39p1kDjvSY" },
+    { id: "u7", n: "Kulrang yog'och uy", photo: "fon/u7.jpg", th: "fon/u7-k.jpg", by: "todd kent", pid: "178j8tJrNlc" },
+    { id: "h4", n: "G'isht va pergola", photo: "hero/4.jpg", th: "fon/h4-k.jpg", by: "juan verdaguer aguerrebehere", pid: "0n94KqRz6rQ" },
+    { id: "h5", n: "Beton va yog'och", photo: "hero/5.jpg", th: "fon/h5-k.jpg", by: "POOJAN THANEKAR", pid: "F-slnkFvcag" },
+    { id: "h3", n: "Registon", photo: "hero/3.jpg", th: "fon/h3-k.jpg", by: "Alessio Roversi", pid: "dvoY6xonps8" },
+  ];
+  const BGS = [...PHOTOS,
     { id: "peshtoq", n: "Madrasa peshtoqi", file: "bg-arxitektura.svg" },
     { id: "minora", n: "Minora", make() {
       let d = "", hw = y => 70 + (y - 230) / (G - 230) * 45;          // minora pastga qarab kengayadi
@@ -112,16 +127,23 @@
   ];
 
   // ---------- Qo'llash ----------
-  const urlOf = b => (b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
+  const abs = f => new URL(f, document.baseURI).href;
+  const urlOf = b => (b.photo ? `url("${abs(b.th)}")` : b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
   // Standart: oddiy, qimirlamaydigan 2D chizma. 3D jonli fonni foydalanuvchi o'zi yoqishi mumkin.
   // v:2 — avval 3D standart bo'lgan: eski tanlovda 3D bir marta o'chiriladi. v:3 — fon matnga xalaqit bermasin: eski kuchli fon 4% ga tushiriladi
-  const DEF = { id: "peshtoq", op: 4, d3: false, v: 3 };
+  // v:4 — standart fon haqiqiy uy fotosurati; eski standart chizma ("peshtoq") bir marta fotoga almashtiriladi. pop — foto shaffofligi (%)
+  const DEF = { id: "u5", op: 4, pop: 22, d3: false, v: 4 };
   let state = { ...DEF };
-  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (!s.v || s.v < 2) state.d3 = false; if (!s.v || s.v < 3) state.op = Math.min(Number(state.op) || 4, 4); state.v = 3; } catch {}
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (!s.v || s.v < 2) state.d3 = false; if (!s.v || s.v < 3) state.op = Math.min(Number(state.op) || 4, 4); if (!s.v || s.v < 4) { if (!s.id || s.id === "peshtoq") state.id = DEF.id; state.pop = DEF.pop; } state.v = 4; } catch {}
+  const cur = () => BGS.find(x => x.id === state.id) || BGS[0];
+  const lim = b => (b.photo ? [5, 60] : [2, 25]);                // foto ko'rinishi 5–60%, chizma 2–25%
+  const opOf = b => { const [lo, hi] = lim(b), v = Number(b.photo ? state.pop : state.op) || (b.photo ? DEF.pop : DEF.op); return Math.min(hi, Math.max(lo, v)); };
   function apply() {
-    const b = BGS.find(x => x.id === state.id) || BGS[0], root = document.documentElement.style;
-    root.setProperty("--bg-mask", urlOf(b));
-    root.setProperty("--bg-op", String(Math.min(25, Math.max(2, Number(state.op) || 4)) / 100));
+    const b = cur(), root = document.documentElement;
+    root.classList.toggle("bg-photo", !!b.photo);
+    if (b.photo) root.style.setProperty("--bg-photo", `url("${abs(b.photo)}")`);
+    else root.style.setProperty("--bg-mask", urlOf(b));
+    root.style.setProperty("--bg-op", String(opOf(b) / 100));
     window.dispatchEvent(new CustomEvent("ustun-fon", { detail: { ...state } }));   // bg3d.js shu hodisani tinglaydi
   }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
@@ -134,8 +156,13 @@
   btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12z"/><path d="M9 21v-6h6v6"/></svg><span>Fon</span>';
   const panel = document.createElement("div");
   panel.className = "bgp"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Orqa fon");
-  panel.innerHTML = `<div class="bgp-head"><b>Orqa fon</b><span class="label">faqat arxitektura</span><button type="button" class="bgp-x" aria-label="Yopish">×</button></div>
-    <div class="bgp-grid" role="radiogroup" aria-label="Fon rasmi">${BGS.map(b => `<button type="button" role="radio" data-bg="${b.id}"><span class="bgp-th" style="--th:${urlOf(b).replace(/"/g, "'")}"></span><small>${b.n}</small></button>`).join("")}</div>
+  const thumb = b => `<button type="button" role="radio" data-bg="${b.id}"><span class="bgp-th${b.photo ? " photo" : ""}" style="--th:${urlOf(b).replace(/"/g, "'")}"></span><small>${b.n}</small></button>`;
+  panel.innerHTML = `<div class="bgp-head"><b>Orqa fon</b><span class="label">haqiqiy uylar</span><button type="button" class="bgp-x" aria-label="Yopish">×</button></div>
+    <div class="bgp-sub">Fotosuratlar</div>
+    <div class="bgp-grid" role="radiogroup" aria-label="Fon rasmi">${PHOTOS.map(thumb).join("")}</div>
+    <p class="bgp-credit" data-credit></p>
+    <div class="bgp-sub">Chizmalar</div>
+    <div class="bgp-grid" role="radiogroup" aria-label="Fon chizmasi">${BGS.filter(b => !b.photo).map(thumb).join("")}</div>
     <label class="bgp-3d"><input type="checkbox" data-3d> <span><b>3D jonli fon</b><small>Bino 3D'da aylanadi, sichqoncha va skrolga qarab og'adi</small></span></label>
     <label class="bgp-op">Ko'rinishi <input type="range" min="2" max="25" step="1" aria-label="Fon ko'rinishi, foiz"><output></output></label>
     <button type="button" class="bgp-reset">Asl holiga qaytarish</button>`;
@@ -143,7 +170,10 @@
   const range = panel.querySelector('input[type="range"]'), out = panel.querySelector("output"), d3 = panel.querySelector("[data-3d]");
   function sync() {
     panel.querySelectorAll("[data-bg]").forEach(b => b.setAttribute("aria-checked", String(b.dataset.bg === state.id)));
-    range.value = state.op; out.textContent = `${state.op}%`; d3.checked = state.d3 !== false;
+    const b = cur(), [lo, hi] = lim(b), v = opOf(b);
+    range.min = lo; range.max = hi; range.value = v; out.textContent = `${v}%`; d3.checked = state.d3 !== false;
+    const cr = panel.querySelector("[data-credit]");
+    cr.innerHTML = b.photo ? `Foto: <a href="https://unsplash.com/photos/${encodeURIComponent(b.pid)}" target="_blank" rel="noopener">${b.by.replace(/[<>&"]/g, "")}</a> / Unsplash` : "";
   }
   sync();
   const open = v => { panel.hidden = !v; btn.setAttribute("aria-expanded", String(v)); if (v) (panel.querySelector('[aria-checked="true"]') || panel.querySelector("[data-bg]")).focus(); };
@@ -154,16 +184,17 @@
     if (e.target.closest(".bgp-x")) { open(false); btn.focus(); }
     if (e.target.closest(".bgp-reset")) { state = { ...DEF }; apply(); save(); sync(); }
   });
-  range.addEventListener("input", () => { state.op = Number(range.value); out.textContent = `${state.op}%`; apply(); });
+  range.addEventListener("input", () => { if (cur().photo) state.pop = Number(range.value); else state.op = Number(range.value); out.textContent = `${range.value}%`; apply(); });
   range.addEventListener("change", save);
   d3.addEventListener("change", () => { state.d3 = d3.checked; apply(); save(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !panel.hidden) { open(false); btn.focus(); } });
   document.addEventListener("pointerdown", e => { if (!panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) open(false); });
 
   window.UstunFon = {
-    list: BGS.map(b => b.id), items: () => BGS.map(b => ({ id: b.id, n: b.n, url: urlOf(b) })),
+    list: BGS.map(b => b.id), items: () => BGS.map(b => ({ id: b.id, n: b.n, url: urlOf(b), photo: !!b.photo })),
     set(id) { if (BGS.some(b => b.id === id)) { state.id = id; apply(); save(); sync(); } },
-    setOp(v) { state.op = Math.min(25, Math.max(2, Math.round(Number(v) || 4))); apply(); save(); sync(); },
+    setOp(v) { const b = cur(), [lo, hi] = lim(b), x = Math.min(hi, Math.max(lo, Math.round(Number(v) || lo))); if (b.photo) state.pop = x; else state.op = x; apply(); save(); sync(); },
+    opRange: () => lim(cur()), op: () => opOf(cur()),
     set3d(v) { state.d3 = !!v; apply(); save(); sync(); },
     get: () => ({ ...state }),
   };

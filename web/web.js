@@ -20,7 +20,7 @@ function estimate(category, quality, area, floors) {
 }
 
 // ================= BO'LIMLAR =================
-const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "bolimlar", "galereya", "mahsulotlar", "sozlamalar"];
+const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "bolimlar", "rasm", "galereya", "mahsulotlar", "sozlamalar"];
 let firstDesignerVisit = true;
 function showView(v, scroll = true) {
   if (v === "qogoz") { v = "erkin"; if (window.UstunErkin) UstunErkin.set("qolda"); }   // Oq qog'oz endi Erkin qurish ichida
@@ -33,7 +33,8 @@ function showView(v, scroll = true) {
   try { localStorage.setItem("ustun-view", v); } catch {}
   if (v === "sozlamalar" && typeof UstunSettings !== "undefined") UstunSettings.render();
   if (v === "gp" && window.UstunGP) UstunGP.render();
-  if (v === "bolimlar" && window.UstunRP) UstunRP.render();                               // muhandislik bo'limlari joriy binodan
+  if (v === "bolimlar" && window.UstunRP) UstunRP.render();
+  if (v === "rasm" && window.UstunRasm) UstunRasm.render();                                // rasmdan dizayn rejasi                               // muhandislik bo'limlari joriy binodan
   if (v === "ar" && window.UstunAR) UstunAR.render();                                     // arxitektura chizmalari joriy binodan                                     // bosh reja joriy loyihadan chiziladi   // saqlangan loyihalar ro'yxati yangilansin
   if (v === "konstruktor") {
     render();

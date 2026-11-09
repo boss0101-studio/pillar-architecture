@@ -1594,3 +1594,67 @@ html.menu-open .nav-burger i::after { transform: translateY(-6px) rotate(-45deg)
 }
 @media (prefers-reduced-motion: reduce) { html.menu-open .nav.has-burger ul > li.nav-tile > a::before { transition: none; } }
 html.menu-open .ai-btn, html.menu-open .bgp-btn, html.menu-open .ai { display: none !important; }   /* menyu ochiq: suzuvchi tugmalar kartochkalarni to'smasin */
+
+/* ---------- RASMDAN DIZAYN ---------- */
+.rz-grid { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 28px; align-items: start; }
+.rz-in { display: grid; gap: 10px; position: sticky; top: calc(var(--nav-h, 64px) + 12px); }
+.rz-drop { display: grid; place-items: center; gap: 6px; min-height: 220px; padding: 18px; border: 2px dashed var(--line); background: var(--surface); text-align: center; cursor: pointer; overflow: hidden; transition: border-color .2s, background .2s; }
+.rz-drop:hover, .rz-drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); }
+.rz-drop.has { padding: 0; border-style: solid; min-height: 0; }
+.rz-drop img { display: block; width: 100%; max-height: 320px; object-fit: cover; }
+.rz-drop-ic { font-size: 2.2rem; }
+.rz-drop small { color: var(--muted); }
+.rz-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.rz-pal { display: flex; height: 26px; border: 1px solid var(--line); overflow: hidden; }
+.rz-pal span { background: var(--c); }
+.rz-h { margin: 8px 0 0; font: 600 .74rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rz-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.rz-seg button { font: inherit; font-size: .85rem; padding: 7px 11px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+.rz-seg button[aria-checked="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+.rz-seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rz-area { display: flex; align-items: center; gap: 10px; font-size: .9rem; margin-top: 6px; }
+.rz-area input { width: 8em; font: inherit; padding: 6px 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.rz-go { margin-top: 8px; justify-self: start; }
+.rz-go[disabled] { opacity: .5; cursor: not-allowed; }
+.rz-ai-note { font-size: .8rem; margin: 0; }
+.rz-out { display: grid; gap: 14px; min-width: 0; }
+.rz-empty { border: 1px dashed var(--line); padding: 40px 24px; text-align: center; color: var(--muted); }
+.rz-empty b { color: var(--fg); font-size: 1.1rem; }
+.rz-head { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: center; }
+.rz-head img { width: 110px; height: 110px; object-fit: cover; border: 1px solid var(--line); }
+.rz-head h2 { margin: 4px 0; font-size: clamp(1.4rem, 3vw, 2rem); }
+.rz-head p { margin: 0; color: var(--muted); }
+.rz-card { border: 1px solid var(--line); background: var(--surface); padding: 14px 16px; }
+.rz-card > b { display: block; margin-bottom: 8px; font-size: 1rem; }
+.rz-card ul, .rz-card ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.rz-card h4 { margin: 10px 0 4px; font-size: .85rem; }
+.rz-ai { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); }
+.rz-ai b small { font: 500 .7rem var(--font-mono); color: var(--accent); margin-left: 6px; }
+.rz-wait { display: flex; gap: 10px; align-items: center; color: var(--muted); }
+.rz-dl { display: grid; grid-template-columns: minmax(110px, 180px) minmax(0, 1fr); gap: 6px 16px; margin: 0; }
+.rz-dl dt { font-weight: 600; }
+.rz-dl dd { margin: 0; color: var(--fg); }
+.rz-sw { display: flex; flex-wrap: wrap; gap: 10px; }
+.rz-sw span { display: grid; gap: 4px; justify-items: center; }
+.rz-sw i { width: 58px; height: 58px; border: 1px solid var(--line); }
+.rz-sw small { font: .7rem var(--font-mono); color: var(--muted); }
+.rz-sw .keep i { outline: 2px dashed var(--accent); outline-offset: 2px; }
+.rz-kpi { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rz-kpi div { display: grid; gap: 2px; }
+.rz-kpi strong { font: 700 1.4rem var(--font-mono); color: var(--accent); }
+.rz-kpi small { color: var(--muted); }
+.rz-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rz-actions a { text-decoration: none; }
+.rz-k { font-size: .82rem; margin: 0; }
+@media (max-width: 860px) {
+  .rz-grid { grid-template-columns: minmax(0, 1fr); }
+  .rz-in { position: static; }
+  .rz-dl { grid-template-columns: minmax(0, 1fr); }
+  .rz-dl dd { margin-bottom: 6px; }
+}
+@media print {
+  html.rz-printing body * { visibility: hidden !important; }
+  html.rz-printing .rz-out, html.rz-printing .rz-out * { visibility: visible !important; }
+  html.rz-printing .rz-out { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+  html.rz-printing .rz-actions { display: none; }
+}

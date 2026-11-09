@@ -347,6 +347,7 @@ Saytdagi bo'limlar va imkoniyatlar (faqat shular haqida gapir, yo'q imkoniyatni 
 - Erkin qurish (builder.html): tayyor quti yo'q. Tashqi/ichki devorni nuqtama-nuqta chizish (0,5 m to'r, uchlarga yopishish, Shift — to'g'ri burchak, boshlang'ich nuqtani bosish — kontur yopiladi, Enter yoki ikki marta bosish — tugatish), eshik va deraza, qavat qo'shish (tashqi devorlar nusxasi yoki bo'sh), devor qalinligi va materiali (g'isht, gazoblok, beton), tom (tekis yoki tomsiz), fundament chuqurligi. Hisob: devor uzunligi, brutto/netto yuza, hajm; g'isht 394 dona/m³ va qorishma 0,24 m³/m³; gazoblok 27,8 dona/m³; beton va armatura 80 kg/m³; lenta fundament = uzunlik × (qalinlik + 0,2) × chuqurlik, armatura 60 kg/m³; pol maydoni = yopiq kontur − perimetr × qalinlik/2 − ichki devorlar; yopma plitalar; yorug'lik (deraza/pol ≥ 12,5%); smeta va CSV. Pol, fundament va tom faqat yopiq konturdan hisoblanadi.
 - Oq qog'oz (paper.html): qo'lda chizish (qiyshiq chiziq to'g'ri devorga aylanadi), chizg'ich (15° qadam), go'niya (90°), uchburchak (30/45/60°), transportir (5°), sirkul (aylana/yarim aylana), to'rtburchak va ko'pburchak shablonlari, o'chirg'ich; "3D ga o'tkazish", "Yonma-yon"; Erkin qurishga yangi loyiha yoki mavjud loyihaga birlashtirish.
 - Mahsulotlar: katalog, savat, buyurtma. Galereya: saqlangan dizaynlar.
+- Rasmdan dizayn (rasm.html): uy, xona yoki hovli rasmini yuklab (telefonda kamera), maqsad, uslub va byudjetni tanlab dizayn rejasi olish: rasm ranglari, palitra, qismlar bo'yicha maslahat, ish tartibi, narx va muddat; Konstruktorda shu uslubda boshlash.
 - Loyiha bo'limlari (bolimlar.html): GP bosh reja, AR arxitektura chizmalari, KR konstruksiyalar (AS/KJ/KM/KD), OV isitish va ventilyatsiya, VK suv va kanalizatsiya, EOM elektr, GS gaz, SS aloqa, PS yong'in xavfsizligi, TX texnologiya, POS qurilishni tashkil etish, OOS ekologiya, SM smeta — binodan avtomatik A3 varaqlar, yaqinlashtirish, SVG va PDF.
 - Sozlamalar: profil, ma'lumotlarim, zaxira nusxa/tiklash, hisobni o'chirish; yangi loyiha standartlari, Erkin qurish standartlari, smeta narxlari, saqlangan loyihalar; mavzu, matn o'lchami, animatsiyalar, orqa fon (9 ta arxitektura rasmi, 3D jonli fon).
 - Pastki chapda "Fon" tugmasi, pastki o'ngda shu "AI yordamchi".
@@ -467,7 +468,7 @@ AI_DESIGN_TOOL = {
 }
 # Bo'limga o'tish: model kalitni tanlaydi, brauzer (ai.js) o'zi ochadi
 NAV_KEYS = {"bosh": "Bosh sahifa", "tezkor": "Tezkor loyiha", "konstruktor": "Konstruktor", "erkin": "Erkin qurish", "qogoz": "Qo'lda chizish",
-            "gp": "Bosh reja (GP)", "ar": "Arxitektura (AR)", "bolimlar": "Loyiha bo'limlari", "kr": "Konstruksiyalar (AS/KJ/KM/KD)",
+            "gp": "Bosh reja (GP)", "ar": "Arxitektura (AR)", "bolimlar": "Loyiha bo'limlari", "rasm": "Rasmdan dizayn", "kr": "Konstruksiyalar (AS/KJ/KM/KD)",
             "ov": "Isitish va ventilyatsiya (OV)", "vk": "Suv va kanalizatsiya (VK)", "eom": "Elektr (EOM)", "gs": "Gaz (GS)", "ss": "Aloqa (SS)",
             "ps": "Yong'in xavfsizligi (PS)", "tx": "Texnologik yechimlar (TX)", "pos": "Qurilishni tashkil etish (POS)", "oos": "Atrof-muhit (OOS)",
             "sm": "Smeta (SM)", "galereya": "Galereya", "mahsulotlar": "Mahsulotlar", "sozlamalar": "Sozlamalar"}

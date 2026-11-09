@@ -48,14 +48,14 @@
   window.addEventListener("unhandledrejection", e => { const r = e.reason; if (r && r.stack && /\.js/.test(r.stack) && !r.stack.includes(location.origin)) return; pushErr(r && r.message ? r.message : String(r), "promise"); });
 
   // ---------- Sahifa va uning holati ----------
-  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", gp: "Bosh reja", ar: "Arxitektura chizmalari", bolimlar: "Loyiha bo'limlari (KR, OV, VK, EOM, GS, SS, PS, TX, POS, OOS, SM)", qogoz: "Qo'lda chizish", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
+  const PAGES = { bosh: "Bosh sahifa", konstruktor: "Konstruktor", erkin: "Erkin qurish", gp: "Bosh reja", ar: "Arxitektura chizmalari", bolimlar: "Loyiha bo'limlari (KR, OV, VK, EOM, GS, SS, PS, TX, POS, OOS, SM)", rasm: "Rasmdan dizayn (rasm yuklab dizayn rejasi)", qogoz: "Qo'lda chizish", galereya: "Galereya", mahsulotlar: "Mahsulotlar", sozlamalar: "Sozlamalar", admin: "Admin panel" };
   function page() {
     const r = page0(); return r === "erkin" && window.UstunErkin && UstunErkin.mode === "qolda" ? "qogoz" : r;   // qo'lda chizish — o'z maslahatlari
   }
   function page0() {
     if (isWeb()) { const v = [...document.querySelectorAll(".view")].find(x => !x.hidden); return v ? v.id : "bosh"; }
     const f = location.pathname.split("/").pop() || "index.html";
-    return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "ar.html": "ar", "bolimlar.html": "bolimlar", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" }[f] || "bosh";
+    return { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "gp.html": "gp", "ar.html": "ar", "bolimlar.html": "bolimlar", "rasm.html": "rasm", "paper.html": "qogoz", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" }[f] || "bosh";
   }
   const visible = el => !!(el.offsetParent || el.getClientRects().length);
   function context() {
@@ -109,6 +109,7 @@
     { k: "pos", v: "bolimlar", rp: "pos", n: "Qurilishni tashkil etish (POS)", w: ["pos", "pic", "qurilishni tashkil", "stroygenplan", "kalendar reja", "construction organi", "organizacion de obra", "организац"] },
     { k: "oos", v: "bolimlar", rp: "oos", n: "Atrof-muhit muhofazasi (OOS)", w: ["oos", "atrof-muhit", "atrof muhit", "ekolog", "environment", "medio ambiente", "окружающ", "эколог"] },
     { k: "sm", v: "bolimlar", rp: "sm", n: "Smeta (SM)", w: ["sm", "smeta", "estimate", "cost estimate", "presupuesto", "смет"] },
+    { k: "rasm", v: "rasm", f: "rasm.html", n: "Rasmdan dizayn", w: ["rasmdan dizayn", "rasm boyicha", "rasmga ol", "foto", "photo design", "design from photo", "diseno desde foto", "по фото", "фото"] },
     { k: "galereya", v: "galereya", f: "designer.html#galereya", n: "Galereya", w: ["galereya", "gallery", "galeria", "галере"] },
     { k: "mahsulotlar", v: "mahsulotlar", f: "shop.html", n: "Mahsulotlar", w: ["mahsulot", "katalog", "savat", "products", "catalog", "cart", "productos", "carrito", "товар", "каталог", "корзин"] },
     { k: "sozlamalar", v: "sozlamalar", f: "settings.html", n: "Sozlamalar", w: ["sozlama", "profil", "settings", "ajustes", "configuracion", "настройк", "профил"] },
@@ -252,7 +253,7 @@
     `Free build (draw walls from scratch, doors/windows, floors, foundation/brick/concrete/estimate with formulas), ` +
     `Blank Paper (freehand drawing, ruler, set square, triangle, protractor, compass, templates, convert to 3D, send to Free build), Products and cart, ` +
     `Settings (profile, backup, defaults, estimate prices, theme, language, 2D/3D background), ` +
-    `Project sections: GP site plan, AR architecture drawings, KR structures (AS/KJ/KM/KD), OV heating and ventilation, VK water and sewerage, EOM electrical, GS gas, SS communications, PS fire safety, TX process, POS construction organisation, OOS environment, SM estimate — A3 sheets generated from the building, zoomable, SVG/PDF export. ` +
+    `Design from photo (upload or take a photo of a house, room or yard; choose goal, style, budget; get a design plan with palette, advice per part, steps, cost and time; Claude analyzes the photo), Project sections: GP site plan, AR architecture drawings, KR structures (AS/KJ/KM/KD), OV heating and ventilation, VK water and sewerage, EOM electrical, GS gas, SS communications, PS fire safety, TX process, POS construction organisation, OOS environment, SM estimate — A3 sheets generated from the building, zoomable, SVG/PDF export. ` +
     `SCOPE: answer ONLY questions about this website and the user's building project (designing, drawings, sections, calculations, materials, estimates, construction of their building). ` +
     `If a question is unrelated (news, weather, currency, general knowledge, other subjects, coding, homework, chit-chat beyond a greeting), do not answer it: say in one short sentence that you only help with the Pillar project and suggest two things you can do. ` +
     `NAVIGATION: when the user asks to go to, open or show a section or page, call the go_to_section tool with its key instead of describing how to get there, then confirm in one short sentence. ` +

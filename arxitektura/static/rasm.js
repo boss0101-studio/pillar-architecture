@@ -386,9 +386,24 @@ const UstunRasm = (function () {
     return { ...last.S.k, ...out };
   }
   // Konstruktorda yangi loyiha: rasmdagi tuzilish (qavat, ustun, o'lcham, tom, kataklar); style — material va derazalar yangi uslubda
-  function build(style) {
+  // Ramka ichidagi devorlar qismi — 3D old fasad teksturasi uchun (eni ≤ 1400 px)
+  async function cropFacade() {
+    const im = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = img.dataUrl; });   // decode() fondagi oynada osilib qolishi mumkin
+    const [x0, y0, x1, y1] = match.rect, sx = x0 * im.naturalWidth, sy = y0 * im.naturalHeight, sw = (x1 - x0) * im.naturalWidth, sh = (y1 - y0) * im.naturalHeight;
+    const k = Math.min(1, 1400 / sw), c = document.createElement("canvas"); c.width = Math.max(1, Math.round(sw * k)); c.height = Math.max(1, Math.round(sh * k));
+    c.getContext("2d").drawImage(im, sx, sy, sw, sh, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.82);
+  }
+  const photoSig = p => [p.shape || "rect", p.floors, p.bays, Number(p.bay_w).toFixed(2), Number(p.floor_h).toFixed(2)].join("|");   // view3d.js bilan bir xil
+  async function build(style) {
     if (!match) match = newMatch();
     const { p } = matchParams(style), cells = Object.entries(cellsOf()).map(([k, t]) => { const [f, b] = k.split(",").map(Number); return { floor: f + 1, bay: b + 1, type: t }; });
+    // aslidek: 3D'da old fasad rasmning o'zi; yangi uslub: rasm olib tashlanadi (ko'rinish ataylab o'zgaradi)
+    try {
+      if (style) localStorage.removeItem("ustun-fasad-foto");
+      else localStorage.setItem("ustun-fasad-foto", JSON.stringify({ sig: photoSig(p), img: await cropFacade() }));
+    } catch { /* joy yetmasa — 3D odatdagi fasad bilan */ }
+    window.dispatchEvent(new Event("ustun-fasad-foto"));
     const acts = [{ type: "new_design", name: style ? `${STYLES[st.style].n} uslubida (rasmdan)` : "Rasmdagi uy", params: p, cells }];
     if (web() && window.AIDesign && AIDesign.available()) {
       const r = AIDesign.apply(acts);

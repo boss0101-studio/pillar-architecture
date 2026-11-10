@@ -89,6 +89,7 @@ USTUN_I18N.es = {
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "Añade 2–3 casas y colócalas en el plano general; el patio también se activa aquí.",
  "3D ga o'tkazish": "Pasar a 3D",
  "44 soniyada": "En 44 segundos",
+ "46 soniyada": "En 46 segundos",
  "AI bilan qayta tahlil": "Reanalizar con IA",
  "AI bu serverda sozlanmagan: kutubxona yoki kalit yo'q.": "La IA no está configurada en este servidor: falta la biblioteca o la clave.",
  "AI hozir band — oflayn javob berildi.": "La IA está ocupada: se dio una respuesta sin conexión.",

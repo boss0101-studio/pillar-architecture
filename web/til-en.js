@@ -89,6 +89,7 @@ USTUN_I18N.en = {
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "Add 2–3 houses and arrange them on the site plan; the yard is turned on here too.",
  "3D ga o'tkazish": "Switch to 3D",
  "44 soniyada": "In 44 seconds",
+ "46 soniyada": "In 46 seconds",
  "AI bilan qayta tahlil": "Re-analyse with AI",
  "AI bu serverda sozlanmagan: kutubxona yoki kalit yo'q.": "AI is not configured on this server: library or key missing.",
  "AI hozir band — oflayn javob berildi.": "AI is busy right now — an offline answer was given.",

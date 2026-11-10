@@ -4,8 +4,11 @@
 <style>body{margin:0;background:#111;color:#eee;font:14px Archivo,sans-serif}canvas{width:960px;height:540px;display:block}#log{padding:8px;font-family:monospace}</style></head>
 <body><canvas id="c" width="1920" height="1080"></canvas><div id="log">tayyorlanmoqda…</div>
 <script src="building.js"></script><script src="interior.js"></script><script src="bolimlar.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script><!-- faqat tekshirish: QR videodan qayta o'qiladi -->
 <script>
 // Pillar Architecture — reklama videosi: 1920×1080, 30 kadr/s. Har kadr canvas'da chiziladi, WebCodecs H.264 bilan kodlanadi (real vaqt shart emas).
+const SITE_URL = "https://boss0101-studio.github.io/pillar-architecture/";   // QR kod shu manzilni ochadi
 const W = 1920, H = 1080, FPS = 30, ACC = "#6f86ff", VBG = "#0f1214";
 const c = document.getElementById("c"), x = c.getContext("2d"), log = s => { document.getElementById("log").textContent = s; };
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), ease = t => 1 - Math.pow(1 - clamp(t), 3), lerp = (a, b, t) => a + (b - a) * t;
@@ -113,12 +116,22 @@ const SC = [
       x.fillStyle = "#fff"; x.textBaseline = "middle"; x.fillText(full, px + 32, py + 47 + (1 - a) * 20); x.restore(); py += 130;
     });
   } },
-  { d: 5, draw(t, s) {                                                        // 8. Yakun
+  { d: 7, draw(t, s) {                                                        // 8. Yakun (QR skanerlash uchun uzunroq)
+    t = s / 5;                                                                // animatsiyalar 5 s o'lchovida qoladi
     cover(A.h5, lerp(1.1, 1.0, s / 5), .5, .55); x.fillStyle = "rgba(10,12,14,.62)"; x.fillRect(0, 0, W, H);
-    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 230px ${D}`; x.textAlign = "center"; x.fillStyle = "#fff"; const lw = x.measureText("PILLAR").width; x.fillText("PILLAR", W / 2 - 30, 520); x.fillStyle = ACC; x.textAlign = "left"; x.fillText(".", W / 2 - 30 + lw / 2, 520); x.restore();
-    txt("Arxitektura loyihalash platformasi", W / 2, 610, `500 46px ${B}`, "#fff", t, .2, "center");
-    const a = ease((t - .35) / .5); if (a > 0) { x.save(); x.globalAlpha = a; x.font = `600 40px ${M}`; const url = "boss0101-studio.github.io/pillar-architecture", w = x.measureText(url).width + 90; rr(W / 2 - w / 2, 690, w, 96, 48); x.fillStyle = "#fff"; x.fill(); x.fillStyle = VBG; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(url, W / 2, 740); x.restore(); }
-    txt("Bepul sinab ko'ring", W / 2, 880, `700 56px ${D}`, "#fff", t, .5, "center");
+    // chapda: logotip va chaqiriq; o'ngda: sayt QR kodi (modullar butun pikselga — telefon kamerasi aniq o'qisin)
+    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 220px ${D}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", 160, 500); const lw = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", 160 + lw, 500); x.restore();
+    txt("Arxitektura loyihalash platformasi", 166, 580, `500 46px ${B}`, "#fff", t, .2);
+    txt("BEPUL SINAB KO'RING", 166, 700, `800 76px ${D}`, "#fff", t, .35);
+    txt("Telefon kamerasini QR kodga qarating →", 166, 770, `500 36px ${B}`, "rgba(255,255,255,.85)", t, .45);
+    const a = ease((t - .1) / .2);                                            // QR 1,5 s da to'liq ko'rinadi va oxirigacha turadi
+    if (a > 0) {
+      const box = 470, bx = 1290, by = 215, n = A.qr.n, quiet = 2, mod = Math.floor((box - 40) / (n + quiet * 2)), qs = mod * (n + quiet * 2), ox = bx + Math.round((box - qs) / 2) + quiet * mod, oy = by + Math.round((box - qs) / 2) + quiet * mod;
+      x.save(); x.globalAlpha = a; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 50; rr(bx, by, box, box, 28); x.fillStyle = "#fff"; x.fill(); x.shadowBlur = 0;
+      x.fillStyle = "#0f1214"; for (let r = 0; r < n; r++) for (let cc = 0; cc < n; cc++) if (A.qr.dark[r][cc]) x.fillRect(ox + cc * mod, oy + r * mod, mod, mod);
+      x.restore();
+      txt("Skanerlang — saytni oching", bx + box / 2, by + box + 70, `600 36px ${B}`, "#fff", t, .4, "center");
+    }
     txt("Fotolar: Unsplash (bepul litsenziya)", W / 2, 1040, `400 24px ${M}`, "rgba(255,255,255,.55)", t, .6, "center");
   } },
 ];
@@ -138,6 +151,8 @@ async function prepare() {
   await Promise.all([`800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f)));
   const [h1, h5, u5, u2, bk, bb, br, bm] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg"].map(load));
   A = { h1, h5, u5, u2, bk, bb, br, bm };
+  const q = qrcode(0, "M"); q.addData(SITE_URL); q.make();                              // xatoni tuzatish darajasi M (~15%)
+  const n = q.getModuleCount(); A.qr = { n, dark: [...Array(n)].map((_, r) => [...Array(n)].map((_, cc) => q.isDark(r, cc))) };
   const P = (o, cells = {}) => ({ params: { ...DEFAULT_PARAMS, ...o }, cells });
   const designs = [P({ category: "turar-joy", floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht", window: "oddiy", ground: "oddiy" }, { "1,0": "balc", "1,3": "balc" }),
     P({ category: "turar-joy", floors: 2, bays: 6, floor_h: 3.3, bay_w: 4.2, depth: 14, roof: "piramida", material: "travertin", window: "panorama", ground: "oddiy" }, { "1,1": "balc", "1,4": "balc" }),
@@ -259,6 +274,8 @@ async function encode() {
   frame(3.2); const jpg = await new Promise(res2 => c.toBlob(res2, "image/jpeg", 0.85)); const r2 = await (await fetch("/poster", { method: "POST", body: jpg })).json();
   return { codec: cfg.codec, frames: N, seconds: TOTAL, mux: res, poster: r2 };
 }
+// QR tekshiruvi: yakuniy sahna kadridan jsQR bilan qayta o'qish
+window.CHECKQR = sec => { frame(sec); const d = x.getImageData(0, 0, W, H); const r = typeof jsQR === "function" ? jsQR(d.data, W, H) : null; return r ? r.data : null; };
 window.RUN = async () => { await prepare(); frame(3.2); log("tayyor"); return true; };
 window.ENCODE = encode;
 window.PREVIEW = sec => { frame(sec); return true; };

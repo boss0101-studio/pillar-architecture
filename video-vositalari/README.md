@@ -1,6 +1,6 @@
 # Reklama videosini qayta yasash
 
-Video: `web/video/pillar-reklama.mp4` (1920×1080, 30 kadr/s, ~54 s, H.264 + AAC 160 kbit/s). Oxirida sayt QR kodi (qrcode-generator, M daraja), videodan jsQR bilan o'qilishi tekshiriladi: `CHECKQR(43)`. Musiqa original: brauzerda sintez qilinadi (96 BPM, Am–F–C–G; pad, arpedjio, bas, baraban, sahna o'tishlarida "vush", yakunda zarba) — mualliflik huquqi muammosiz.
+Video: `web/video/pillar-reklama.mp4` (1920×1080, 30 kadr/s, ~60 s, H.264 + AAC 160 kbit/s). Oxirida sayt QR kodi (qrcode-generator, M daraja), videodan jsQR bilan o'qilishi tekshiriladi: `CHECKQR(43)`. Musiqa original: brauzerda sintez qilinadi (96 BPM, Am–F–C–G; pad, arpedjio, bas, baraban, sahna o'tishlarida "vush", yakunda zarba) — mualliflik huquqi muammosiz.
 
 0. Diktor: `python video-vositalari/diktor.py` (edge-tts, o'zbekcha erkak ovozi uz-UZ-SardorNeural) → `video-vositalari/ovoz/1…8.mp3`; ularni `web/_ovoz/` ga nusxalang. Sahna diktor jumlasidan qisqa bo'lsa, o'zi uzayadi; musiqa gap paytida pasayadi.
 1. `generator.html`ni `web/_video.html` nomi bilan `web/` papkasiga nusxalang (u `building.js`, `bolimlar.js`, `hero/`, `fon/` fayllaridan foydalanadi).

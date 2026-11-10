@@ -39,6 +39,70 @@ function head(t, kicker, title, sub, px = 140, py = 560) {
   lines.forEach((l, i) => txt(l, px, py + (title.split("\n").length - 1) * 132 + 90 + i * 54, `400 38px ${B}`, "rgba(255,255,255,.88)", t, 0.25 + i * 0.05));
 }
 function wrap(s, font, max) { x.font = font; const out = []; let line = ""; s.split(" ").forEach(w => { const tr = line ? line + " " + w : w; if (x.measureText(tr).width > max && line) { out.push(line); line = w; } else line = tr; }); if (line) out.push(line); return out; }
+// chizma qog'ozi: iliq oq, mayda katakli to'r (arxitektor varag'i)
+function paper(px, py, w, h) {
+  x.save(); rr(px, py, w, h, 26); x.fillStyle = "#f6f3ec"; x.fill(); x.clip();
+  x.strokeStyle = "rgba(60,90,140,.10)"; x.lineWidth = 1; for (let gx = px + 20; gx < px + w; gx += 26) { x.beginPath(); x.moveTo(gx, py); x.lineTo(gx, py + h); x.stroke(); } for (let gy = py + 20; gy < py + h; gy += 26) { x.beginPath(); x.moveTo(px, gy); x.lineTo(px + w, gy); x.stroke(); }
+  x.restore();
+}
+// qalam: sariq tanasi, yog'och konusi va grafit uchi (uchi — chizilayotgan nuqta)
+function pencil(tx, ty) {
+  x.save(); x.translate(tx, ty); x.rotate(-0.75);
+  x.fillStyle = "#2b2b2b"; x.beginPath(); x.moveTo(0, 0); x.lineTo(14, -5); x.lineTo(14, 5); x.closePath(); x.fill();
+  x.fillStyle = "#e8c48f"; x.beginPath(); x.moveTo(14, -5); x.lineTo(40, -13); x.lineTo(40, 13); x.lineTo(14, 5); x.closePath(); x.fill();
+  x.fillStyle = "#f2b630"; x.fillRect(40, -13, 150, 26); x.fillStyle = "rgba(0,0,0,.12)"; x.fillRect(40, 4, 150, 9);
+  x.fillStyle = "#b9bcc0"; x.fillRect(190, -13, 18, 26); x.fillStyle = "#e58b8b"; x.fillRect(208, -13, 22, 26);
+  x.restore();
+}
+// Erkin qurish rejasi: 12×9 m uy, 3 xona. 0–3 s — qo'lda (titroq, uchlari chiqib turgan chiziqlar), 3–4 s — to'g'rilanadi, so'ng o'lcham va maydonlar
+const PLAN = { W: 12, D: 9, segs: [[0, 0, 12, 0], [12, 0, 12, 9], [12, 9, 0, 9], [0, 9, 0, 0], [5, 0, 5, 9], [5, 5, 12, 5]],
+  rooms: [["Mehmonxona", 2.5, 4.5, 45], ["Yotoqxona", 8.5, 2.5, 35], ["Oshxona", 8.5, 7, 28]] };
+function planSketch(cx, cy, cw, ch, s) {
+  const pad = 110, sc = Math.min((cw - pad * 2) / PLAN.W, (ch - pad * 2) / PLAN.D), ox = cx + (cw - PLAN.W * sc) / 2, oy = cy + (ch - PLAN.D * sc) / 2 - 10;
+  const P = (mx, my) => [ox + mx * sc, oy + my * sc];
+  const draw = Math.min(1, s / 2.8), morph = ease((s - 3.0) / 0.9), lens = PLAN.segs.map(([a, b, c, d]) => Math.hypot(c - a, d - b)), total = lens.reduce((q, v) => q + v, 0);
+  let acc = 0; const col = `rgb(${Math.round(lerp(34, 29, morph))},${Math.round(lerp(34, 58, morph))},${Math.round(lerp(34, 138, morph))})`;
+  x.save(); x.lineCap = "round"; x.lineJoin = "round"; x.strokeStyle = col; x.lineWidth = lerp(5, 7, morph);
+  PLAN.segs.forEach(([a, b, c, d], si) => {
+    const frac = clamp((draw * total - acc) / lens[si]); acc += lens[si]; if (frac <= 0) return;
+    const over = 0.35 * (1 - morph), ux = (c - a) / lens[si], uy = (d - b) / lens[si], nx = -uy, ny = ux, n = 40;
+    x.beginPath();
+    for (let j = 0; j <= n * frac; j++) {
+      const u = j / n, L = lens[si] + over * 2, along = -over + u * L, wob = (1 - morph) * (0.18 * Math.sin(u * 7 + si * 2.1) + 0.07 * Math.sin(u * 23 + si));
+      const [px2, py2] = P(a + ux * along + nx * wob, b + uy * along + ny * wob);
+      j ? x.lineTo(px2, py2) : x.moveTo(px2, py2);
+    }
+    x.stroke();
+  });
+  // qalam uchi chizilayotgan joyda
+  if (draw < 1) { let rem = draw * total; for (let si = 0; si < PLAN.segs.length; si++) { if (rem <= lens[si]) { const [a, b, c, d] = PLAN.segs[si], u = rem / lens[si]; pencil(...P(a + (c - a) * u, b + (d - b) * u)); break; } rem -= lens[si]; } }
+  // o'lchamlar va xona maydonlari (aniq chizmadan keyin)
+  const da = ease((s - 3.9) / 0.6);
+  if (da > 0) {
+    x.globalAlpha *= da; x.strokeStyle = "#1d3a8a"; x.fillStyle = "#1d3a8a"; x.lineWidth = 2; x.font = `600 26px ${M}`; x.textAlign = "center";
+    const [l0, b0] = P(0, PLAN.D), [r0] = P(PLAN.W, 0); x.beginPath(); x.moveTo(l0, b0 + 40); x.lineTo(r0, b0 + 40); x.moveTo(l0, b0 + 28); x.lineTo(l0, b0 + 52); x.moveTo(r0, b0 + 28); x.lineTo(r0, b0 + 52); x.stroke(); x.fillText("12,00", (l0 + r0) / 2, b0 + 34);
+    const [, t0] = P(0, 0); x.beginPath(); x.moveTo(l0 - 40, t0); x.lineTo(l0 - 40, b0); x.moveTo(l0 - 52, t0); x.lineTo(l0 - 28, t0); x.moveTo(l0 - 52, b0); x.lineTo(l0 - 28, b0); x.stroke();
+    x.save(); x.translate(l0 - 48, (t0 + b0) / 2); x.rotate(-Math.PI / 2); x.fillText("9,00", 0, 0); x.restore();
+    PLAN.rooms.forEach(([nm, mx, my, ar], j) => { const ra = ease((s - 4.2 - j * .15) / .4); if (ra <= 0) return; x.save(); x.globalAlpha *= ra; const [qx, qy] = P(mx, my); x.font = `600 28px ${B}`; x.fillStyle = "#222"; x.fillText(nm, qx, qy); x.font = `600 26px ${M}`; x.fillStyle = "#1d3a8a"; x.fillText(`${ar} m²`, qx, qy + 36); x.restore(); });
+  }
+  x.restore();
+}
+// Fasad SVG → qora qalam chizmasi: qirralar (Sobel) qora grafit, qog'oz shaffof; mayda donalik — qalam izi
+function sketchify(img) {
+  const w = Math.round(img.width), h = Math.round(img.height), c0 = document.createElement("canvas"); c0.width = w; c0.height = h;
+  const g0 = c0.getContext("2d"); g0.fillStyle = "#fff"; g0.fillRect(0, 0, w, h); g0.drawImage(img, 0, 0, w, h);
+  const src = g0.getImageData(0, 0, w, h).data, L = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) L[i] = 0.3 * src[i * 4] + 0.59 * src[i * 4 + 1] + 0.11 * src[i * 4 + 2];
+  const out = g0.createImageData(w, h), o = out.data;
+  let seed = 7; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  for (let y = 1; y < h - 1; y++) for (let xx = 1; xx < w - 1; xx++) {
+    const i = y * w + xx, gx = -L[i - w - 1] - 2 * L[i - 1] - L[i + w - 1] + L[i - w + 1] + 2 * L[i + 1] + L[i + w + 1], gy = -L[i - w - 1] - 2 * L[i - w] - L[i - w + 1] + L[i + w - 1] + 2 * L[i + w] + L[i + w + 1];
+    const m = Math.min(1, Math.hypot(gx, gy) / 220), shade = (255 - L[i]) / 255 * 0.12;                      // qirra + juda yengil tus (shtrix o'rnida)
+    const a = Math.min(1, Math.pow(m, 0.8) * (0.75 + 0.25 * rnd()) + shade * (rnd() < 0.5 ? 1 : 0));
+    o[i * 4] = 26; o[i * 4 + 1] = 26; o[i * 4 + 2] = 28; o[i * 4 + 3] = Math.round(a * 255);
+  }
+  g0.putImageData(out, 0, 0); return c0;
+}
 function logo(px, py, size = 54, a = 1) { x.save(); x.globalAlpha = a; x.font = `800 ${size}px ${D}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", px, py); const w = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", px + w, py); x.restore(); }
 function chip(s, px, py, a, fill = "rgba(255,255,255,.1)", stroke = "rgba(255,255,255,.35)") {
   x.save(); x.globalAlpha = a; x.font = `500 28px ${M}`; const w = x.measureText(s).width + 44; rr(px, py, w, 58, 29); x.fillStyle = fill; x.fill(); x.strokeStyle = stroke; x.lineWidth = 2; x.stroke();
@@ -56,12 +120,23 @@ const SC = [
   { d: 6, draw(t, s) {                                                        // 2. Konstruktor
     cover(A.bk, 1.05, .5, .5, .5); x.fillStyle = "rgba(10,12,14,.72)"; x.fillRect(0, 0, W, H);
     head(t, "KONSTRUKTOR", "Binoni o'zingiz\nloyihalang", "Qavat, tom, material va derazalar — bir necha bosishda. Natija darhol chizma va 3D'da.", 120, 520);
+    // qog'oz kartochka: uy qora qalamda chapdan o'ngga chizilib boradi (qalam uchi chiziq bo'ylab), keyingi uy yangi varaqda
     const cx = 1040, cy = 150, cw = 760, ch = 640, k = ease((t - .15) / .5);
-    x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); rr(cx, cy, cw, ch, 26); x.fillStyle = "#f4f2ee"; x.fill();
-    const i = Math.floor(s / 1.45) % A.fac.length, f = clamp((s % 1.45) / .35);
-    const draw = (img, a) => { x.globalAlpha = k * a; const sc = Math.min((cw - 60) / img.width, (ch - 60) / img.height); x.drawImage(img, cx + (cw - img.width * sc) / 2, cy + (ch - img.height * sc) / 2, img.width * sc, img.height * sc); };
-    draw(A.fac[(i + A.fac.length - 1) % A.fac.length], 1 - f); draw(A.fac[i], f); x.restore();
+    x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); paper(cx, cy, cw, ch);
+    const per = (SC[1].d - 0.4) / A.sketch.length, i = Math.min(A.sketch.length - 1, Math.floor(s / per)), p = clamp((s - i * per) / (per * 0.72));
+    const img = A.sketch[i], sc = Math.min((cw - 70) / img.width, (ch - 70) / img.height), dw = img.width * sc, dh = img.height * sc, dx = cx + (cw - dw) / 2, dy = cy + (ch - dh) / 2;
+    if (i > 0 && p < 0.25) { x.globalAlpha = k * (1 - p / 0.25); const pv = A.sketch[i - 1], s2 = Math.min((cw - 70) / pv.width, (ch - 70) / pv.height); x.drawImage(pv, cx + (cw - pv.width * s2) / 2, cy + (ch - pv.height * s2) / 2, pv.width * s2, pv.height * s2); }
+    x.globalAlpha = k; x.save(); x.beginPath(); x.rect(dx, dy - 10, dw * ease(p), dh + 20); x.clip(); x.drawImage(img, dx, dy, dw, dh); x.restore();
+    if (p > 0 && p < 1) pencil(dx + dw * ease(p), dy + dh * (0.25 + 0.5 * Math.abs(Math.sin(s * 9))));
+    x.restore();
     let px = 1040; ["Qavat", "Tom", "Material", "Deraza", "Balkon"].forEach((l, j) => { px += chip(l, px, 840, ease((t - .4 - j * .08) / .4)) + 14; });
+  } },
+  { d: 6.5, draw(t, s) {                                                      // 3. Erkin qurish: qo'lda eskiz → aniq chizma
+    cover(A.be, 1.04, .5, .5, .35); x.fillStyle = "rgba(10,12,14,.78)"; x.fillRect(0, 0, W, H);
+    head(t, "ERKIN QURISH", "Qo'lda chizing —\naniq chizma tayyor", "Devorlarni qalam bilan chizing: Pillar ularni to'g'rilaydi, o'lcham va maydonlarni hisoblaydi.", 120, 520);
+    const cx = 1040, cy = 150, cw = 760, ch = 640, k = ease((t - .1) / .45);
+    x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); paper(cx, cy, cw, ch);
+    planSketch(cx, cy, cw, ch, s); x.restore();
   } },
   { d: 5.5, draw(t, s) {                                                      // 3. 3D va VR
     cover(A.u5, lerp(1.0, 1.12, s / 5.5), .55, .5); shade(.85, .15);
@@ -150,8 +225,8 @@ function frame(sec) {
 
 async function prepare() {
   await Promise.all([`800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f)));
-  const [h1, h5, u5, u2, bk, bb, br, bm] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg"].map(load));
-  A = { h1, h5, u5, u2, bk, bb, br, bm };
+  const [h1, h5, u5, u2, bk, bb, br, bm, be] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg", "fon/b-erkin.jpg"].map(load));
+  A = { h1, h5, u5, u2, bk, bb, br, bm, be };
   const q = qrcode(0, "M"); q.addData(SITE_URL); q.make();                              // xatoni tuzatish darajasi M (~15%)
   const n = q.getModuleCount(); A.qr = { n, dark: [...Array(n)].map((_, r) => [...Array(n)].map((_, cc) => q.isDark(r, cc))) };
   const P = (o, cells = {}) => ({ params: { ...DEFAULT_PARAMS, ...o }, cells });
@@ -160,6 +235,7 @@ async function prepare() {
     P({ category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" }),
     P({ category: "tijorat", floors: 6, bays: 8, floor_h: 3.6, bay_w: 4.5, depth: 18, roof: "terrasa", material: "travertin", window: "panorama", ground: "vitrina" })];
   A.fac = await Promise.all(designs.map((d, i) => svgImg(renderFacade(d.params, d.cells, { dims: false, uid: "vid" + i }), 1400)));
+  A.sketch = A.fac.map(sketchify);                                                       // qora qalam uslubi
   const sb = P({ floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht" });
   const sheets = [["kr", 1], ["ov", 1], ["vk", 1], ["sm", 0]].map(([k, i]) => UstunRP.sheetsOf(sb, k)[i].svg);
   A.sheets = await Promise.all(sheets.map(s => svgImg(s, 1400)));
@@ -276,7 +352,7 @@ window.MUSIC = async () => { const b = await makeMusic(); return { seconds: b.du
 async function encode() {
   log("musiqa yaratilmoqda…"); const music = await encodeAudio(await makeMusic());
   const cands = ["avc1.640028", "avc1.4d0028", "avc1.420028"]; let cfg = null;
-  for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 2_200_000, framerate: FPS, avc: { format: "avc" }, latencyMode: "quality" }; const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
+  for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 1_600_000, framerate: FPS, avc: { format: "avc" }, latencyMode: "quality" }; const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
   if (!cfg) throw new Error("H.264 kodlash qo'llab-quvvatlanmaydi");
   const chunks = [], keys = []; let avcc = null;
   const enc = new VideoEncoder({ output: (ch, meta) => { if (meta && meta.decoderConfig && meta.decoderConfig.description) avcc = new Uint8Array(meta.decoderConfig.description); const b = new Uint8Array(ch.byteLength); ch.copyTo(b); chunks.push(b); keys.push(ch.type === "key"); }, error: e => { throw e; } });

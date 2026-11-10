@@ -1,5 +1,5 @@
 """Reklama videosi uchun diktor ovozi: har sahnaga bitta jumla, o'zbekcha neyron ovoz (Microsoft Edge TTS, uz-UZ-SardorNeural).
-Natija: video-vositalari/ovoz/1.mp3 … 8.mp3. Ishga tushirish: python video-vositalari/diktor.py  (edge-tts paketi kerak)."""
+Natija: video-vositalari/ovoz/1.mp3 … 9.mp3. Ishga tushirish: python video-vositalari/diktor.py  (edge-tts paketi kerak)."""
 import asyncio, pathlib
 import edge_tts
 
@@ -7,6 +7,7 @@ VOICE = "uz-UZ-SardorNeural"
 LINES = [
     "Pillar — uyingizni bugunoq loyihalang.",
     "Qavat, tom, material va derazalarni tanlang — bino shu zahoti chizmada paydo bo'ladi.",
+    "Erkin qurishda devorlarni qo'lda chizing — Pillar ularni aniq chizmaga aylantiradi.",
     "Uyingizni uch o'lchamda ko'ring, virtual reallikda ichida yuring va mebel joylang.",
     "O'n uchta loyiha bo'limi: bosh reja, arxitektura, konstruksiya, muhandislik tarmoqlari va smeta — chizmalar avtomatik tayyorlanadi.",
     "Uy rasmini yuklang — Pillar dizayn rejasini tuzadi va aynan o'sha uyni Konstruktorda quradi.",

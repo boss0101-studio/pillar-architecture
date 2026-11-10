@@ -149,7 +149,93 @@ async function prepare() {
   A.sheets = await Promise.all(sheets.map(s => svgImg(s, 1400)));
 }
 
+// ---------- Musiqa: original, sintez (mualliflik huquqi muammosiz). 96 BPM, Am–F–C–G, sahnalar almashganda "vush" ----------
+const SR = 48000, BPM = 96, BEAT = 60 / BPM, BAR = BEAT * 4;
+const CUTS = (() => { let t = 0; return SC.map(s => (t += s.d)).slice(0, -1); })();         // sahna chegaralari
+const nf = m => 440 * Math.pow(2, (m - 69) / 12);
+const CHORDS = [[45, [57, 60, 64, 71]], [41, [53, 57, 60, 64]], [48, [55, 60, 64, 67]], [43, [55, 59, 62, 67]]];   // Am(add9) F(maj7) C G — [bas, akkord] MIDI
+async function makeMusic() {
+  const len = Math.ceil(TOTAL * SR), ac = new OfflineAudioContext(2, len, SR);
+  const master = ac.createGain(); master.gain.setValueAtTime(0, 0); master.gain.linearRampToValueAtTime(1, 0.6); master.gain.setValueAtTime(1, TOTAL - 3.2); master.gain.linearRampToValueAtTime(0, TOTAL - 0.05);
+  const comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25;
+  master.connect(comp); comp.connect(ac.destination);
+  // reverb: sun'iy impuls (shovqin, eksponensial so'nish)
+  const ir = ac.createBuffer(2, SR * 2.6, SR); for (let ch = 0; ch < 2; ch++) { const d = ir.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3); }
+  const rev = ac.createConvolver(); rev.buffer = ir; const revG = ac.createGain(); revG.gain.value = 0.28; rev.connect(revG); revG.connect(master);
+  const send = (node, dry = 1, wet = 0.5) => { const a = ac.createGain(); a.gain.value = dry; node.connect(a); a.connect(master); const b = ac.createGain(); b.gain.value = wet; node.connect(b); b.connect(rev); };
+  const noiseBuf = ac.createBuffer(1, SR * 2, SR); { const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+  const noise = (t, dur) => { const s = ac.createBufferSource(); s.buffer = noiseBuf; s.start(t, Math.random(), dur + 0.05); return s; };
+  const END = CUTS[CUTS.length - 1];                                            // yakun sahnasi boshlanishi
+  const bars = Math.ceil(TOTAL / BAR);
+  // pad: har bar akkord, ikki detunlangan arra to'lqin → past chastota filtri
+  const padBus = ac.createGain(); padBus.gain.value = 0.9; send(padBus, 0.8, 0.9);
+  for (let b = 0; b < bars; b++) {
+    const t = b * BAR, [, notes] = CHORDS[b % 4], last = t >= END;
+    const dur = last ? TOTAL - t : BAR + 0.4;
+    notes.forEach(m => [-7, 7].forEach(det => {
+      const o = ac.createOscillator(); o.type = "sawtooth"; o.frequency.value = nf(m); o.detune.value = det;
+      const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1500, t + BAR * 0.6); f.Q.value = 0.6;
+      const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.034, t + 0.5); g.gain.setValueAtTime(0.034, t + dur - 0.5); g.gain.linearRampToValueAtTime(0, t + dur);
+      o.connect(f); f.connect(g); g.connect(padBus); o.start(t); o.stop(t + dur + 0.05);
+      if (last) b = bars;
+    }));
+  }
+  // arpedjio: 8-liklar, uchburchak to'lqin, nuqtali 8-lik aks-sado
+  const dl = ac.createDelay(1); dl.delayTime.value = BEAT * 0.75; const fb = ac.createGain(); fb.gain.value = 0.32; dl.connect(fb); fb.connect(dl);
+  const arpBus = ac.createGain(); arpBus.gain.value = 1; arpBus.connect(dl); send(arpBus, 0.9, 0.35); const dlOut = ac.createGain(); dlOut.gain.value = 0.35; dl.connect(dlOut); dlOut.connect(master);
+  const pat = [0, 1, 2, 3, 2, 1, 2, 3];
+  for (let i = 0; i * BEAT / 2 < END; i++) {
+    const t = i * BEAT / 2, [, notes] = CHORDS[Math.floor(t / BAR) % 4], m = notes[pat[i % 8]] + 12;
+    const o = ac.createOscillator(); o.type = "triangle"; o.frequency.value = nf(m);
+    const g = ac.createGain(); const lv = t < 5 ? 0.12 : 0.085; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(lv, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.32);
+    o.connect(g); g.connect(arpBus); o.start(t); o.stop(t + 0.35);
+  }
+  // bas va baraban: 5-soniyadan yakungacha
+  const DRUM0 = SC[0].d;
+  for (let t = DRUM0; t < END - 0.01; t += BEAT) {
+    const beat = Math.round((t - DRUM0) / BEAT), [root] = CHORDS[Math.floor(t / BAR) % 4];
+    // kick
+    const k = ac.createOscillator(); k.frequency.setValueAtTime(130, t); k.frequency.exponentialRampToValueAtTime(42, t + 0.13);
+    const kg = ac.createGain(); kg.gain.setValueAtTime(0.62, t); kg.gain.exponentialRampToValueAtTime(0.001, t + 0.38); k.connect(kg); kg.connect(master); k.start(t); k.stop(t + 0.4);
+    // bas (sakkizliklar, "pompalanuvchi")
+    [0, BEAT / 2].forEach(off => { const bt = t + off, o = ac.createOscillator(); o.type = "triangle"; o.frequency.value = nf(root); const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 420;
+      const g = ac.createGain(); g.gain.setValueAtTime(0, bt); g.gain.linearRampToValueAtTime(0.2, bt + 0.03); g.gain.exponentialRampToValueAtTime(0.002, bt + BEAT / 2 - 0.02); o.connect(f); f.connect(g); g.connect(master); o.start(bt); o.stop(bt + BEAT / 2); });
+    // chapak (2 va 4-zarba) — 2-sahnadan
+    if (t >= CUTS[1] && beat % 2 === 1) { const s = noise(t, 0.2), f = ac.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 1900; f.Q.value = 0.8; const g = ac.createGain(); g.gain.setValueAtTime(0.32, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18); s.connect(f); f.connect(g); send(g, 0.8, 0.5); }
+    // hi-hat (zarbalar orasida) — 3-sahnadan
+    if (t >= CUTS[2]) { const ht = t + BEAT / 2, s = noise(ht, 0.06), f = ac.createBiquadFilter(); f.type = "highpass"; f.frequency.value = 7000; const g = ac.createGain(); g.gain.setValueAtTime(0.12, ht); g.gain.exponentialRampToValueAtTime(0.001, ht + 0.05); s.connect(f); f.connect(g); g.connect(master); }
+  }
+  // sahna o'tishlarida "vush"
+  CUTS.forEach(cut => { const t = cut - 0.9, s = noise(t, 1.0), f = ac.createBiquadFilter(); f.type = "bandpass"; f.Q.value = 1.2; f.frequency.setValueAtTime(300, t); f.frequency.exponentialRampToValueAtTime(6000, cut);
+    const g = ac.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, cut - 0.05); g.gain.linearRampToValueAtTime(0, cut + 0.08); s.connect(f); f.connect(g); send(g, 0.7, 0.6); });
+  // yakun: past "zarba" va jiringlovchi qo'ng'iroq
+  { const t = END, o = ac.createOscillator(); o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(38, t + 1.2); const g = ac.createGain(); g.gain.setValueAtTime(0.9, t); g.gain.exponentialRampToValueAtTime(0.001, t + 2.2); o.connect(g); send(g, 1, 0.4); o.start(t); o.stop(t + 2.3);
+    [69, 76, 81].forEach((m, j) => { const b = ac.createOscillator(); b.type = "sine"; b.frequency.value = nf(m + 12); const bg = ac.createGain(); bg.gain.setValueAtTime(0, t); bg.gain.linearRampToValueAtTime(0.05 - j * 0.012, t + 0.01); bg.gain.exponentialRampToValueAtTime(0.0005, t + 3.8); b.connect(bg); send(bg, 0.7, 0.8); b.start(t); b.stop(t + 4); }); }
+  const buf = await ac.startRendering();
+  // normallashtirish: cho'qqi −1 dB
+  let peak = 0; for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i])); }
+  const k = peak > 0 ? 0.89 / peak : 1; for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] *= k; }
+  return buf;
+}
+async function encodeAudio(buf) {
+  const cfg = { codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 160000 };
+  const chunks = []; let asc = null;
+  const enc = new AudioEncoder({ output: (ch, meta) => { if (meta && meta.decoderConfig && meta.decoderConfig.description) asc = new Uint8Array(meta.decoderConfig.description); const b = new Uint8Array(ch.byteLength); ch.copyTo(b); chunks.push(b); }, error: e => { throw e; } });
+  enc.configure(cfg);
+  const L = buf.getChannelData(0), R = buf.getChannelData(1), step = 4800;               // 0,1 s bo'laklar (f32-planar)
+  for (let i = 0; i < L.length; i += step) {
+    const n = Math.min(step, L.length - i), data = new Float32Array(n * 2); data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
+    const ad = new AudioData({ format: "f32-planar", sampleRate: SR, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i * 1e6 / SR), data });
+    enc.encode(ad); ad.close();
+  }
+  await enc.flush(); enc.close();
+  if (!asc) asc = new Uint8Array([0x11, 0x90]);                                          // AAC-LC, 48 kHz, stereo
+  return { chunks, asc };
+}
+window.MUSIC = async () => { const b = await makeMusic(); return { seconds: b.duration, ch: b.numberOfChannels }; };
+
 async function encode() {
+  log("musiqa yaratilmoqda…"); const music = await encodeAudio(await makeMusic());
   const cands = ["avc1.640028", "avc1.4d0028", "avc1.420028"]; let cfg = null;
   for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 2_200_000, framerate: FPS, avc: { format: "avc" }, latencyMode: "quality" }; const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
   if (!cfg) throw new Error("H.264 kodlash qo'llab-quvvatlanmaydi");
@@ -164,10 +250,10 @@ async function encode() {
     if (i % 30 === 0) log(`kodlanmoqda ${i}/${N} (${cfg.codec})`);
   }
   await enc.flush(); enc.close();
-  const meta = new TextEncoder().encode(JSON.stringify({ w: W, h: H, fps: FPS, sizes: chunks.map(b => b.length), keys }));
-  const parts = [new Uint32Array([0]), meta, new Uint32Array([0]), avcc, ...chunks];
+  const meta = new TextEncoder().encode(JSON.stringify({ w: W, h: H, fps: FPS, sizes: chunks.map(b => b.length), keys,
+    audio: { sr: SR, ch: 2, sizes: music.chunks.map(b => b.length), asc: Array.from(music.asc) } }));
   const head1 = new DataView(new ArrayBuffer(4)); head1.setUint32(0, meta.length); const head2 = new DataView(new ArrayBuffer(4)); head2.setUint32(0, avcc.length);
-  const body = new Blob([head1, meta, head2, avcc, ...chunks]);
+  const body = new Blob([head1, meta, head2, avcc, ...chunks, ...music.chunks]);         // video kadrlaridan keyin AAC kadrlar
   const r = await fetch("/mux", { method: "POST", body }); const res = await r.json();
   // muqova: 1-sahnaning 3-soniyasi
   frame(3.2); const jpg = await new Promise(res2 => c.toBlob(res2, "image/jpeg", 0.85)); const r2 = await (await fetch("/poster", { method: "POST", body: jpg })).json();

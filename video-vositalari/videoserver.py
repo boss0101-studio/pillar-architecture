@@ -18,13 +18,15 @@ def full(kind, ver, flags, *parts):
 
 def mux(meta, avcc, data):
     w, h, fps, sizes, keys = meta["w"], meta["h"], meta["fps"], meta["sizes"], meta["keys"]
-    n = len(sizes); assert n and sum(sizes) == len(data), (n, sum(sizes), len(data))
+    au = meta.get("audio")                                       # ixtiyoriy AAC trek: video kadrlaridan keyin keladi
+    n = len(sizes); vlen = sum(sizes); alen = sum(au["sizes"]) if au else 0
+    assert n and vlen + alen == len(data), (n, vlen, alen, len(data))
     ftyp = box(b"ftyp", b"isom", struct.pack(">I", 512), b"isom", b"iso2", b"avc1", b"mp41")
     mdat_off = len(ftyp) + 8                                     # birinchi kadr mdat sarlavhasidan keyin
     mdat = struct.pack(">I", 8 + len(data)) + b"mdat" + data
     ts, dur_ms = fps, int(round(n * 1000 / fps))                 # media vaqt birligi: 1 kadr = 1
     matrix = struct.pack(">9I", 0x10000, 0, 0, 0, 0x10000, 0, 0, 0, 0x40000000)
-    mvhd = full(b"mvhd", 0, 0, struct.pack(">IIII", 0, 0, 1000, dur_ms), struct.pack(">IH", 0x10000, 0x100), b"\0" * 10, matrix, b"\0" * 24, struct.pack(">I", 2))
+    mvhd = full(b"mvhd", 0, 0, struct.pack(">IIII", 0, 0, 1000, dur_ms), struct.pack(">IH", 0x10000, 0x100), b"\0" * 10, matrix, b"\0" * 24, struct.pack(">I", 3 if au else 2))
     tkhd = full(b"tkhd", 0, 3, struct.pack(">IIIII", 0, 0, 1, 0, dur_ms), b"\0" * 8, struct.pack(">HHHH", 0, 0, 0, 0), matrix, struct.pack(">II", w << 16, h << 16))
     mdhd = full(b"mdhd", 0, 0, struct.pack(">IIII", 0, 0, ts, n), struct.pack(">HH", 0x55C4, 0))   # til: und
     hdlr = full(b"hdlr", 0, 0, struct.pack(">I", 0), b"vide", b"\0" * 12, b"Pillar video\0")
@@ -43,7 +45,23 @@ def mux(meta, avcc, data):
     minf = box(b"minf", vmhd, dinf, stbl)
     mdia = box(b"mdia", mdhd, hdlr, minf)
     trak = box(b"trak", tkhd, mdia)
-    moov = box(b"moov", mvhd, trak)
+    traks = [trak]
+    if au:                                                       # AAC-LC trek (1 kadr = 1024 namuna)
+        sr, chn, asz, asc = au["sr"], au["ch"], au["sizes"], bytes(au["asc"]); an = len(asz)
+        desc = lambda tag, body: bytes([tag, len(body)]) + body   # MPEG-4 deskriptor (uzunlik < 128)
+        dcd = desc(0x04, bytes([0x40, 0x15]) + b"\0\0\0" + struct.pack(">II", 160000, 160000) + desc(0x05, asc))
+        esds = full(b"esds", 0, 0, desc(0x03, struct.pack(">HB", 1, 0) + dcd + desc(0x06, b"\x02")))
+        mp4a = box(b"mp4a", b"\0" * 6, struct.pack(">H", 1), b"\0" * 8, struct.pack(">HHHH", chn, 16, 0, 0), struct.pack(">I", sr << 16), esds)
+        adur = int(round(an * 1024 * 1000 / sr))
+        atkhd = full(b"tkhd", 0, 3, struct.pack(">IIIII", 0, 0, 2, 0, adur), b"\0" * 8, struct.pack(">HHHH", 0, 1, 0x100, 0), matrix, struct.pack(">II", 0, 0))
+        amdhd = full(b"mdhd", 0, 0, struct.pack(">IIII", 0, 0, sr, an * 1024), struct.pack(">HH", 0x55C4, 0))
+        ahdlr = full(b"hdlr", 0, 0, struct.pack(">I", 0), b"soun", b"\0" * 12, b"Pillar music\0")
+        smhd = full(b"smhd", 0, 0, b"\0" * 4)
+        astbl = box(b"stbl", full(b"stsd", 0, 0, struct.pack(">I", 1), mp4a), full(b"stts", 0, 0, struct.pack(">III", 1, an, 1024)),
+                    full(b"stsc", 0, 0, struct.pack(">IIII", 1, 1, an, 1)), full(b"stsz", 0, 0, struct.pack(">II", 0, an), struct.pack(">%dI" % an, *asz)),
+                    full(b"stco", 0, 0, struct.pack(">II", 1, mdat_off + vlen)))
+        traks.append(box(b"trak", atkhd, box(b"mdia", amdhd, ahdlr, box(b"minf", smhd, dinf, astbl))))
+    moov = box(b"moov", mvhd, *traks)
     return ftyp + mdat + moov
 
 class H(http.server.SimpleHTTPRequestHandler):

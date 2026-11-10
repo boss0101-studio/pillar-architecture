@@ -1,6 +1,6 @@
 # Reklama videosini qayta yasash
 
-Video: `web/video/pillar-reklama.mp4` (1920×1080, 30 kadr/s, 44 s, H.264, ovozsiz).
+Video: `web/video/pillar-reklama.mp4` (1920×1080, 30 kadr/s, 44 s, H.264 + AAC 160 kbit/s). Musiqa original: brauzerda sintez qilinadi (96 BPM, Am–F–C–G; pad, arpedjio, bas, baraban, sahna o'tishlarida "vush", yakunda zarba) — mualliflik huquqi muammosiz.
 
 1. `generator.html`ni `web/_video.html` nomi bilan `web/` papkasiga nusxalang (u `building.js`, `bolimlar.js`, `hero/`, `fon/` fayllaridan foydalanadi).
 2. `python video-vositalari/videoserver.py 8021` — lokal server (faqat 127.0.0.1).

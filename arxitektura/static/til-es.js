@@ -28,6 +28,7 @@ USTUN_I18N.es = {
  "'{0}' son bo'lishi kerak": "'{0}' debe ser un número",
  "'{0}' {1} va {2} oralig'ida bo'lishi kerak": "'{0}' debe estar entre {1} y {2}",
  "(12 MB, 1920×1080)": "(12 MB, 1920×1080)",
+ "(13 MB, 1920×1080, musiqa bilan)": "(13 MB, 1920×1080, con música)",
  "(devor + plita + tom) × {0} = ({1} + {2} + {3}) t × {4}": "(muros + losas + techo) × {0} = ({1} + {2} + {3}) t × {4}",
  "(devor + tom) / hajm = {0} / {1}": "(muros + techo) / volumen = {0} / {1}",
  "**AI yordamchi** uch xil ishlaydi: artifact ichida — Claude to'g'ridan-to'g'ri; Python serverda — `pip install anthropic` va `ANTHROPIC_API_KEY` o'rnatilsa Claude javob beradi; aks holda — hozirgi **oflayn yordam** (tayyor javoblar bazasi).": "El **asistente IA** funciona de tres formas: dentro del artefacto — Claude directamente; en el servidor Python — responde Claude si se instalan `pip install anthropic` y `ANTHROPIC_API_KEY`; si no — la **ayuda sin conexión** actual (base de respuestas preparadas).",

@@ -1672,3 +1672,22 @@ html.bg-photo body::after {
 .bgp-credit { margin: -2px 0 0; font: .72rem var(--font-mono); color: var(--muted); }
 .bgp-credit:empty { display: none; }
 .bgp-credit a { color: inherit; }
+
+/* ---------- XIZMATLAR: kartalar foni — mavzuga mos foto (Unsplash, bepul) ---------- */
+.svc-card { position: relative; isolation: isolate; overflow: hidden; min-height: 270px; background: #1b2024; color: #fff; padding-bottom: 38px; }
+.svc-card::before { content: ""; position: absolute; inset: 0; z-index: -2; background: var(--svc-img) center / cover no-repeat; transform: scale(1.01); transition: transform .8s cubic-bezier(.2, .7, .2, 1); }
+.svc-card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(10, 12, 14, .5) 0%, rgba(10, 12, 14, .78) 55%, rgba(10, 12, 14, .9) 100%); transition: background .3s; }
+.svc-card:hover { background: #1b2024; }
+.svc-card:hover::before { transform: scale(1.07); }
+.svc-card:hover::after { background: linear-gradient(180deg, rgba(20, 28, 70, .5) 0%, rgba(10, 12, 14, .8) 60%, rgba(10, 12, 14, .92) 100%); }
+.svc-card svg { stroke: #b9c6ff; }
+.svc-card h3 { color: #fff; }
+.svc-card p { color: rgba(255, 255, 255, .86); }
+.svc-card .more { color: #c3cdff; }
+.svc-card:nth-child(1) { --svc-img: url("xizmat/x1.jpg"); }
+.svc-card:nth-child(2) { --svc-img: url("xizmat/x2.jpg"); }
+.svc-card:nth-child(3) { --svc-img: url("xizmat/x3.jpg"); }
+.svc-card:nth-child(4) { --svc-img: url("xizmat/x4.jpg"); }
+.svc-credit { position: absolute; right: 12px; bottom: 10px; font: .66rem var(--font-mono); color: rgba(255, 255, 255, .55); }
+.svc-credit a { color: inherit; }
+@media (prefers-reduced-motion: reduce) { .svc-card::before { transition: none; } }

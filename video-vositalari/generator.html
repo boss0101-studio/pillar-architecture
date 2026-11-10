@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="uz"><head><meta charset="utf-8"><title>Pillar reklama videosi — generator</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
 <style>body{margin:0;background:#111;color:#eee;font:14px Archivo,sans-serif}canvas{width:960px;height:540px;display:block}#log{padding:8px;font-family:monospace}</style></head>
 <body><canvas id="c" width="1920" height="1080"></canvas><div id="log">tayyorlanmoqda…</div>
 <script src="building.js"></script><script src="interior.js"></script><script src="bolimlar.js"></script>
@@ -14,7 +14,7 @@ const c = document.getElementById("c"), x = c.getContext("2d"), log = s => { doc
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), ease = t => 1 - Math.pow(1 - clamp(t), 3), lerp = (a, b, t) => a + (b - a) * t;
 const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(src)); i.src = src; });
 const svgImg = (svg, w) => load(URL.createObjectURL(new Blob([svg.replace(/<svg\b([^>]*?)\swidth="[^"]*"/, "<svg$1").replace(/<svg\b([^>]*?)\sheight="[^"]*"/, "<svg$1").replace(/^<svg\b/, `<svg width="${w}"`)], { type: "image/svg+xml" })));
-const D = "'Big Shoulders Display'", B = "Archivo", M = "'JetBrains Mono'";
+let D = "'Big Shoulders Display'", B = "Archivo"; const M = "'JetBrains Mono'", LOGO_F = "'Big Shoulders Display'";   // logotip har tilda bir xil
 
 // ---------- chizish yordamchilari ----------
 function cover(img, zoom = 1, fx = 0.5, fy = 0.5, alpha = 1) {
@@ -83,7 +83,7 @@ function planSketch(cx, cy, cw, ch, s) {
     const [l0, b0] = P(0, PLAN.D), [r0] = P(PLAN.W, 0); x.beginPath(); x.moveTo(l0, b0 + 40); x.lineTo(r0, b0 + 40); x.moveTo(l0, b0 + 28); x.lineTo(l0, b0 + 52); x.moveTo(r0, b0 + 28); x.lineTo(r0, b0 + 52); x.stroke(); x.fillText("12,00", (l0 + r0) / 2, b0 + 34);
     const [, t0] = P(0, 0); x.beginPath(); x.moveTo(l0 - 40, t0); x.lineTo(l0 - 40, b0); x.moveTo(l0 - 52, t0); x.lineTo(l0 - 28, t0); x.moveTo(l0 - 52, b0); x.lineTo(l0 - 28, b0); x.stroke();
     x.save(); x.translate(l0 - 48, (t0 + b0) / 2); x.rotate(-Math.PI / 2); x.fillText("9,00", 0, 0); x.restore();
-    PLAN.rooms.forEach(([nm, mx, my, ar], j) => { const ra = ease((s - 4.2 - j * .15) / .4); if (ra <= 0) return; x.save(); x.globalAlpha *= ra; const [qx, qy] = P(mx, my); x.font = `600 28px ${B}`; x.fillStyle = "#222"; x.fillText(nm, qx, qy); x.font = `600 26px ${M}`; x.fillStyle = "#1d3a8a"; x.fillText(`${ar} m²`, qx, qy + 36); x.restore(); });
+    PLAN.rooms.forEach(([nm0, mx, my, ar], j) => { const nm = L("rooms")[j] || nm0; const ra = ease((s - 4.2 - j * .15) / .4); if (ra <= 0) return; x.save(); x.globalAlpha *= ra; const [qx, qy] = P(mx, my); x.font = `600 28px ${B}`; x.fillStyle = "#222"; x.fillText(nm, qx, qy); x.font = `600 26px ${M}`; x.fillStyle = "#1d3a8a"; x.fillText(`${ar} m²`, qx, qy + 36); x.restore(); });
   }
   x.restore();
 }
@@ -103,23 +103,70 @@ function sketchify(img) {
   }
   g0.putImageData(out, 0, 0); return c0;
 }
-function logo(px, py, size = 54, a = 1) { x.save(); x.globalAlpha = a; x.font = `800 ${size}px ${D}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", px, py); const w = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", px + w, py); x.restore(); }
+function logo(px, py, size = 54, a = 1) { x.save(); x.globalAlpha = a; x.font = `800 ${size}px ${LOGO_F}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", px, py); const w = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", px + w, py); x.restore(); }
 function chip(s, px, py, a, fill = "rgba(255,255,255,.1)", stroke = "rgba(255,255,255,.35)") {
   x.save(); x.globalAlpha = a; x.font = `500 28px ${M}`; const w = x.measureText(s).width + 44; rr(px, py, w, 58, 29); x.fillStyle = fill; x.fill(); x.strokeStyle = stroke; x.lineWidth = 2; x.stroke();
   x.fillStyle = "#fff"; x.textBaseline = "middle"; x.fillText(s, px + 22, py + 30); x.restore(); return w;
 }
 
+// ---------- Tillar: ekran matnlari (uz / en / ru / es). Diktor jumlalari — diktor.py ----------
+const TX = {
+  uz: { k1: "ARXITEKTURA LOYIHALASH PLATFORMASI", t1: "Uyingizni\nbugun chizing", s1: "Brauzerda ishlaydi: chizing, 3D'da ko'ring, hisoblang — bitta joyda.",
+    k2: "KONSTRUKTOR", t2: "Binoni o'zingiz\nloyihalang", s2: "Qavat, tom, material va derazalar — bir necha bosishda. Natija darhol chizma va 3D'da.", c2: ["Qavat", "Tom", "Material", "Deraza", "Balkon"],
+    k3: "ERKIN QURISH", t3: "Qo'lda chizing —\naniq chizma tayyor", s3: "Devorlarni qalam bilan chizing: Pillar ularni to'g'rilaydi, o'lcham va maydonlarni hisoblaydi.", rooms: ["Mehmonxona", "Yotoqxona", "Oshxona"],
+    k4: "3D · VR · ICHKI MAKON", t4: "Uyingiz ichida\nyuring", s4: "3D va VR'da xonalar bo'ylab yuring, mebel va texnikani joylang, hovlini bezang.", c4: ["FHD VR", "Ichki makon", "Hovli", "Quyosh holati"],
+    k5: "LOYIHA BO'LIMLARI", t5: "13 ta bo'lim —\nchizmalar tayyor", s5: "GP, AR, konstruksiya, isitish, suv, elektr, gaz, yong'in xavfsizligi, smeta… A3 varaqlar avtomatik.",
+    k6: "RASMDAN DIZAYN", t6: "Rasm yuklang —\nuy tayyor", s6: "Rang palitrasi, dizayn rejasi va Konstruktorda aynan rasmdagi uy — 3D'da ham.",
+    k7: "SMETA VA MATERIALLAR", t7: "Narxi oldindan\nma'lum", s7: "Formulali hisob, materiallar ro'yxati va QQS bilan yig'ma smeta — PDF'ga chiqariladi.",
+    k8: "AI YORDAMCHI", t8: "Savol bering —\nu ochib beradi", s8: "Faqat loyiha bo'yicha javob beradi, bo'limlarni ochadi va binoni o'zgartiradi.",
+    m8: ["Smeta bo'limiga o't", "Ochildi: Smeta (SM) →", "3 qavat qil, tomi gumbaz bo'lsin", "Bajarildi ✓ 3 qavat, gumbaz tom"],
+    o1: "Arxitektura loyihalash platformasi", o2: "BEPUL SINAB KO'RING", o3: "Telefon kamerasini QR kodga qarating →", o4: "Skanerlang — saytni oching", o5: "Fotolar: Unsplash (bepul litsenziya)" },
+  en: { k1: "ARCHITECTURAL DESIGN PLATFORM", t1: "Draw your home\ntoday", s1: "Works in the browser: draw, view in 3D, calculate — all in one place.",
+    k2: "DESIGNER", t2: "Design the building\nyourself", s2: "Floors, roof, materials and windows — in a few clicks. Instantly in drawings and 3D.", c2: ["Floors", "Roof", "Material", "Windows", "Balcony"],
+    k3: "FREE BUILD", t3: "Sketch by hand —\nget a precise plan", s3: "Draw walls with a pencil: Pillar straightens them and calculates dimensions and areas.", rooms: ["Living room", "Bedroom", "Kitchen"],
+    k4: "3D · VR · INTERIOR", t4: "Walk inside\nyour home", s4: "Walk through the rooms in 3D and VR, place furniture and appliances, design the yard.", c4: ["FHD VR", "Interior", "Yard", "Sun position"],
+    k5: "PROJECT SECTIONS", t5: "13 sections —\ndrawings ready", s5: "Site plan, architecture, structures, heating, water, electrical, gas, fire safety, estimate… A3 sheets automatically.",
+    k6: "DESIGN FROM PHOTO", t6: "Upload a photo —\nthe house is ready", s6: "Colour palette, design plan and the exact house from the photo in the Designer — in 3D too.",
+    k7: "ESTIMATE AND MATERIALS", t7: "Know the price\nin advance", s7: "Formula-based costing, bill of materials and a summary estimate with VAT — exported to PDF.",
+    k8: "AI ASSISTANT", t8: "Ask a question —\nit takes you there", s8: "Answers only project questions, opens sections and changes the building.",
+    m8: ["Go to the Estimate section", "Opened: Estimate (SM) →", "Make it 3 floors with a dome roof", "Done ✓ 3 floors, dome roof"],
+    o1: "Architectural design platform", o2: "TRY IT FREE", o3: "Point your phone camera at the QR code →", o4: "Scan — open the website", o5: "Photos: Unsplash (free license)" },
+  ru: { k1: "ПЛАТФОРМА АРХИТЕКТУРНОГО ПРОЕКТИРОВАНИЯ", t1: "Нарисуйте дом\nуже сегодня", s1: "Работает в браузере: рисуйте, смотрите в 3D, считайте — всё в одном месте.",
+    k2: "КОНСТРУКТОР", t2: "Спроектируйте\nздание сами", s2: "Этажи, крыша, материалы и окна — в несколько кликов. Результат сразу в чертежах и 3D.", c2: ["Этажи", "Крыша", "Материал", "Окна", "Балкон"],
+    k3: "СВОБОДНОЕ СТРОИТЕЛЬСТВО", t3: "Рисуйте от руки —\nточный чертёж готов", s3: "Рисуйте стены карандашом: Pillar выпрямит их и рассчитает размеры и площади.", rooms: ["Гостиная", "Спальня", "Кухня"],
+    k4: "3D · VR · ИНТЕРЬЕР", t4: "Прогуляйтесь\nпо своему дому", s4: "Ходите по комнатам в 3D и VR, расставляйте мебель и технику, обустройте двор.", c4: ["FHD VR", "Интерьер", "Двор", "Положение солнца"],
+    k5: "РАЗДЕЛЫ ПРОЕКТА", t5: "13 разделов —\nчертежи готовы", s5: "ГП, АР, конструкции, отопление, водоснабжение, электрика, газ, пожарная безопасность, смета… Листы A3 автоматически.",
+    k6: "ДИЗАЙН ПО ФОТО", t6: "Загрузите фото —\nдом готов", s6: "Цветовая палитра, дизайн-план и точно такой же дом в Конструкторе — и в 3D.",
+    k7: "СМЕТА И МАТЕРИАЛЫ", t7: "Цена известна\nзаранее", s7: "Расчёт по формулам, ведомость материалов и сводная смета с НДС — экспорт в PDF.",
+    k8: "AI-ПОМОЩНИК", t8: "Задайте вопрос —\nон всё откроет", s8: "Отвечает только по проекту, открывает разделы и меняет здание.",
+    m8: ["Перейди в раздел Смета", "Открыто: Смета (SM) →", "Сделай 3 этажа и купольную крышу", "Готово ✓ 3 этажа, купол"],
+    o1: "Платформа архитектурного проектирования", o2: "ПОПРОБУЙТЕ БЕСПЛАТНО", o3: "Наведите камеру телефона на QR-код →", o4: "Сканируйте — откройте сайт", o5: "Фото: Unsplash (бесплатная лицензия)" },
+  es: { k1: "PLATAFORMA DE DISEÑO ARQUITECTÓNICO", t1: "Dibuja tu casa\nhoy", s1: "Funciona en el navegador: dibuja, mira en 3D, calcula — todo en un solo lugar.",
+    k2: "DISEÑADOR", t2: "Diseña tu propio\nedificio", s2: "Plantas, cubierta, materiales y ventanas — en pocos clics. Al instante en planos y 3D.", c2: ["Plantas", "Cubierta", "Material", "Ventanas", "Balcón"],
+    k3: "CONSTRUCCIÓN LIBRE", t3: "Dibuja a mano —\nplano preciso listo", s3: "Dibuja los muros con lápiz: Pillar los endereza y calcula medidas y superficies.", rooms: ["Salón", "Dormitorio", "Cocina"],
+    k4: "3D · RV · INTERIOR", t4: "Camina dentro\nde tu casa", s4: "Recorre las habitaciones en 3D y RV, coloca muebles y electrodomésticos, diseña el jardín.", c4: ["FHD VR", "Interior", "Jardín", "Posición del sol"],
+    k5: "SECCIONES DEL PROYECTO", t5: "13 secciones —\nplanos listos", s5: "Plano general, arquitectura, estructuras, calefacción, agua, electricidad, gas, protección contra incendios, presupuesto… Láminas A3 automáticas.",
+    k6: "DISEÑO DESDE FOTO", t6: "Sube una foto —\nla casa está lista", s6: "Paleta de colores, plan de diseño y la misma casa de la foto en el Diseñador — también en 3D.",
+    k7: "PRESUPUESTO Y MATERIALES", t7: "Conoce el precio\nde antemano", s7: "Cálculo con fórmulas, lista de materiales y presupuesto resumido con IVA — exportado a PDF.",
+    k8: "ASISTENTE IA", t8: "Pregunta —\nte lleva allí", s8: "Responde solo sobre el proyecto, abre secciones y modifica el edificio.",
+    m8: ["Ve a la sección Presupuesto", "Abierto: Presupuesto (SM) →", "Haz 3 plantas con cúpula", "Hecho ✓ 3 plantas, cúpula"],
+    o1: "Plataforma de diseño arquitectónico", o2: "PRUÉBALO GRATIS", o3: "Apunta la cámara del móvil al código QR →", o4: "Escanea — abre el sitio web", o5: "Fotos: Unsplash (licencia gratuita)" },
+};
+let LANG = "uz";
+const L = k => (TX[LANG] && TX[LANG][k] !== undefined ? TX[LANG][k] : TX.uz[k]);
+// Big Shoulders Display va Archivo'da kirill harflari yo'q — rus tili uchun Oswald + Inter
+const FONTS = { uz: ["'Big Shoulders Display'", "Archivo"], en: ["'Big Shoulders Display'", "Archivo"], es: ["'Big Shoulders Display'", "Archivo"], ru: ["'Oswald'", "Inter"] };
 // ---------- sahnalar ----------
 let A = {};   // yuklangan rasmlar
 const SC = [
   { d: 5, draw(t, s) {                                                        // 1. Kirish
     cover(A.h1, lerp(1.14, 1.0, s / 5), .5, .6); shade(.82, .2);
     logo(140, 150, 64, ease(t / .4));
-    head(t, "ARXITEKTURA LOYIHALASH PLATFORMASI", "Uyingizni\nbugun chizing", "Brauzerda ishlaydi: chizing, 3D'da ko'ring, hisoblang — bitta joyda.", 140, 560);
+    head(t, L("k1"), L("t1"), L("s1"), 140, 560);
   } },
   { d: 6, draw(t, s) {                                                        // 2. Konstruktor
     cover(A.bk, 1.05, .5, .5, .5); x.fillStyle = "rgba(10,12,14,.72)"; x.fillRect(0, 0, W, H);
-    head(t, "KONSTRUKTOR", "Binoni o'zingiz\nloyihalang", "Qavat, tom, material va derazalar — bir necha bosishda. Natija darhol chizma va 3D'da.", 120, 520);
+    head(t, L("k2"), L("t2"), L("s2"), 120, 520);
     // qog'oz kartochka: uy qora qalamda chapdan o'ngga chizilib boradi (qalam uchi chiziq bo'ylab), keyingi uy yangi varaqda
     const cx = 1040, cy = 150, cw = 760, ch = 640, k = ease((t - .15) / .5);
     x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); paper(cx, cy, cw, ch);
@@ -129,23 +176,23 @@ const SC = [
     x.globalAlpha = k; x.save(); x.beginPath(); x.rect(dx, dy - 10, dw * ease(p), dh + 20); x.clip(); x.drawImage(img, dx, dy, dw, dh); x.restore();
     if (p > 0 && p < 1) pencil(dx + dw * ease(p), dy + dh * (0.25 + 0.5 * Math.abs(Math.sin(s * 9))));
     x.restore();
-    let px = 1040; ["Qavat", "Tom", "Material", "Deraza", "Balkon"].forEach((l, j) => { px += chip(l, px, 840, ease((t - .4 - j * .08) / .4)) + 14; });
+    let px = 1040; L("c2").forEach((l, j) => { px += chip(l, px, 840, ease((t - .4 - j * .08) / .4)) + 14; });
   } },
   { d: 6.5, draw(t, s) {                                                      // 3. Erkin qurish: qo'lda eskiz → aniq chizma
     cover(A.be, 1.04, .5, .5, .35); x.fillStyle = "rgba(10,12,14,.78)"; x.fillRect(0, 0, W, H);
-    head(t, "ERKIN QURISH", "Qo'lda chizing —\naniq chizma tayyor", "Devorlarni qalam bilan chizing: Pillar ularni to'g'rilaydi, o'lcham va maydonlarni hisoblaydi.", 120, 520);
+    head(t, L("k3"), L("t3"), L("s3"), 120, 520);
     const cx = 1040, cy = 150, cw = 760, ch = 640, k = ease((t - .1) / .45);
     x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); paper(cx, cy, cw, ch);
     planSketch(cx, cy, cw, ch, s); x.restore();
   } },
   { d: 5.5, draw(t, s) {                                                      // 3. 3D va VR
     cover(A.u5, lerp(1.0, 1.12, s / 5.5), .55, .5); shade(.85, .15);
-    head(t, "3D · VR · ICHKI MAKON", "Uyingiz ichida\nyuring", "3D va VR'da xonalar bo'ylab yuring, mebel va texnikani joylang, hovlini bezang.", 140, 560);
-    let px = 140; ["FHD VR", "Ichki makon", "Hovli", "Quyosh holati"].forEach((l, j) => { px += chip(l, px, 900, ease((t - .45 - j * .08) / .4), "rgba(111,134,255,.25)", ACC) + 14; });
+    head(t, L("k4"), L("t4"), L("s4"), 140, 560);
+    let px = 140; L("c4").forEach((l, j) => { px += chip(l, px, 900, ease((t - .45 - j * .08) / .4), "rgba(111,134,255,.25)", ACC) + 14; });
   } },
   { d: 6.5, draw(t, s) {                                                      // 4. Loyiha bo'limlari
     cover(A.bb, 1.04, .5, .5, .45); x.fillStyle = "rgba(10,12,14,.78)"; x.fillRect(0, 0, W, H);
-    head(t, "LOYIHA BO'LIMLARI", "13 ta bo'lim —\nchizmalar tayyor", "GP, AR, konstruksiya, isitish, suv, elektr, gaz, yong'in xavfsizligi, smeta… A3 varaqlar avtomatik.", 120, 520);
+    head(t, L("k5"), L("t5"), L("s5"), 120, 520);
     A.sheets.forEach((img, j) => {
       const k = ease((t - .2 - j * .12) / .55), w = 720, h = w * img.height / img.width, px = 1060 + j * 46 + (1 - k) * 500, py = 170 + j * 70;
       x.save(); x.globalAlpha = k; x.translate(px + w / 2, py + h / 2); x.rotate((-4 + j * 2.6) * Math.PI / 180);
@@ -156,7 +203,7 @@ const SC = [
   } },
   { d: 6, draw(t, s) {                                                        // 5. Rasmdan dizayn
     x.fillStyle = VBG; x.fillRect(0, 0, W, H); cover(A.br, 1.02, .5, .5, .25);
-    head(t, "RASMDAN DIZAYN", "Rasm yuklang —\nuy tayyor", "Rang palitrasi, dizayn rejasi va Konstruktorda aynan rasmdagi uy — 3D'da ham.", 120, 520);
+    head(t, L("k6"), L("t6"), L("s6"), 120, 520);
     const px = 1030, py = 150, pw = 780, ph = pw * A.u2.height / A.u2.width, k = ease((t - .1) / .5);
     x.save(); x.globalAlpha = k; rr(px, py, pw, ph, 22); x.clip(); x.drawImage(A.u2, px, py, pw, ph);
     const scan = clamp((s - .6) / 1.6); if (scan > 0 && scan < 1) { const yy = py + ph * scan, g = x.createLinearGradient(0, yy - 60, 0, yy); g.addColorStop(0, "rgba(111,134,255,0)"); g.addColorStop(1, "rgba(111,134,255,.55)"); x.fillStyle = g; x.fillRect(px, yy - 60, pw, 60); x.fillStyle = "#b9c6ff"; x.fillRect(px, yy, pw, 3); }
@@ -170,7 +217,7 @@ const SC = [
   } },
   { d: 5, draw(t, s) {                                                        // 6. Smeta
     cover(A.bm, 1.04, .5, .5, .35); x.fillStyle = "rgba(10,12,14,.8)"; x.fillRect(0, 0, W, H);
-    head(t, "SMETA VA MATERIALLAR", "Narxi oldindan\nma'lum", "Formulali hisob, materiallar ro'yxati va QQS bilan yig'ma smeta — PDF'ga chiqariladi.", 120, 520);
+    head(t, L("k7"), L("t7"), L("s7"), 120, 520);
     const v = 151900 * ease((s - .3) / 2.2);
     txt("$" + Math.round(v).toLocaleString("ru-RU"), 1060, 330, `800 170px ${D}`, ACC, t, .15);
     [["AR", .31], ["AS / KJ", .16], ["TX", .09], ["OV", .07], ["EOM", .07], ["VK", .05]].forEach(([n, p], j) => {
@@ -181,8 +228,8 @@ const SC = [
   } },
   { d: 5, draw(t, s) {                                                        // 7. AI yordamchi
     x.fillStyle = VBG; x.fillRect(0, 0, W, H); const g = x.createRadialGradient(1400, 300, 50, 1400, 300, 900); g.addColorStop(0, "rgba(111,134,255,.25)"); g.addColorStop(1, "rgba(111,134,255,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
-    head(t, "AI YORDAMCHI", "Savol bering —\nu ochib beradi", "Faqat loyiha bo'yicha javob beradi, bo'limlarni ochadi va binoni o'zgartiradi.", 120, 520);
-    const msgs = [["u", "Smeta bo'limiga o't", .4], ["a", "Ochildi: Smeta (SM) →", 1.2], ["u", "3 qavat qil, tomi gumbaz bo'lsin", 2.1], ["a", "Bajarildi ✓ 3 qavat, gumbaz tom", 3.0]];
+    head(t, L("k8"), L("t8"), L("s8"), 120, 520);
+    const m8 = L("m8"), msgs = [["u", m8[0], .4], ["a", m8[1], 1.2], ["u", m8[2], 2.1], ["a", m8[3], 3.0]];
     let py = 230;
     msgs.forEach(([who, s2, at]) => {
       const a = ease((s - at) / .35); if (a <= 0) return; const full = who === "a" ? s2 : s2.slice(0, Math.ceil(s2.length * clamp((s - at) / .5)));
@@ -195,23 +242,23 @@ const SC = [
     t = s / 5;                                                                // animatsiyalar 5 s o'lchovida qoladi
     cover(A.h5, lerp(1.1, 1.0, s / 5), .5, .55); x.fillStyle = "rgba(10,12,14,.62)"; x.fillRect(0, 0, W, H);
     // chapda: logotip va chaqiriq; o'ngda: sayt QR kodi (modullar butun pikselga — telefon kamerasi aniq o'qisin)
-    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 220px ${D}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", 160, 500); const lw = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", 160 + lw, 500); x.restore();
-    txt("Arxitektura loyihalash platformasi", 166, 580, `500 46px ${B}`, "#fff", t, .2);
-    txt("BEPUL SINAB KO'RING", 166, 700, `800 76px ${D}`, "#fff", t, .35);
-    txt("Telefon kamerasini QR kodga qarating →", 166, 770, `500 36px ${B}`, "rgba(255,255,255,.85)", t, .45);
+    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 220px ${LOGO_F}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", 160, 500); const lw = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", 160 + lw, 500); x.restore();
+    txt(L("o1"), 166, 580, `500 46px ${B}`, "#fff", t, .2);
+    txt(L("o2"), 166, 700, `800 76px ${D}`, "#fff", t, .35);
+    txt(L("o3"), 166, 770, `500 36px ${B}`, "rgba(255,255,255,.85)", t, .45);
     const a = ease((t - .1) / .2);                                            // QR 1,5 s da to'liq ko'rinadi va oxirigacha turadi
     if (a > 0) {
       const box = 470, bx = 1290, by = 215, n = A.qr.n, quiet = 2, mod = Math.floor((box - 40) / (n + quiet * 2)), qs = mod * (n + quiet * 2), ox = bx + Math.round((box - qs) / 2) + quiet * mod, oy = by + Math.round((box - qs) / 2) + quiet * mod;
       x.save(); x.globalAlpha = a; x.shadowColor = "rgba(0,0,0,.45)"; x.shadowBlur = 50; rr(bx, by, box, box, 28); x.fillStyle = "#fff"; x.fill(); x.shadowBlur = 0;
       x.fillStyle = "#0f1214"; for (let r = 0; r < n; r++) for (let cc = 0; cc < n; cc++) if (A.qr.dark[r][cc]) x.fillRect(ox + cc * mod, oy + r * mod, mod, mod);
       x.restore();
-      txt("Skanerlang — saytni oching", bx + box / 2, by + box + 70, `600 36px ${B}`, "#fff", t, .4, "center");
+      txt(L("o4"), bx + box / 2, by + box + 70, `600 36px ${B}`, "#fff", t, .4, "center");
     }
-    txt("Fotolar: Unsplash (bepul litsenziya)", W / 2, 1040, `400 24px ${M}`, "rgba(255,255,255,.55)", t, .6, "center");
+    txt(L("o5"), W / 2, 1040, `400 24px ${M}`, "rgba(255,255,255,.55)", t, .6, "center");
   } },
 ];
 let TOTAL = SC.reduce((a, s) => a + s.d, 0), N = Math.round(TOTAL * FPS);                // diktor ovozi yuklangach qayta hisoblanadi
-const FADE = 0.6;
+const FADE = 0.6, BASE_D = SC.map(s => s.d);
 function frame(sec) {
   let t0 = 0, i = 0; while (i < SC.length - 1 && sec >= t0 + SC[i].d) { t0 += SC[i].d; i++; }
   const s = sec - t0, sc = SC[i];
@@ -223,8 +270,10 @@ function frame(sec) {
   x.font = `500 26px ${M}`; x.fillStyle = "rgba(255,255,255,.7)"; x.textBaseline = "alphabetic"; x.fillText(`${String(i + 1).padStart(2, "0")} / ${String(SC.length).padStart(2, "0")}`, W - 250, H - 40);
 }
 
-async function prepare() {
-  await Promise.all([`800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f)));
+async function prepare(lang = "uz") {
+  LANG = TX[lang] ? lang : "uz"; [D, B] = FONTS[LANG]; document.documentElement.lang = LANG; SC.forEach((sc, i) => { sc.d = BASE_D[i]; });
+  const sample = LANG === "ru" ? "Жж Яя Pillar" : "Pillar ÑñÓó";                       // kirill/lotin qismini ham yuklasin
+  await Promise.all([`800 100px ${LOGO_F}`, `800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `600 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f, sample)));
   const [h1, h5, u5, u2, bk, bb, br, bm, be] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg", "fon/b-erkin.jpg"].map(load));
   A = { h1, h5, u5, u2, bk, bb, br, bm, be };
   const q = qrcode(0, "M"); q.addData(SITE_URL); q.make();                              // xatoni tuzatish darajasi M (~15%)
@@ -241,7 +290,7 @@ async function prepare() {
   A.sheets = await Promise.all(sheets.map(s => svgImg(s, 1400)));
   // Diktor (uz-UZ-SardorNeural, video-vositalari/diktor.py): har sahnaga bitta jumla. Sahna jumladan qisqa bo'lsa — uzaytiriladi
   const dec = new OfflineAudioContext(1, 1, SR);
-  A.voice = await Promise.all(SC.map((_, i) => fetch(`_ovoz/${i + 1}.mp3`).then(r => r.ok ? r.arrayBuffer() : null).then(b => b ? dec.decodeAudioData(b) : null).catch(() => null)));
+  A.voice = await Promise.all(SC.map((_, i) => fetch(`_ovoz/${LANG}/${i + 1}.mp3`).then(r => r.ok ? r.arrayBuffer() : null).then(b => b ? dec.decodeAudioData(b) : null).catch(() => null)));
   A.voice.forEach((v, i) => { if (v) SC[i].d = Math.max(SC[i].d, VOICE_AT(i) + v.duration + 0.7); });
   TOTAL = SC.reduce((a, s) => a + s.d, 0); N = Math.round(TOTAL * FPS);
   let t = 0; CUTS = SC.map(s => (t += s.d)).slice(0, -1);
@@ -369,14 +418,14 @@ async function encode() {
     audio: { sr: SR, ch: 2, sizes: music.chunks.map(b => b.length), asc: Array.from(music.asc) } }));
   const head1 = new DataView(new ArrayBuffer(4)); head1.setUint32(0, meta.length); const head2 = new DataView(new ArrayBuffer(4)); head2.setUint32(0, avcc.length);
   const body = new Blob([head1, meta, head2, avcc, ...chunks, ...music.chunks]);         // video kadrlaridan keyin AAC kadrlar
-  const r = await fetch("/mux", { method: "POST", body }); const res = await r.json();
+  const r = await fetch(`/mux?lang=${LANG}`, { method: "POST", body }); const res = await r.json();
   // muqova: 1-sahnaning 3-soniyasi
-  frame(3.2); const jpg = await new Promise(res2 => c.toBlob(res2, "image/jpeg", 0.85)); const r2 = await (await fetch("/poster", { method: "POST", body: jpg })).json();
-  return { codec: cfg.codec, frames: N, seconds: TOTAL, mux: res, poster: r2 };
+  frame(3.2); const jpg = await new Promise(res2 => c.toBlob(res2, "image/jpeg", 0.85)); const r2 = await (await fetch(`/poster?lang=${LANG}`, { method: "POST", body: jpg })).json();
+  return { lang: LANG, codec: cfg.codec, frames: N, seconds: TOTAL, mux: res, poster: r2 };
 }
 // QR tekshiruvi: yakuniy sahna kadridan jsQR bilan qayta o'qish
 window.CHECKQR = sec => { frame(sec); const d = x.getImageData(0, 0, W, H); const r = typeof jsQR === "function" ? jsQR(d.data, W, H) : null; return r ? r.data : null; };
-window.RUN = async () => { await prepare(); frame(3.2); log("tayyor"); return true; };
+window.RUN = async (lang = "uz") => { await prepare(lang); frame(3.2); log("tayyor: " + LANG); return { lang: LANG, seconds: TOTAL, frames: N, font: [D, B] }; };
 window.ENCODE = encode;
 window.PREVIEW = sec => { frame(sec); return true; };
 </script></body></html>

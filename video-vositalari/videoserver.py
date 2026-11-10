@@ -6,9 +6,12 @@ Paket: [4 bayt JSON uzunligi][JSON {w,h,fps,sizes,keys}][4 bayt avcC uzunligi][a
 import http.server, json, pathlib, struct, sys, functools
 
 WEB = pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\web")
-OUT = [pathlib.Path(r"C:\Users\user\Videos\Pillar-reklama.mp4"), WEB / "video" / "pillar-reklama.mp4",
-       pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\arxitektura\static\video\pillar-reklama.mp4")]
-POSTER = [WEB / "video" / "pillar-reklama.jpg", pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\arxitektura\static\video\pillar-reklama.jpg")]
+STATIC = pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\arxitektura\static\video")
+LANGS = {"uz", "en", "ru", "es"}
+def outs(lang):                                                  # har til — alohida fayl: Pillar-reklama-en.mp4 va h.k.
+    return [pathlib.Path(r"C:\Users\user\Videos") / f"Pillar-reklama-{lang}.mp4", WEB / "video" / f"pillar-reklama-{lang}.mp4", STATIC / f"pillar-reklama-{lang}.mp4"]
+def posters(lang):
+    return [WEB / "video" / f"pillar-reklama-{lang}.jpg", STATIC / f"pillar-reklama-{lang}.jpg"]
 
 def box(kind, *parts):
     body = b"".join(parts)
@@ -68,14 +71,18 @@ class H(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
         n = int(self.headers.get("Content-Length", 0)); body = self.rfile.read(n)
         try:
-            if self.path == "/mux":
+            path, _, query = self.path.partition("?")
+            lang = dict(q.split("=", 1) for q in query.split("&") if "=" in q).get("lang", "uz")
+            if lang not in LANGS: raise ValueError("lang")
+            if path == "/mux":
                 jl = struct.unpack(">I", body[:4])[0]; meta = json.loads(body[4:4 + jl]); p = 4 + jl
                 al = struct.unpack(">I", body[p:p + 4])[0]; avcc = body[p + 4:p + 4 + al]; data = body[p + 4 + al:]
                 mp4 = mux(meta, avcc, data)
+                OUT = outs(lang)
                 for f in OUT: f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(mp4)
-                msg = {"ok": True, "bytes": len(mp4), "frames": len(meta["sizes"]), "saved": [str(f) for f in OUT]}
-            elif self.path == "/poster":
-                for f in POSTER: f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(body)
+                msg = {"ok": True, "lang": lang, "bytes": len(mp4), "frames": len(meta["sizes"]), "saved": [str(f) for f in OUT]}
+            elif path == "/poster":
+                for f in posters(lang): f.parent.mkdir(parents=True, exist_ok=True); f.write_bytes(body)
                 msg = {"ok": True, "bytes": len(body)}
             else:
                 msg = {"ok": False, "error": "unknown path"}

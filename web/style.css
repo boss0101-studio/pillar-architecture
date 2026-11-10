@@ -1751,3 +1751,7 @@ html.bg-photo body::after {
 /* ---------- BOSH SAHIFA: reklama videosi ---------- */
 .promo-video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #0f1214; border: 1px solid var(--line); border-radius: 14px; }
 .pv-dl { margin-top: 10px; font-size: .85rem; }
+.pv-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.pv-tabs button { font: inherit; font-size: .9rem; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; }
+.pv-tabs button:hover { border-color: var(--accent, #6f86ff); }
+.pv-tabs button.on { background: var(--accent, #6f86ff); border-color: var(--accent, #6f86ff); color: #fff; }

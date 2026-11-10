@@ -98,7 +98,7 @@ const AIDesign = (function () {
       try {
         switch (a && a.type) {
           case "new_design": {
-            const list = (Array.isArray(a.houses) && a.houses.length ? a.houses : [{ params: a.params || {} }]).slice(0, Site.MAX).map(x => {
+            const list = (Array.isArray(a.houses) && a.houses.length ? a.houses : [{ params: a.params || {}, cells: a.cells }]).slice(0, Site.MAX).map(x => {   // bitta uy: kataklar ham yuqori darajada kelishi mumkin
               const p = cleanP(DEFAULT_PARAMS, x.params), c = {}; putCells(c, p, x.cells); return { params: p, cells: c };
             });
             h.load(list, 10, String(a.name || "").slice(0, 80), "");

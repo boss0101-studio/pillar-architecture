@@ -1718,3 +1718,32 @@ html.bg-photo body::after {
 #galereya > main > section:first-child > .sec-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; }
 @media (max-width: 640px) { .ds-head, #galereya > main > section:first-child > .sec-head { border-radius: 12px; min-height: 200px; } }
 @media print { .ds-head, #galereya > main > section:first-child > .sec-head { background: none; color: #000; } .ds-head::before, .ds-head::after { display: none; } }
+
+/* ---------- RASMDAN DIZAYN: rasmdagi uyni Konstruktorga moslash ---------- */
+.rz-match { margin-top: 28px; border: 1px solid var(--line); background: var(--surface); padding: 16px; display: grid; gap: 12px; }
+.rzm-head { display: grid; gap: 4px; }
+.rzm-head b { font-size: 1.15rem; }
+.rzm-head small { color: var(--muted); }
+.rzm-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.rzm-photo { position: relative; user-select: none; -webkit-user-select: none; touch-action: none; line-height: 0; }
+.rzm-photo img { display: block; width: 100%; height: auto; pointer-events: none; }
+.rzm-rect { position: absolute; display: grid; outline: 2px solid #ffd166; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .35); }
+.rzm-c { position: relative; border: 1px dashed rgba(255, 209, 102, .85); background: transparent; color: #fff; font: 700 .8rem var(--font-mono); cursor: pointer; padding: 0; text-shadow: 0 1px 2px #000; line-height: 1; }
+.rzm-c:hover { background: rgba(255, 209, 102, .22); }
+.rzm-c.on { background: rgba(43, 74, 203, .45); }
+.rzm-c:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
+.rzm-h { position: absolute; width: 16px; height: 16px; background: #ffd166; border: 2px solid #1b2024; border-radius: 50%; cursor: nwse-resize; touch-action: none; z-index: 2; font-style: normal; }
+.rzm-h.nw { left: -8px; top: -8px; } .rzm-h.ne { right: -8px; top: -8px; cursor: nesw-resize; } .rzm-h.sw { left: -8px; bottom: -8px; cursor: nesw-resize; } .rzm-h.se { right: -8px; bottom: -8px; }
+.rzm-h.mv { left: 50%; top: -26px; width: 24px; height: 20px; margin-left: -12px; border-radius: 4px; cursor: move; display: grid; place-items: center; font-size: .75rem; color: #1b2024; line-height: 1; }
+.rzm-side { display: grid; gap: 10px; min-width: 0; }
+.rzm-ctl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.rzm-ctl label { display: grid; gap: 4px; font-size: .8rem; color: var(--muted); }
+.rzm-ctl select, .rzm-ctl input { font: inherit; font-size: .88rem; padding: 6px 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); min-width: 0; }
+.rzm-step { display: inline-flex; align-items: center; gap: 8px; }
+.rzm-step button { width: 32px; height: 32px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: 600 1rem var(--font-mono); cursor: pointer; }
+.rzm-step b { min-width: 2ch; text-align: center; color: var(--fg); font: 700 1rem var(--font-mono); }
+.rzm-hint { font-size: .78rem; margin: 0; }
+.rzm-prev { background: #fff; border: 1px solid var(--line); }
+.rzm-prev svg { display: block; width: 100%; height: auto; max-height: 300px; }
+.rzm-act { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 860px) { .rzm-grid { grid-template-columns: minmax(0, 1fr); } }

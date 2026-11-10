@@ -1673,3 +1673,7 @@ html.bg-photo body::after {
 .svc-credit { position: absolute; right: 12px; bottom: 10px; font: .66rem var(--font-mono); color: rgba(255, 255, 255, .55); }
 .svc-credit a { color: inherit; }
 @media (prefers-reduced-motion: reduce) { .svc-card::before { transition: none; } }
+
+/* avto fon tanlovi: kichik rasmda "avto" belgisi */
+.bgp-th.auto { position: relative; }
+.bgp-th.auto::after { content: "AVTO"; position: absolute; left: 4px; top: 4px; padding: 1px 5px; background: var(--accent); color: #fff; font: 600 .6rem var(--font-mono); letter-spacing: .06em; }

@@ -30,7 +30,29 @@
     { id: "h5", n: "Beton va yog'och", photo: "hero/5.jpg", th: "fon/h5-k.jpg", by: "POOJAN THANEKAR", pid: "F-slnkFvcag" },
     { id: "h3", n: "Registon", photo: "hero/3.jpg", th: "fon/h3-k.jpg", by: "Alessio Roversi", pid: "dvoY6xonps8" },
   ];
-  const BGS = [...PHOTOS,
+  // Har bo'limga nomiga mos foto (avto rejim): bo'lim almashganda fon ham almashadi
+  const SECTION = {
+    bosh: { photo: "fon/u5.jpg", by: "Brian Babb", pid: "XbwHrt87mQ0", n: "Bosh sahifa" },
+    konstruktor: { photo: "fon/b-konstruktor.jpg", by: "Evgeniy Surzhan", pid: "lVWozBOVY2M", n: "Konstruktor" },
+    erkin: { photo: "fon/b-erkin.jpg", by: "tofayel ahmed", pid: "2j8nnYUttmw", n: "Erkin qurish" },
+    gp: { photo: "fon/b-gp.jpg", by: "Peter Nguyen", pid: "fsgyO8vF7do", n: "Bosh reja" },
+    ar: { photo: "fon/b-ar.jpg", by: "Steve driscoll", pid: "VsBl5PwVZpY", n: "Arxitektura" },
+    bolimlar: { photo: "fon/b-bolimlar.jpg", by: "Josh Olalde", pid: "X1P1_EDNnok", n: "Loyiha bo'limlari" },
+    rasm: { photo: "fon/b-rasm.jpg", by: "Jorik Kleen", pid: "oAvRgNu6oVY", n: "Rasmdan dizayn" },
+    galereya: { photo: "fon/b-galereya.jpg", by: "Clay Banks", pid: "IE0m2PUI4Fg", n: "Galereya" },
+    mahsulotlar: { photo: "fon/b-mahsulotlar.jpg", by: "Declan Sun", pid: "RaTyAZrysv4", n: "Mahsulotlar" },
+    sozlamalar: { photo: "fon/b-sozlamalar.jpg", by: "Neon Wang", pid: "DAjAgQBs9AY", n: "Sozlamalar" },
+  };
+  SECTION.qogoz = SECTION.erkin; SECTION.admin = SECTION.sozlamalar;
+  const PAGE = { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "erkin", "gp.html": "gp", "ar.html": "ar",
+    "bolimlar.html": "bolimlar", "rasm.html": "rasm", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" };
+  function section() {
+    const views = document.querySelectorAll(".view");
+    if (views.length) { const v = [...views].find(x => !x.hidden); return v ? v.id : "bosh"; }
+    return PAGE[location.pathname.split("/").pop() || "index.html"] || "bosh";
+  }
+  const AUTO = { id: "auto", n: "Bo'limga mos (avto)", auto: true };
+  const BGS = [AUTO, ...PHOTOS,
     { id: "peshtoq", n: "Madrasa peshtoqi", file: "bg-arxitektura.svg" },
     { id: "minora", n: "Minora", make() {
       let d = "", hw = y => 70 + (y - 230) / (G - 230) * 45;          // minora pastga qarab kengayadi
@@ -128,14 +150,16 @@
 
   // ---------- Qo'llash ----------
   const abs = f => new URL(f, document.baseURI).href;
-  const urlOf = b => (b.photo ? `url("${abs(b.th)}")` : b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
+  const urlOf = b => (b.auto ? `url("${abs((SECTION[section()] || SECTION.bosh).photo)}")` : b.photo ? `url("${abs(b.th)}")` : b.file ? `url("${new URL(b.file, document.baseURI).href}")` : `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(b.svg || (b.svg = b.make()))}")`);
   // Standart: oddiy, qimirlamaydigan 2D chizma. 3D jonli fonni foydalanuvchi o'zi yoqishi mumkin.
   // v:2 — avval 3D standart bo'lgan: eski tanlovda 3D bir marta o'chiriladi. v:3 — fon matnga xalaqit bermasin: eski kuchli fon 4% ga tushiriladi
   // v:4 — standart fon haqiqiy uy fotosurati; eski standart chizma ("peshtoq") bir marta fotoga almashtiriladi. pop — foto shaffofligi (%)
-  const DEF = { id: "u5", op: 4, pop: 22, d3: false, v: 4 };
+  // v:5 — standart: har bo'limga mos foto ("auto"); avvalgi standart foto (u5) bir marta avtoga o'tadi
+  const DEF = { id: "auto", op: 4, pop: 22, d3: false, v: 5 };
   let state = { ...DEF };
-  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (!s.v || s.v < 2) state.d3 = false; if (!s.v || s.v < 3) state.op = Math.min(Number(state.op) || 4, 4); if (!s.v || s.v < 4) { if (!s.id || s.id === "peshtoq") state.id = DEF.id; state.pop = DEF.pop; } state.v = 4; } catch {}
-  const cur = () => BGS.find(x => x.id === state.id) || BGS[0];
+  try { const s = JSON.parse(localStorage.getItem(KEY) || "{}"); state = { ...state, ...s }; if (!s.v || s.v < 2) state.d3 = false; if (!s.v || s.v < 3) state.op = Math.min(Number(state.op) || 4, 4); if (!s.v || s.v < 4) { if (!s.id || s.id === "peshtoq") state.id = DEF.id; state.pop = DEF.pop; } if (!s.v || s.v < 5) { if (!s.id || s.id === "peshtoq" || s.id === "u5") state.id = DEF.id; } state.v = 5; } catch {}
+  // avto rejimda — joriy bo'lim fotosi (foto kabi ishlaydi)
+  const cur = () => { const b = BGS.find(x => x.id === state.id) || BGS[0]; return b.auto ? { ...(SECTION[section()] || SECTION.bosh), id: "auto", auto: true } : b; };
   const lim = b => (b.photo ? [5, 60] : [2, 25]);                // foto ko'rinishi 5–60%, chizma 2–25%
   const opOf = b => { const [lo, hi] = lim(b), v = Number(b.photo ? state.pop : state.op) || (b.photo ? DEF.pop : DEF.op); return Math.min(hi, Math.max(lo, v)); };
   function apply() {
@@ -148,6 +172,11 @@
   }
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch {} };
   apply();
+  // bo'lim almashganda (bitta sahifali versiyada .view yashiriladi/ochiladi) avto fon yangilanadi
+  let lastSec = section();
+  const onView = () => { const sec = section(); if (sec === lastSec) return; lastSec = sec; if (state.id === "auto") { apply(); if (typeof sync === "function") sync(); } };
+  const watch = () => document.querySelectorAll(".view").forEach(v => new MutationObserver(onView).observe(v, { attributes: true, attributeFilter: ["hidden"] }));
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
 
   // ---------- Tanlash oynasi ----------
   const btn = document.createElement("button");
@@ -156,10 +185,10 @@
   btn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12z"/><path d="M9 21v-6h6v6"/></svg><span>Fon</span>';
   const panel = document.createElement("div");
   panel.className = "bgp"; panel.hidden = true; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Orqa fon");
-  const thumb = b => `<button type="button" role="radio" data-bg="${b.id}"><span class="bgp-th${b.photo ? " photo" : ""}" style="--th:${urlOf(b).replace(/"/g, "'")}"></span><small>${b.n}</small></button>`;
+  const thumb = b => `<button type="button" role="radio" data-bg="${b.id}"><span class="bgp-th${b.photo || b.auto ? " photo" : ""}${b.auto ? " auto" : ""}" style="--th:${urlOf(b).replace(/"/g, "'")}"></span><small>${b.n}</small></button>`;
   panel.innerHTML = `<div class="bgp-head"><b>Orqa fon</b><span class="label">haqiqiy uylar</span><button type="button" class="bgp-x" aria-label="Yopish">×</button></div>
     <div class="bgp-sub">Fotosuratlar</div>
-    <div class="bgp-grid" role="radiogroup" aria-label="Fon rasmi">${PHOTOS.map(thumb).join("")}</div>
+    <div class="bgp-grid" role="radiogroup" aria-label="Fon rasmi">${[AUTO, ...PHOTOS].map(thumb).join("")}</div>
     <p class="bgp-credit" data-credit></p>
     <div class="bgp-sub">Chizmalar</div>
     <div class="bgp-grid" role="radiogroup" aria-label="Fon chizmasi">${BGS.filter(b => !b.photo).map(thumb).join("")}</div>
@@ -173,7 +202,8 @@
     const b = cur(), [lo, hi] = lim(b), v = opOf(b);
     range.min = lo; range.max = hi; range.value = v; out.textContent = `${v}%`; d3.checked = state.d3 !== false;
     const cr = panel.querySelector("[data-credit]");
-    cr.innerHTML = b.photo ? `Foto: <a href="https://unsplash.com/photos/${encodeURIComponent(b.pid)}" target="_blank" rel="noopener">${b.by.replace(/[<>&"]/g, "")}</a> / Unsplash` : "";
+    const at = panel.querySelector(".bgp-th.auto"); if (at) at.style.setProperty("--th", urlOf(AUTO));
+    cr.innerHTML = b.photo ? `${b.auto ? `${(b.n || "").replace(/[<>&"]/g, "")} · ` : ""}Foto: <a href="https://unsplash.com/photos/${encodeURIComponent(b.pid)}" target="_blank" rel="noopener">${b.by.replace(/[<>&"]/g, "")}</a> / Unsplash` : "";
   }
   sync();
   const open = v => { panel.hidden = !v; btn.setAttribute("aria-expanded", String(v)); if (v) (panel.querySelector('[aria-checked="true"]') || panel.querySelector("[data-bg]")).focus(); };
@@ -191,7 +221,7 @@
   document.addEventListener("pointerdown", e => { if (!panel.hidden && !panel.contains(e.target) && !btn.contains(e.target)) open(false); });
 
   window.UstunFon = {
-    list: BGS.map(b => b.id), items: () => BGS.map(b => ({ id: b.id, n: b.n, url: urlOf(b), photo: !!b.photo })),
+    list: BGS.map(b => b.id), items: () => BGS.map(b => ({ id: b.id, n: b.n, url: urlOf(b), photo: !!(b.photo || b.auto) })),
     set(id) { if (BGS.some(b => b.id === id)) { state.id = id; apply(); save(); sync(); } },
     setOp(v) { const b = cur(), [lo, hi] = lim(b), x = Math.min(hi, Math.max(lo, Math.round(Number(v) || lo))); if (b.photo) state.pop = x; else state.op = x; apply(); save(); sync(); },
     opRange: () => lim(cur()), op: () => opOf(cur()),

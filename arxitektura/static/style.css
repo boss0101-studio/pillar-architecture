@@ -1677,3 +1677,26 @@ html.bg-photo body::after {
 /* avto fon tanlovi: kichik rasmda "avto" belgisi */
 .bgp-th.auto { position: relative; }
 .bgp-th.auto::after { content: "AVTO"; position: absolute; left: 4px; top: 4px; padding: 1px 5px; background: var(--accent); color: #fff; font: 600 .6rem var(--font-mono); letter-spacing: .06em; }
+
+/* ---------- BO'LIM SARLAVHASI: nomiga mos foto banner (rasm — bgpicker.js: --sec-img, --sec-credit) ---------- */
+.ds-head, #galereya > main > section:first-child > .sec-head {
+  --fg: #fff; --muted: rgba(255, 255, 255, .84); --line: rgba(255, 255, 255, .32); --surface: rgba(14, 17, 20, .62); --bg: #111416;
+  position: relative; isolation: isolate; overflow: hidden; margin-top: 22px; padding: clamp(28px, 4vw, 48px) clamp(20px, 3vw, 40px);
+  min-height: clamp(220px, 30vh, 330px); align-content: end; color: #fff; border: 0; border-radius: 16px;
+  background: #1b2024 var(--sec-img, none) center / cover no-repeat;
+}
+.ds-head::before, #galereya > main > section:first-child > .sec-head::before {
+  content: ""; position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg, rgba(10, 12, 14, .86) 0%, rgba(10, 12, 14, .6) 55%, rgba(10, 12, 14, .35) 100%),
+              linear-gradient(0deg, rgba(10, 12, 14, .55) 0%, transparent 50%);
+}
+.ds-head::after, #galereya > main > section:first-child > .sec-head::after {
+  content: var(--sec-credit, ""); position: absolute; right: 14px; bottom: 10px; font: .66rem var(--font-mono); color: rgba(255, 255, 255, .55); pointer-events: none;
+}
+.ds-head h1, .ds-head .label, #galereya > main > section:first-child > .sec-head h2 { color: #fff; }
+.ds-head .label { color: rgba(255, 255, 255, .78); }
+.ds-head p { color: rgba(255, 255, 255, .86); }
+.ds-head a:not(.btn) { color: #c3cdff; }
+#galereya > main > section:first-child > .sec-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; }
+@media (max-width: 640px) { .ds-head, #galereya > main > section:first-child > .sec-head { border-radius: 12px; min-height: 200px; } }
+@media print { .ds-head, #galereya > main > section:first-child > .sec-head { background: none; color: #000; } .ds-head::before, .ds-head::after { display: none; } }

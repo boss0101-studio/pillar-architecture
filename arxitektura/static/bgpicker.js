@@ -162,7 +162,14 @@
   const cur = () => { const b = BGS.find(x => x.id === state.id) || BGS[0]; return b.auto ? { ...(SECTION[section()] || SECTION.bosh), id: "auto", auto: true } : b; };
   const lim = b => (b.photo ? [5, 60] : [2, 25]);                // foto ko'rinishi 5–60%, chizma 2–25%
   const opOf = b => { const [lo, hi] = lim(b), v = Number(b.photo ? state.pop : state.op) || (b.photo ? DEF.pop : DEF.op); return Math.min(hi, Math.max(lo, v)); };
+  // Bo'lim sarlavhasi banneri (.ds-head): joriy bo'lim fotosi va muallifi — orqa fon tanlovidan qat'i nazar
+  function applySection() {
+    const sp = SECTION[section()] || SECTION.bosh, st = document.documentElement.style;
+    st.setProperty("--sec-img", `url("${abs(sp.photo)}")`);
+    st.setProperty("--sec-credit", JSON.stringify(`Foto: ${sp.by} / Unsplash`));
+  }
   function apply() {
+    applySection();
     const b = cur(), root = document.documentElement;
     root.classList.toggle("bg-photo", !!b.photo);
     if (b.photo) root.style.setProperty("--bg-photo", `url("${abs(b.photo)}")`);
@@ -174,7 +181,7 @@
   apply();
   // bo'lim almashganda (bitta sahifali versiyada .view yashiriladi/ochiladi) avto fon yangilanadi
   let lastSec = section();
-  const onView = () => { const sec = section(); if (sec === lastSec) return; lastSec = sec; if (state.id === "auto") { apply(); if (typeof sync === "function") sync(); } };
+  const onView = () => { const sec = section(); if (sec === lastSec) return; lastSec = sec; applySection(); if (state.id === "auto") { apply(); if (typeof sync === "function") sync(); } };
   const watch = () => document.querySelectorAll(".view").forEach(v => new MutationObserver(onView).observe(v, { attributes: true, attributeFilter: ["hidden"] }));
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch); else watch();
 

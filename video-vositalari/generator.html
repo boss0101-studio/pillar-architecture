@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="uz"><head><meta charset="utf-8"><title>Pillar reklama videosi — generator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Archivo:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>body{margin:0;background:#111;color:#eee;font:14px Archivo,sans-serif}canvas{width:960px;height:540px;display:block}#log{padding:8px;font-family:monospace}</style></head>
+<body><canvas id="c" width="1920" height="1080"></canvas><div id="log">tayyorlanmoqda…</div>
+<script src="building.js"></script><script src="interior.js"></script><script src="bolimlar.js"></script>
+<script>
+// Pillar Architecture — reklama videosi: 1920×1080, 30 kadr/s. Har kadr canvas'da chiziladi, WebCodecs H.264 bilan kodlanadi (real vaqt shart emas).
+const W = 1920, H = 1080, FPS = 30, ACC = "#6f86ff", VBG = "#0f1214";
+const c = document.getElementById("c"), x = c.getContext("2d"), log = s => { document.getElementById("log").textContent = s; };
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v)), ease = t => 1 - Math.pow(1 - clamp(t), 3), lerp = (a, b, t) => a + (b - a) * t;
+const load = src => new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error(src)); i.src = src; });
+const svgImg = (svg, w) => load(URL.createObjectURL(new Blob([svg.replace(/<svg\b([^>]*?)\swidth="[^"]*"/, "<svg$1").replace(/<svg\b([^>]*?)\sheight="[^"]*"/, "<svg$1").replace(/^<svg\b/, `<svg width="${w}"`)], { type: "image/svg+xml" })));
+const D = "'Big Shoulders Display'", B = "Archivo", M = "'JetBrains Mono'";
+
+// ---------- chizish yordamchilari ----------
+function cover(img, zoom = 1, fx = 0.5, fy = 0.5, alpha = 1) {
+  const s = Math.max(W / img.width, H / img.height) * zoom, w = img.width * s, h = img.height * s;
+  x.globalAlpha = alpha; x.drawImage(img, (W - w) * fx, (H - h) * fy, w, h); x.globalAlpha = 1;
+}
+function shade(a0 = .85, a1 = .3) { const g = x.createLinearGradient(0, 0, W, 0); g.addColorStop(0, `rgba(10,12,14,${a0})`); g.addColorStop(.6, `rgba(10,12,14,${(a0 + a1) / 2})`); g.addColorStop(1, `rgba(10,12,14,${a1})`); x.fillStyle = g; x.fillRect(0, 0, W, H);
+  const v = x.createLinearGradient(0, H, 0, H * .45); v.addColorStop(0, "rgba(10,12,14,.75)"); v.addColorStop(1, "rgba(10,12,14,0)"); x.fillStyle = v; x.fillRect(0, 0, W, H); }
+function rr(px, py, w, h, r) { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); }
+// matn: kirish animatsiyasi (pastdan ko'tarilib, ochilib)
+function txt(s, px, py, font, color, t, delay = 0, align = "left") {
+  const k = ease((t - delay) / 0.5); if (k <= 0) return;
+  x.save(); x.globalAlpha = k; x.font = font; x.fillStyle = color; x.textAlign = align; x.textBaseline = "alphabetic"; x.fillText(s, px, py + (1 - k) * 34); x.restore();
+}
+function head(t, kicker, title, sub, px = 140, py = 560) {
+  const k = ease(t / 0.45);
+  x.fillStyle = ACC; x.fillRect(px, py - 152, 60 * k, 4);
+  txt(kicker, px + 78, py - 140, `500 30px ${M}`, "rgba(255,255,255,.85)", t, 0);
+  x.font = `800 150px ${D}`; const widest = Math.max(...title.split("\n").map(l => x.measureText(l.toUpperCase()).width)), fs = Math.min(150, Math.floor(150 * 860 / widest));   // o'ngdagi rasmga tegmasin
+  title.split("\n").forEach((l, i) => txt(l.toUpperCase(), px, py + i * 132, `800 ${fs}px ${D}`, "#fff", t, 0.08 + i * 0.08));
+  const lines = wrap(sub, `400 38px ${B}`, 900);
+  lines.forEach((l, i) => txt(l, px, py + (title.split("\n").length - 1) * 132 + 90 + i * 54, `400 38px ${B}`, "rgba(255,255,255,.88)", t, 0.25 + i * 0.05));
+}
+function wrap(s, font, max) { x.font = font; const out = []; let line = ""; s.split(" ").forEach(w => { const tr = line ? line + " " + w : w; if (x.measureText(tr).width > max && line) { out.push(line); line = w; } else line = tr; }); if (line) out.push(line); return out; }
+function logo(px, py, size = 54, a = 1) { x.save(); x.globalAlpha = a; x.font = `800 ${size}px ${D}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", px, py); const w = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", px + w, py); x.restore(); }
+function chip(s, px, py, a, fill = "rgba(255,255,255,.1)", stroke = "rgba(255,255,255,.35)") {
+  x.save(); x.globalAlpha = a; x.font = `500 28px ${M}`; const w = x.measureText(s).width + 44; rr(px, py, w, 58, 29); x.fillStyle = fill; x.fill(); x.strokeStyle = stroke; x.lineWidth = 2; x.stroke();
+  x.fillStyle = "#fff"; x.textBaseline = "middle"; x.fillText(s, px + 22, py + 30); x.restore(); return w;
+}
+
+// ---------- sahnalar ----------
+let A = {};   // yuklangan rasmlar
+const SC = [
+  { d: 5, draw(t, s) {                                                        // 1. Kirish
+    cover(A.h1, lerp(1.14, 1.0, s / 5), .5, .6); shade(.82, .2);
+    logo(140, 150, 64, ease(t / .4));
+    head(t, "ARXITEKTURA LOYIHALASH PLATFORMASI", "Uyingizni\nbugun chizing", "Brauzerda ishlaydi: chizing, 3D'da ko'ring, hisoblang — bitta joyda.", 140, 560);
+  } },
+  { d: 6, draw(t, s) {                                                        // 2. Konstruktor
+    cover(A.bk, 1.05, .5, .5, .5); x.fillStyle = "rgba(10,12,14,.72)"; x.fillRect(0, 0, W, H);
+    head(t, "KONSTRUKTOR", "Binoni o'zingiz\nloyihalang", "Qavat, tom, material va derazalar — bir necha bosishda. Natija darhol chizma va 3D'da.", 120, 520);
+    const cx = 1040, cy = 150, cw = 760, ch = 640, k = ease((t - .15) / .5);
+    x.save(); x.globalAlpha = k; x.translate(0, (1 - k) * 60); rr(cx, cy, cw, ch, 26); x.fillStyle = "#f4f2ee"; x.fill();
+    const i = Math.floor(s / 1.45) % A.fac.length, f = clamp((s % 1.45) / .35);
+    const draw = (img, a) => { x.globalAlpha = k * a; const sc = Math.min((cw - 60) / img.width, (ch - 60) / img.height); x.drawImage(img, cx + (cw - img.width * sc) / 2, cy + (ch - img.height * sc) / 2, img.width * sc, img.height * sc); };
+    draw(A.fac[(i + A.fac.length - 1) % A.fac.length], 1 - f); draw(A.fac[i], f); x.restore();
+    let px = 1040; ["Qavat", "Tom", "Material", "Deraza", "Balkon"].forEach((l, j) => { px += chip(l, px, 840, ease((t - .4 - j * .08) / .4)) + 14; });
+  } },
+  { d: 5.5, draw(t, s) {                                                      // 3. 3D va VR
+    cover(A.u5, lerp(1.0, 1.12, s / 5.5), .55, .5); shade(.85, .15);
+    head(t, "3D · VR · ICHKI MAKON", "Uyingiz ichida\nyuring", "3D va VR'da xonalar bo'ylab yuring, mebel va texnikani joylang, hovlini bezang.", 140, 560);
+    let px = 140; ["FHD VR", "Ichki makon", "Hovli", "Quyosh holati"].forEach((l, j) => { px += chip(l, px, 900, ease((t - .45 - j * .08) / .4), "rgba(111,134,255,.25)", ACC) + 14; });
+  } },
+  { d: 6.5, draw(t, s) {                                                      // 4. Loyiha bo'limlari
+    cover(A.bb, 1.04, .5, .5, .45); x.fillStyle = "rgba(10,12,14,.78)"; x.fillRect(0, 0, W, H);
+    head(t, "LOYIHA BO'LIMLARI", "13 ta bo'lim —\nchizmalar tayyor", "GP, AR, konstruksiya, isitish, suv, elektr, gaz, yong'in xavfsizligi, smeta… A3 varaqlar avtomatik.", 120, 520);
+    A.sheets.forEach((img, j) => {
+      const k = ease((t - .2 - j * .12) / .55), w = 720, h = w * img.height / img.width, px = 1060 + j * 46 + (1 - k) * 500, py = 170 + j * 70;
+      x.save(); x.globalAlpha = k; x.translate(px + w / 2, py + h / 2); x.rotate((-4 + j * 2.6) * Math.PI / 180);
+      x.shadowColor = "rgba(0,0,0,.5)"; x.shadowBlur = 40; x.fillStyle = "#fff"; x.fillRect(-w / 2, -h / 2, w, h); x.shadowBlur = 0; x.drawImage(img, -w / 2, -h / 2, w, h); x.restore();
+    });
+    const codes = "GP · AR · KR · OV · VK · EOM · GS · SS · PS · TX · POS · OOS · SM";
+    txt(codes, 120, 980, `500 30px ${M}`, ACC, t, .6);
+  } },
+  { d: 6, draw(t, s) {                                                        // 5. Rasmdan dizayn
+    x.fillStyle = VBG; x.fillRect(0, 0, W, H); cover(A.br, 1.02, .5, .5, .25);
+    head(t, "RASMDAN DIZAYN", "Rasm yuklang —\nuy tayyor", "Rang palitrasi, dizayn rejasi va Konstruktorda aynan rasmdagi uy — 3D'da ham.", 120, 520);
+    const px = 1030, py = 150, pw = 780, ph = pw * A.u2.height / A.u2.width, k = ease((t - .1) / .5);
+    x.save(); x.globalAlpha = k; rr(px, py, pw, ph, 22); x.clip(); x.drawImage(A.u2, px, py, pw, ph);
+    const scan = clamp((s - .6) / 1.6); if (scan > 0 && scan < 1) { const yy = py + ph * scan, g = x.createLinearGradient(0, yy - 60, 0, yy); g.addColorStop(0, "rgba(111,134,255,0)"); g.addColorStop(1, "rgba(111,134,255,.55)"); x.fillStyle = g; x.fillRect(px, yy - 60, pw, 60); x.fillStyle = "#b9c6ff"; x.fillRect(px, yy, pw, 3); }
+    const gk = ease((s - 2.2) / .6);
+    if (gk > 0) { const r = [px + pw * .14, py + ph * .30, pw * .74, ph * .6], fl = 2, bays = 4; x.globalAlpha = k * gk; x.strokeStyle = "#ffd166"; x.lineWidth = 4; x.strokeRect(...r); x.setLineDash([10, 8]); x.lineWidth = 2;
+      for (let i = 1; i < bays; i++) { x.beginPath(); x.moveTo(r[0] + r[2] * i / bays, r[1]); x.lineTo(r[0] + r[2] * i / bays, r[1] + r[3]); x.stroke(); }
+      for (let i = 1; i < fl; i++) { x.beginPath(); x.moveTo(r[0], r[1] + r[3] * i / fl); x.lineTo(r[0] + r[2], r[1] + r[3] * i / fl); x.stroke(); }
+      x.setLineDash([]); x.font = `700 40px ${M}`; x.fillStyle = "#fff"; x.textAlign = "center"; x.fillText("B", r[0] + r[2] / 8, r[1] + r[3] / 4 + 14); x.fillText("B", r[0] + r[2] * 7 / 8, r[1] + r[3] / 4 + 14); x.fillText("E", r[0] + r[2] * 3 / 8, r[1] + r[3] * 3 / 4 + 14); x.textAlign = "left"; }
+    x.restore();
+    ["#f2f0eb", "#2b2f33", "#a77b55", "#8c9399", "#c9d3d9"].forEach((col, j) => { const a = ease((s - 3.2 - j * .12) / .4); if (a <= 0) return; x.save(); x.globalAlpha = a; rr(px + j * 160, py + ph + 40 + (1 - a) * 30, 140, 110, 14); x.fillStyle = col; x.fill(); x.strokeStyle = "rgba(255,255,255,.3)"; x.stroke(); x.restore(); });
+  } },
+  { d: 5, draw(t, s) {                                                        // 6. Smeta
+    cover(A.bm, 1.04, .5, .5, .35); x.fillStyle = "rgba(10,12,14,.8)"; x.fillRect(0, 0, W, H);
+    head(t, "SMETA VA MATERIALLAR", "Narxi oldindan\nma'lum", "Formulali hisob, materiallar ro'yxati va QQS bilan yig'ma smeta — PDF'ga chiqariladi.", 120, 520);
+    const v = 151900 * ease((s - .3) / 2.2);
+    txt("$" + Math.round(v).toLocaleString("ru-RU"), 1060, 330, `800 170px ${D}`, ACC, t, .15);
+    [["AR", .31], ["AS / KJ", .16], ["TX", .09], ["OV", .07], ["EOM", .07], ["VK", .05]].forEach(([n, p], j) => {
+      const a = ease((s - .8 - j * .15) / .6), py = 420 + j * 86; if (a <= 0) return;
+      x.save(); x.globalAlpha = a; x.font = `600 32px ${M}`; x.fillStyle = "#fff"; x.fillText(n, 1060, py + 38); x.fillStyle = "rgba(255,255,255,.12)"; x.fillRect(1240, py + 12, 560, 34); x.fillStyle = ACC; x.fillRect(1240, py + 12, 560 * p / .31 * a, 34);
+      x.fillStyle = "rgba(255,255,255,.8)"; x.font = `500 28px ${M}`; x.fillText(Math.round(p * 100) + "%", 1240 + 560 * p / .31 * a + 14, py + 39); x.restore();
+    });
+  } },
+  { d: 5, draw(t, s) {                                                        // 7. AI yordamchi
+    x.fillStyle = VBG; x.fillRect(0, 0, W, H); const g = x.createRadialGradient(1400, 300, 50, 1400, 300, 900); g.addColorStop(0, "rgba(111,134,255,.25)"); g.addColorStop(1, "rgba(111,134,255,0)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
+    head(t, "AI YORDAMCHI", "Savol bering —\nu ochib beradi", "Faqat loyiha bo'yicha javob beradi, bo'limlarni ochadi va binoni o'zgartiradi.", 120, 520);
+    const msgs = [["u", "Smeta bo'limiga o't", .4], ["a", "Ochildi: Smeta (SM) →", 1.2], ["u", "3 qavat qil, tomi gumbaz bo'lsin", 2.1], ["a", "Bajarildi ✓ 3 qavat, gumbaz tom", 3.0]];
+    let py = 230;
+    msgs.forEach(([who, s2, at]) => {
+      const a = ease((s - at) / .35); if (a <= 0) return; const full = who === "a" ? s2 : s2.slice(0, Math.ceil(s2.length * clamp((s - at) / .5)));
+      x.save(); x.globalAlpha = a; x.font = `500 38px ${B}`; const w = Math.min(760, x.measureText(s2).width + 64), px = who === "u" ? 1800 - w : 1040;
+      rr(px, py + (1 - a) * 20, w, 92, 26); x.fillStyle = who === "u" ? ACC : "rgba(255,255,255,.1)"; x.fill(); if (who === "a") { x.strokeStyle = "rgba(255,255,255,.25)"; x.lineWidth = 2; x.stroke(); }
+      x.fillStyle = "#fff"; x.textBaseline = "middle"; x.fillText(full, px + 32, py + 47 + (1 - a) * 20); x.restore(); py += 130;
+    });
+  } },
+  { d: 5, draw(t, s) {                                                        // 8. Yakun
+    cover(A.h5, lerp(1.1, 1.0, s / 5), .5, .55); x.fillStyle = "rgba(10,12,14,.62)"; x.fillRect(0, 0, W, H);
+    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 230px ${D}`; x.textAlign = "center"; x.fillStyle = "#fff"; const lw = x.measureText("PILLAR").width; x.fillText("PILLAR", W / 2 - 30, 520); x.fillStyle = ACC; x.textAlign = "left"; x.fillText(".", W / 2 - 30 + lw / 2, 520); x.restore();
+    txt("Arxitektura loyihalash platformasi", W / 2, 610, `500 46px ${B}`, "#fff", t, .2, "center");
+    const a = ease((t - .35) / .5); if (a > 0) { x.save(); x.globalAlpha = a; x.font = `600 40px ${M}`; const url = "boss0101-studio.github.io/pillar-architecture", w = x.measureText(url).width + 90; rr(W / 2 - w / 2, 690, w, 96, 48); x.fillStyle = "#fff"; x.fill(); x.fillStyle = VBG; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(url, W / 2, 740); x.restore(); }
+    txt("Bepul sinab ko'ring", W / 2, 880, `700 56px ${D}`, "#fff", t, .5, "center");
+    txt("Fotolar: Unsplash (bepul litsenziya)", W / 2, 1040, `400 24px ${M}`, "rgba(255,255,255,.55)", t, .6, "center");
+  } },
+];
+const TOTAL = SC.reduce((a, s) => a + s.d, 0), N = Math.round(TOTAL * FPS), FADE = 0.6;
+function frame(sec) {
+  let t0 = 0, i = 0; while (i < SC.length - 1 && sec >= t0 + SC[i].d) { t0 += SC[i].d; i++; }
+  const s = sec - t0, sc = SC[i];
+  x.globalAlpha = 1; x.fillStyle = VBG; x.fillRect(0, 0, W, H);
+  if (i > 0 && s < FADE) { const p = SC[i - 1]; p.draw((s + p.d) / p.d * 1.0 > 1 ? 1 : 1, p.d + s); x.save(); x.globalAlpha = s / FADE; sc.draw(s / sc.d, s); x.restore(); }   // o'tish: oldingi sahna ustiga yangisi ochiladi
+  else sc.draw(s / sc.d, s);
+  if (i > 0) logo(W - 250, 90, 46, .9);
+  x.fillStyle = "rgba(255,255,255,.15)"; x.fillRect(0, H - 8, W, 8); x.fillStyle = ACC; x.fillRect(0, H - 8, W * sec / TOTAL, 8);
+  x.font = `500 26px ${M}`; x.fillStyle = "rgba(255,255,255,.7)"; x.textBaseline = "alphabetic"; x.fillText(`${String(i + 1).padStart(2, "0")} / ${String(SC.length).padStart(2, "0")}`, W - 250, H - 40);
+}
+
+async function prepare() {
+  await Promise.all([`800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f)));
+  const [h1, h5, u5, u2, bk, bb, br, bm] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg"].map(load));
+  A = { h1, h5, u5, u2, bk, bb, br, bm };
+  const P = (o, cells = {}) => ({ params: { ...DEFAULT_PARAMS, ...o }, cells });
+  const designs = [P({ category: "turar-joy", floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht", window: "oddiy", ground: "oddiy" }, { "1,0": "balc", "1,3": "balc" }),
+    P({ category: "turar-joy", floors: 2, bays: 6, floor_h: 3.3, bay_w: 4.2, depth: 14, roof: "piramida", material: "travertin", window: "panorama", ground: "oddiy" }, { "1,1": "balc", "1,4": "balc" }),
+    P({ category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" }),
+    P({ category: "tijorat", floors: 6, bays: 8, floor_h: 3.6, bay_w: 4.5, depth: 18, roof: "terrasa", material: "travertin", window: "panorama", ground: "vitrina" })];
+  A.fac = await Promise.all(designs.map((d, i) => svgImg(renderFacade(d.params, d.cells, { dims: false, uid: "vid" + i }), 1400)));
+  const sb = P({ floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht" });
+  const sheets = [["kr", 1], ["ov", 1], ["vk", 1], ["sm", 0]].map(([k, i]) => UstunRP.sheetsOf(sb, k)[i].svg);
+  A.sheets = await Promise.all(sheets.map(s => svgImg(s, 1400)));
+}
+
+async function encode() {
+  const cands = ["avc1.640028", "avc1.4d0028", "avc1.420028"]; let cfg = null;
+  for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 2_200_000, framerate: FPS, avc: { format: "avc" }, latencyMode: "quality" }; const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
+  if (!cfg) throw new Error("H.264 kodlash qo'llab-quvvatlanmaydi");
+  const chunks = [], keys = []; let avcc = null;
+  const enc = new VideoEncoder({ output: (ch, meta) => { if (meta && meta.decoderConfig && meta.decoderConfig.description) avcc = new Uint8Array(meta.decoderConfig.description); const b = new Uint8Array(ch.byteLength); ch.copyTo(b); chunks.push(b); keys.push(ch.type === "key"); }, error: e => { throw e; } });
+  enc.configure(cfg);
+  for (let i = 0; i < N; i++) {
+    frame(i / FPS);
+    const vf = new VideoFrame(c, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+    enc.encode(vf, { keyFrame: i % (FPS * 2) === 0 }); vf.close();
+    while (enc.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 5));
+    if (i % 30 === 0) log(`kodlanmoqda ${i}/${N} (${cfg.codec})`);
+  }
+  await enc.flush(); enc.close();
+  const meta = new TextEncoder().encode(JSON.stringify({ w: W, h: H, fps: FPS, sizes: chunks.map(b => b.length), keys }));
+  const parts = [new Uint32Array([0]), meta, new Uint32Array([0]), avcc, ...chunks];
+  const head1 = new DataView(new ArrayBuffer(4)); head1.setUint32(0, meta.length); const head2 = new DataView(new ArrayBuffer(4)); head2.setUint32(0, avcc.length);
+  const body = new Blob([head1, meta, head2, avcc, ...chunks]);
+  const r = await fetch("/mux", { method: "POST", body }); const res = await r.json();
+  // muqova: 1-sahnaning 3-soniyasi
+  frame(3.2); const jpg = await new Promise(res2 => c.toBlob(res2, "image/jpeg", 0.85)); const r2 = await (await fetch("/poster", { method: "POST", body: jpg })).json();
+  return { codec: cfg.codec, frames: N, seconds: TOTAL, mux: res, poster: r2 };
+}
+window.RUN = async () => { await prepare(); frame(3.2); log("tayyor"); return true; };
+window.ENCODE = encode;
+window.PREVIEW = sec => { frame(sec); return true; };
+</script></body></html>

@@ -1747,3 +1747,7 @@ html.bg-photo body::after {
 .rzm-prev svg { display: block; width: 100%; height: auto; max-height: 300px; }
 .rzm-act { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 860px) { .rzm-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- BOSH SAHIFA: reklama videosi ---------- */
+.promo-video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #0f1214; border: 1px solid var(--line); border-radius: 14px; }
+.pv-dl { margin-top: 10px; font-size: .85rem; }

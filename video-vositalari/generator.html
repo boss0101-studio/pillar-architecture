@@ -135,7 +135,8 @@ const SC = [
     txt("Fotolar: Unsplash (bepul litsenziya)", W / 2, 1040, `400 24px ${M}`, "rgba(255,255,255,.55)", t, .6, "center");
   } },
 ];
-const TOTAL = SC.reduce((a, s) => a + s.d, 0), N = Math.round(TOTAL * FPS), FADE = 0.6;
+let TOTAL = SC.reduce((a, s) => a + s.d, 0), N = Math.round(TOTAL * FPS);                // diktor ovozi yuklangach qayta hisoblanadi
+const FADE = 0.6;
 function frame(sec) {
   let t0 = 0, i = 0; while (i < SC.length - 1 && sec >= t0 + SC[i].d) { t0 += SC[i].d; i++; }
   const s = sec - t0, sc = SC[i];
@@ -162,11 +163,18 @@ async function prepare() {
   const sb = P({ floors: 2, bays: 4, floor_h: 3.2, bay_w: 4.5, depth: 12, roof: "nishab", material: "gisht" });
   const sheets = [["kr", 1], ["ov", 1], ["vk", 1], ["sm", 0]].map(([k, i]) => UstunRP.sheetsOf(sb, k)[i].svg);
   A.sheets = await Promise.all(sheets.map(s => svgImg(s, 1400)));
+  // Diktor (uz-UZ-SardorNeural, video-vositalari/diktor.py): har sahnaga bitta jumla. Sahna jumladan qisqa bo'lsa — uzaytiriladi
+  const dec = new OfflineAudioContext(1, 1, SR);
+  A.voice = await Promise.all(SC.map((_, i) => fetch(`_ovoz/${i + 1}.mp3`).then(r => r.ok ? r.arrayBuffer() : null).then(b => b ? dec.decodeAudioData(b) : null).catch(() => null)));
+  A.voice.forEach((v, i) => { if (v) SC[i].d = Math.max(SC[i].d, VOICE_AT(i) + v.duration + 0.7); });
+  TOTAL = SC.reduce((a, s) => a + s.d, 0); N = Math.round(TOTAL * FPS);
+  let t = 0; CUTS = SC.map(s => (t += s.d)).slice(0, -1);
 }
+const VOICE_AT = i => (i === 0 ? 0.7 : 0.45);                                             // sahna boshidan diktor kirishi, s
 
 // ---------- Musiqa: original, sintez (mualliflik huquqi muammosiz). 96 BPM, Am–F–C–G, sahnalar almashganda "vush" ----------
 const SR = 48000, BPM = 96, BEAT = 60 / BPM, BAR = BEAT * 4;
-const CUTS = (() => { let t = 0; return SC.map(s => (t += s.d)).slice(0, -1); })();         // sahna chegaralari
+let CUTS = (() => { let t = 0; return SC.map(s => (t += s.d)).slice(0, -1); })();           // sahna chegaralari (prepare() yangilaydi)
 const nf = m => 440 * Math.pow(2, (m - 69) / 12);
 const CHORDS = [[45, [57, 60, 64, 71]], [41, [53, 57, 60, 64]], [48, [55, 60, 64, 67]], [43, [55, 59, 62, 67]]];   // Am(add9) F(maj7) C G — [bas, akkord] MIDI
 async function makeMusic() {
@@ -230,7 +238,23 @@ async function makeMusic() {
   // normallashtirish: cho'qqi −1 dB
   let peak = 0; for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) peak = Math.max(peak, Math.abs(d[i])); }
   const k = peak > 0 ? 0.89 / peak : 1; for (let ch = 0; ch < 2; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] *= k; }
+  mixVoice(buf);
   return buf;
+}
+// Diktor: musiqa jumla davomida 0,3 gacha pasayadi (0,25 s silliq), ovoz RMS −15 dBFS ga keltirilib ikkala kanalga qo'shiladi
+function mixVoice(buf) {
+  const segs = []; let t0 = 0;
+  SC.forEach((s, i) => { const v = A.voice && A.voice[i]; if (v) segs.push({ at: t0 + VOICE_AT(i), v }); t0 += s.d; });
+  if (!segs.length) return;
+  const L = buf.getChannelData(0), R = buf.getChannelData(1), n = L.length, duck = new Float32Array(n).fill(1), RAMP = 0.25 * SR, LOW = 0.3;
+  segs.forEach(({ at, v }) => { const a = Math.floor(at * SR), b = Math.floor((at + v.duration) * SR);
+    for (let i = Math.max(0, a - RAMP); i < Math.min(n, b + RAMP); i++) { const g = i < a ? 1 - (1 - LOW) * (i - (a - RAMP)) / RAMP : i > b ? LOW + (1 - LOW) * (i - b) / RAMP : LOW; duck[i] = Math.min(duck[i], g); } });
+  for (let i = 0; i < n; i++) { L[i] *= duck[i] * 0.62; R[i] *= duck[i] * 0.62; }
+  let s2 = 0, cnt = 0; segs.forEach(({ v }) => { const d = v.getChannelData(0); for (let i = 0; i < d.length; i++) if (Math.abs(d[i]) > 0.01) { s2 += d[i] * d[i]; cnt++; } });
+  const gv = cnt ? 0.178 / Math.sqrt(s2 / cnt) : 1;                                        // −15 dBFS
+  segs.forEach(({ at, v }) => { const d = v.getChannelData(0), o = Math.floor(at * SR); for (let i = 0; i < d.length && o + i < n; i++) { L[o + i] += d[i] * gv; R[o + i] += d[i] * gv; } });
+  let pk = 0; for (let i = 0; i < n; i++) pk = Math.max(pk, Math.abs(L[i]), Math.abs(R[i]));
+  if (pk > 0.97) { const k2 = 0.97 / pk; for (let i = 0; i < n; i++) { L[i] *= k2; R[i] *= k2; } }
 }
 async function encodeAudio(buf) {
   const cfg = { codec: "mp4a.40.2", sampleRate: SR, numberOfChannels: 2, bitrate: 160000 };

@@ -753,6 +753,7 @@ USTUN_I18N.en = {
  "Ichki devor: xonalarni ajratish uchun tashqi devordan tashqi devorgacha chizing.": "Interior wall: draw from outer wall to outer wall to divide rooms.",
  "Ichki dizayn": "Interior design",
  "Ichki eshik (MDF)": "Interior door (MDF)",
+ "Ichki hovli": "Courtyard",
  "Ichki hovli qilish": "Add an inner courtyard",
  "Ichki hovlili": "Inner courtyard",
  "Ichki hovlili ikki qavatli uy. Ayvon va hovuz an'anaviy o'zbek uyi rejasidan olingan.": "A two-storey house with an inner courtyard. The iwan and pool come from the traditional Uzbek house plan.",

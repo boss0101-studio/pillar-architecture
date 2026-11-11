@@ -6,7 +6,7 @@ const UstunI18n = (function () {
   const LANGS = [
     { code: "en", name: "English", en: "English" },
     { code: "es", name: "Español", en: "Spanish" },
-    // lug'at tayyorlanmoqda: { code: "ru", name: "Русский", en: "Russian" },
+    { code: "ru", name: "Русский", en: "Russian" },
     { code: "uz", name: "O'zbekcha", en: "Uzbek" },
     // lug'at tayyorlanmoqda: { code: "tr", name: "Türkçe", en: "Turkish" },
     // lug'at tayyorlanmoqda: { code: "fr", name: "Français", en: "French" },

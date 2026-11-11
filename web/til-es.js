@@ -753,6 +753,7 @@ USTUN_I18N.es = {
  "Ichki devor: xonalarni ajratish uchun tashqi devordan tashqi devorgacha chizing.": "Muro interior: dibuja de muro exterior a muro exterior para separar habitaciones.",
  "Ichki dizayn": "Diseño interior",
  "Ichki eshik (MDF)": "Puerta interior (MDF)",
+ "Ichki hovli": "Patio interior",
  "Ichki hovli qilish": "Hacer patio interior",
  "Ichki hovlili": "Con patio interior",
  "Ichki hovlili ikki qavatli uy. Ayvon va hovuz an'anaviy o'zbek uyi rejasidan olingan.": "Casa de dos plantas con patio interior. El iwán y la alberca proceden de la planta tradicional de la casa uzbeka.",

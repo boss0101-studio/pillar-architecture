@@ -13,3 +13,9 @@ Videolar: `web/video/pillar-reklama-<til>.mp4` (1920×1080, 30 kadr/s, ~60–65 
 5. Tekshiruv: `CHECKQR(sekund)` — kadrdan QR o'qiladi. `web/_video.html` va `web/_ovoz/`ni o'chiring (saytga chiqmasin).
 
 Bosh sahifadagi til tugmalari — `web/promovideo.js` (boshlang'ich til = sayt tili). Kadrlar WebCodecs bilan kodlanadi, MP4 konteyneri `videoserver.py`da Python standart kutubxonasi bilan yig'iladi — ffmpeg kerak emas.
+
+## O'zbekcha: ElevenLabs ovozi (2026-11-17)
+Hozirgi `pillar-reklama-uz.mp4` diktori — ElevenLabs (ovoz "Asilbek", matn: `elevenlabs/uz-emotsiya.txt`). Manba: `ovoz/uz-elevenlabs.mp3` (bitta fayl, 60,8 s).
+Qayta yasashda generator `_ovoz/uz/full.mp3` ni o'qib, sahnalarga pauzalar o'rtasidan bo'ladi: `CUTS_S = [5.37, 13.78, 20.64, 29.45, 35.63, 41.43, 47.90, 54.62]` (s).
+Buning uchun `web/_video.html` dagi diktor yuklash qatoridan keyin full.mp3 ni CUTS_S bo'yicha kesadigan kod qo'shiladi (generator.html'da yo'q — vaqtinchalik nusxada qilingan).
+Ekran yozuvlari (`TX.uz`) hali eski ssenariyda.

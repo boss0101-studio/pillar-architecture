@@ -1,0 +1,38 @@
+[curious] Orzuingizdagi uy qanday koʻrinishini bilmoqchimisiz?
+[warm] Pillar bilan uni bugunoq koʻrasiz.
+
+[confident] Qavatlar sonini tanlang.
+Tom shaklini tanlang.
+Gʻisht yoki toshni tanlang.
+[excited] Har bir oʻzgarish shu zahoti chizmada koʻrinadi!
+
+[playful] Qoʻlingiz bilan eskiz chizing.
+[impressed] Pillar chiziqlarni oʻzi toʻgʻrilaydi.
+Oʻlcham va maydonlarni ham oʻzi hisoblaydi.
+
+[softly] Uyingiz hali qurilmagan...
+[amazed] Lekin siz uning ichida yura olasiz!
+[warm] Mebelni joylang.
+Hovlini bezang.
+[dreamy] Quyosh nurini kuzating.
+
+[confident] Bosh rejadan smetagacha.
+Oʻn uchta loyiha boʻlimi.
+[satisfied] Chizma varaqlari avtomatik tayyorlanadi.
+
+[curious] Yoqqan uyning rasmi bormi?
+[encouraging] Uni yuklang.
+[excited] Pillar oʻsha uyni Konstruktorda qayta quradi!
+
+[serious] Qurilish qancha turadi?
+[reassuring] Materiallar va smeta bir zumda hisoblanadi.
+[warm] Byudjetingizni oldindan rejalashtiring.
+
+[friendly] Savolingizni yozing.
+[confident] Sunʼiy intellekt javob beradi.
+Kerakli boʻlimni ochadi.
+[excited] Binoni ham oʻzgartiradi!
+
+[pause] [proud] Pillar.
+[warm] Uyingiz shu yerdan boshlanadi.
+[inviting] QR kodni skanerlang va bepul sinab koʻring!

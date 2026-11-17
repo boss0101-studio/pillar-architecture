@@ -5,14 +5,19 @@
 //    o'zi 15 s da yopiladi; 3 marta yopilsa shu sessiyada boshqa chiqmaydi.
 // Bezovta qilmaslik uchun: sahifa ochilgandagi holat uchun muammo aytilmaydi, yopilgan muammo shu sessiyada qaytmaydi,
 // yo'riqnoma, til oynasi yoki AI paneli ochiq bo'lsa jim turadi. O'chirish/yoqish — pufakchadagi tugma yoki Sozlamalar ("ustun-maslahat").
-// Robot rasmi (UstunRobot) shu yerda: ai.js tugmani u bilan chizadi.
+// Yordamchi rasmi (UstunRobot) shu yerda: ai.js tugmani u bilan chizadi. Qiyofa — kichkina uy-personaj:
+// nishab tom (rb-head), mo'ri (rb-ear), fasad (rb-face), deraza-ko'zlar (rb-eye, ko'z qisadi), tabassum (rb-mouth, gapirganda qimirlaydi),
+// tomdagi dumaloq deraza va mo'ri chirog'i (rb-light, yonib-o'chadi), poydevor va zinapoya (rb-body). Klass nomlari style.css animatsiyalari uchun.
 window.UstunRobot = cls => `<svg class="robot ${cls || ""}" viewBox="0 0 64 64" aria-hidden="true">
-  <path d="M32 7v8" class="rb-wire"/><circle cx="32" cy="6" r="3.6" class="rb-light"/>
-  <rect x="5" y="25" width="6" height="11" rx="3" class="rb-ear"/><rect x="53" y="25" width="6" height="11" rx="3" class="rb-ear"/>
-  <rect x="10" y="14" width="44" height="32" rx="11" class="rb-head"/><rect x="16" y="20" width="32" height="20" rx="7" class="rb-face"/>
-  <g class="rb-eyes"><circle cx="25" cy="29" r="3.3" class="rb-eye"/><circle cx="39" cy="29" r="3.3" class="rb-eye"/></g>
-  <path d="M26.5 35q5.5 3.6 11 0" class="rb-mouth"/>
-  <rect x="19" y="48" width="26" height="13" rx="6" class="rb-body"/><circle cx="32" cy="54.5" r="2.4" class="rb-light"/></svg>`;
+  <rect x="41" y="9" width="7" height="14" rx="1.5" class="rb-ear"/><circle cx="44.5" cy="6" r="3" class="rb-light"/>
+  <path d="M5 31L32 9l27 22z" class="rb-head rb-roof"/>
+  <rect x="11" y="27" width="42" height="24" rx="3" class="rb-head"/>
+  <circle cx="32" cy="21" r="2.8" class="rb-light"/>
+  <rect x="15" y="30" width="34" height="18" rx="4" class="rb-face"/>
+  <g class="rb-eyes"><rect x="20" y="33" width="8" height="8" rx="1.6" class="rb-eye"/><rect x="36" y="33" width="8" height="8" rx="1.6" class="rb-eye"/>
+    <path d="M24 33v8M20 37h8M40 33v8M36 37h8" class="rb-mull"/></g>
+  <path d="M27.5 44q4.5 2.8 9 0" class="rb-mouth"/>
+  <rect x="7" y="51" width="50" height="5" rx="2" class="rb-body"/><rect x="25" y="56" width="14" height="4" rx="1.5" class="rb-body"/></svg>`;
 const UstunAdvisor = (function () {
   const KEY = "ustun-maslahat";
   let on = true;

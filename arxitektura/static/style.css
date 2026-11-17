@@ -1283,7 +1283,7 @@ th { font-size: .76rem; }
 .dim { font-size: .8rem; }
 .ds-head p, .hero .lede, .contact-info p { line-height: 1.6; }
 p, li { text-wrap: pretty; }
-/* AI robotcha: tugma — robot, maslahatlar uning gapirish pufakchasida */
+/* AI yordamchi tugmasi — kichkina uy-personaj (advisor.js UstunRobot), maslahatlar uning gapirish pufakchasida */
 .ai-btn.robot-btn { width: 72px; height: 76px; padding: 0; border: 0; background: none; box-shadow: none; justify-content: center; }
 .ai-btn.robot-btn:hover { transform: translateY(-3px) rotate(-3deg); }
 .ai-btn.robot-btn svg.robot { width: 72px; height: 76px; overflow: visible; filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .35)); animation: rb-bob 3.2s ease-in-out infinite; }
@@ -1293,9 +1293,12 @@ p, li { text-wrap: pretty; }
 .ai-btn.robot-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 12px; }
 .ai-btn.robot-btn .ai-dot { top: 6px; right: 4px; }
 .robot .rb-head, .robot .rb-ear { fill: var(--accent); }
+.robot .rb-roof { fill: color-mix(in srgb, var(--accent) 78%, #000); stroke: color-mix(in srgb, var(--accent) 78%, #000); stroke-width: 3; stroke-linejoin: round; }
+.ai-btn.robot-btn[aria-expanded="true"] .rb-roof { fill: color-mix(in srgb, var(--fg) 80%, #000); stroke: color-mix(in srgb, var(--fg) 80%, #000); }
 .robot .rb-face { fill: #0f1a24; }
-.robot .rb-eye { fill: #7ef0ff; }
-.robot .rb-mouth { fill: none; stroke: #7ef0ff; stroke-width: 2.4; stroke-linecap: round; }
+.robot .rb-eye { fill: #ffe08a; }                                  /* chiroq yoqilgan derazalar */
+.robot .rb-mull { fill: none; stroke: #0f1a24; stroke-width: 1.3; }
+.robot .rb-mouth { fill: none; stroke: #ffe08a; stroke-width: 2.4; stroke-linecap: round; }
 .robot .rb-body { fill: color-mix(in srgb, var(--accent) 70%, var(--fg)); }
 .robot .rb-wire { stroke: color-mix(in srgb, var(--accent) 70%, var(--fg)); stroke-width: 2.6; stroke-linecap: round; }
 .robot .rb-light { fill: #ffd166; animation: rb-glow 2s ease-in-out infinite; }

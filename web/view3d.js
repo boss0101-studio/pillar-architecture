@@ -166,6 +166,232 @@
   };
   const box = (w, h, d, m, x, y, z, shadow = true) => mk(track(new THREE.BoxGeometry(w, h, d)), m, x, y, z, shadow);
 
+  // ---------- Realistik ko'rinish ----------
+  // Haqiqiy o'lchamdagi teksturalar (g'isht 250×65 mm, chok 10 mm va h.k.) rang + bo'rtiq (bump) xaritasi bilan,
+  // osmon gumbazi, osmondan atrof yorug'ligi (PMREM: oynalarda osmon aksi), ACES tonlash, maysa, otmostka, uzoqdagi daraxtlar.
+  // "Maket" rejimi (oq plinta va to'r) bitta tugma bilan qaytadi; tanlov brauzerda eslab qolinadi.
+  let real = (() => { try { return localStorage.getItem("ustun-3d-real") !== "0"; } catch { return true; } })();
+  const realTex = {}, REAL_TILE = 1.2;
+  let skyDome = null, envDome = null, envScene = null, envRT = null, pmrem = null, envTimer = 0, skyState = null;
+  const seeded = s => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;
+  const shade = (hex, k, j = 0) => { const c = new THREE.Color(hex); c.r = clamp(c.r * k + j, 0, 1); c.g = clamp(c.g * k + j * 0.9, 0, 1); c.b = clamp(c.b * k + j * 0.8, 0, 1); return "#" + c.getHexString(); };
+  // rang va bo'rtiq kanvaslari bir xil tasodifiy ketma-ketlik bilan chiziladi: chok joylari ikkalasida mos tushadi
+  function texPair(key, size, draw, rep = REAL_TILE) {
+    if (realTex[key]) return realTex[key];
+    const aniso = renderer.capabilities.getMaxAnisotropy(), mkT = bump => {
+      const c = document.createElement("canvas"); c.width = c.height = size; const x = c.getContext("2d");
+      draw(x, size, bump, seeded(97));
+      const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.repeat.set(1 / rep, 1 / rep);
+      if (!bump) t.encoding = THREE.sRGBEncoding;
+      return t;
+    };
+    return (realTex[key] = { map: mkT(false), bump: mkT(true) });
+  }
+  function noise(x, n, rnd, amt, count, light) {                    // mayda dog'lar (g'ovaklik, chang)
+    for (let i = 0; i < count; i++) { const a = rnd() * amt; x.fillStyle = light ? `rgba(255,255,255,${a})` : `rgba(0,0,0,${a})`; const s = 1 + rnd() * 2.5; x.fillRect(rnd() * n, rnd() * n, s, s); }
+  }
+  const DRAW = {
+    brick: base => (x, n, B, rnd) => {                            // 1,2 m: 16 qator (75 mm), qatorda 5 g'isht (240 mm), choklar 10 mm
+      const rows = 16, cols = 5, rh = n / rows, cw = n / cols, j = n * 0.0083;
+      x.fillStyle = B ? "#3a3a3a" : shade(base, 0.62, 0.3); x.fillRect(0, 0, n, n);
+      for (let r = 0; r < rows; r++) for (let c = -1; c <= cols; c++) {
+        const off = (r % 2) * cw / 2, k = 0.8 + rnd() * 0.32;
+        x.fillStyle = B ? `rgb(${200 + rnd() * 40 | 0},${200 | 0},200)` : shade(base, k, (rnd() - 0.5) * 0.04);
+        x.fillRect(c * cw + off + j / 2, r * rh + j / 2, cw - j, rh - j);
+        if (!B && rnd() < 0.18) { x.fillStyle = "rgba(0,0,0,.12)"; x.fillRect(c * cw + off + j / 2, r * rh + rh * 0.55, cw - j, rh * 0.45 - j / 2); }
+      }
+      noise(x, n, rnd, B ? 0.35 : 0.22, 9000);
+    },
+    stone: base => (x, n, B, rnd) => {                            // travertin plitalar: 3 qator, har xil uzunlik, gorizontal tomirlar
+      const rows = 3, rh = n / rows, j = 3;
+      x.fillStyle = B ? "#404040" : shade(base, 0.75); x.fillRect(0, 0, n, n);
+      for (let r = 0; r < rows; r++) { let xx = -rnd() * n * 0.3; while (xx < n) { const w = n * (0.3 + rnd() * 0.3), k = 0.9 + rnd() * 0.14;
+        x.fillStyle = B ? "#c8c8c8" : shade(base, k); x.fillRect(xx + j, r * rh + j, w - 2 * j, rh - 2 * j);
+        if (!B) { x.strokeStyle = "rgba(120,95,60,.18)"; for (let v = 0; v < 6; v++) { const y = r * rh + rnd() * rh; x.lineWidth = 1 + rnd() * 2; x.beginPath(); x.moveTo(xx, y); x.bezierCurveTo(xx + w / 3, y + rnd() * 6 - 3, xx + w * 2 / 3, y + rnd() * 6 - 3, xx + w, y); x.stroke(); } }
+        xx += w; } }
+      noise(x, n, rnd, 0.25, 7000); if (!B) noise(x, n, rnd, 0.12, 3000, true);
+    },
+    panel: base => (x, n, B, rnd) => {                            // monolit beton: dog'lar, qolip izlari, chok va bolt teshiklari
+      x.fillStyle = B ? "#b4b4b4" : base; x.fillRect(0, 0, n, n);
+      for (let i = 0; i < 40; i++) { const cx = rnd() * n, cy = rnd() * n, r = n * (0.04 + rnd() * 0.14), g = x.createRadialGradient(cx, cy, 0, cx, cy, r); const a = rnd() * 0.1; g.addColorStop(0, rnd() < 0.5 ? `rgba(0,0,0,${a})` : `rgba(255,255,255,${a})`); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(cx - r, cy - r, 2 * r, 2 * r); }
+      noise(x, n, rnd, 0.3, 14000); noise(x, n, rnd, 0.15, 5000, true);
+      x.fillStyle = B ? "#202020" : "rgba(0,0,0,.45)"; x.fillRect(0, 0, n, 4); x.fillRect(0, 0, 4, n);
+      [[0.17, 0.17], [0.83, 0.17], [0.17, 0.83], [0.83, 0.83], [0.5, 0.17], [0.5, 0.83]].forEach(([a, b]) => { x.beginPath(); x.arc(a * n, b * n, n * 0.012, 0, 6.3); x.fillStyle = B ? "#151515" : "rgba(0,0,0,.4)"; x.fill(); });
+    },
+    tile: base => (x, n, B, rnd) => {                             // koshin: 150 mm sirli plitkalar, oq choklar
+      const k = 8, s = n / k, j = 3;
+      x.fillStyle = B ? "#505050" : "#e9e6de"; x.fillRect(0, 0, n, n);
+      for (let a = 0; a < k; a++) for (let b = 0; b < k; b++) {
+        x.fillStyle = B ? "#d0d0d0" : shade(base, 0.86 + rnd() * 0.22); x.fillRect(a * s + j, b * s + j, s - 2 * j, s - 2 * j);
+        if (!B) { const g = x.createLinearGradient(a * s, b * s, a * s + s, b * s + s); g.addColorStop(0, "rgba(255,255,255,.22)"); g.addColorStop(0.5, "rgba(255,255,255,0)"); x.fillStyle = g; x.fillRect(a * s + j, b * s + j, s - 2 * j, s - 2 * j); }
+      }
+    },
+    wood: base => (x, n, B, rnd) => {                             // vertikal taxtalar 150 mm, tolalar va tugunlar
+      const k = 8, s = n / k;
+      for (let i = 0; i < k; i++) {
+        x.fillStyle = B ? "#bdbdbd" : shade(base, 0.82 + rnd() * 0.3); x.fillRect(i * s, 0, s, n);
+        x.strokeStyle = B ? "rgba(0,0,0,.25)" : "rgba(50,28,10,.22)";
+        for (let g = 0; g < 14; g++) { const xx = i * s + rnd() * s; x.lineWidth = 0.6 + rnd() * 1.6; x.beginPath(); x.moveTo(xx, 0); x.bezierCurveTo(xx + rnd() * 8 - 4, n / 3, xx + rnd() * 8 - 4, n * 2 / 3, xx + rnd() * 6 - 3, n); x.stroke(); }
+        if (rnd() < 0.5) { x.fillStyle = B ? "#555" : "rgba(60,30,10,.45)"; x.beginPath(); x.ellipse(i * s + s / 2, rnd() * n, 4 + rnd() * 5, 7 + rnd() * 8, 0, 0, 6.3); x.fill(); }
+        x.fillStyle = B ? "#111" : "rgba(25,12,4,.6)"; x.fillRect(i * s, 0, 3, n);
+      }
+    },
+    seam: base => (x, n, B, rnd) => {                             // metall panel: tik choklar (falts) va yengil to'lqin
+      x.fillStyle = B ? "#888" : base; x.fillRect(0, 0, n, n);
+      for (let i = 0; i < 4; i++) { const xx = i * n / 4; const g = x.createLinearGradient(xx, 0, xx + n / 4, 0); g.addColorStop(0, B ? "#999" : "rgba(255,255,255,.1)"); g.addColorStop(1, B ? "#777" : "rgba(0,0,0,.1)"); x.fillStyle = g; x.fillRect(xx, 0, n / 4, n);
+        x.fillStyle = B ? "#fff" : "rgba(255,255,255,.35)"; x.fillRect(xx + 2, 0, 5, n); x.fillStyle = B ? "#000" : "rgba(0,0,0,.35)"; x.fillRect(xx + 7, 0, 3, n); }
+      noise(x, n, rnd, 0.08, 4000);
+    },
+    rubble: base => (x, n, B, rnd) => {                           // tabiiy tosh: notekis qatorlar, yumaloq toshlar, chuqur choklar
+      x.fillStyle = B ? "#202020" : shade(base, 0.45); x.fillRect(0, 0, n, n);
+      let y = 0; while (y < n) { const h = n * (0.1 + rnd() * 0.1); let xx = -rnd() * 40; while (xx < n) { const w = h * (1 + rnd() * 1.4), k = 0.75 + rnd() * 0.4;
+        x.fillStyle = B ? `rgb(${190 + rnd() * 50 | 0},190,190)` : shade(base, k, (rnd() - 0.5) * 0.06); x.beginPath();
+        const r = Math.min(w, h) * 0.3; x.moveTo(xx + r + 3, y + 3); x.arcTo(xx + w - 3, y + 3, xx + w - 3, y + h - 3, r); x.arcTo(xx + w - 3, y + h - 3, xx + 3, y + h - 3, r); x.arcTo(xx + 3, y + h - 3, xx + 3, y + 3, r); x.arcTo(xx + 3, y + 3, xx + w - 3, y + 3, r); x.fill();
+        xx += w; } y += h; }
+      noise(x, n, rnd, 0.3, 9000);
+    },
+    plaster: base => (x, n, B, rnd) => { x.fillStyle = B ? "#b0b0b0" : base; x.fillRect(0, 0, n, n); noise(x, n, rnd, B ? 0.4 : 0.07, 16000); noise(x, n, rnd, B ? 0.4 : 0.06, 8000, true); },
+    roof: base => (x, n, B, rnd) => {                             // cherepitsa: 4 qator (300 mm), har birida 5 dona; qator pastki cheti soyali
+      const k = 4, s = n / k, t = n / 5;
+      for (let c = 0; c < k; c++) for (let r = -1; r < 6; r++) {
+        const off = (c % 2) * t / 2, g = x.createLinearGradient(c * s, 0, c * s + s, 0), col = shade(base, 0.8 + rnd() * 0.3);
+        g.addColorStop(0, B ? "#eee" : col); g.addColorStop(0.85, B ? "#999" : shade(col, 0.82)); g.addColorStop(1, B ? "#111" : shade(col, 0.45));
+        x.fillStyle = g; x.fillRect(c * s, r * t + off, s, t);
+        x.fillStyle = B ? "rgba(0,0,0,.6)" : "rgba(0,0,0,.35)"; x.fillRect(c * s, r * t + off, s * 0.85, 2.5);
+      }
+      noise(x, n, rnd, 0.2, 6000);
+    },
+    grass: () => (x, n, B, rnd) => {                              // maysa: 4 m maydon, yashil tuslar va o't tolalari
+      x.fillStyle = B ? "#888" : "#5d7f3e"; x.fillRect(0, 0, n, n);
+      for (let i = 0; i < 70; i++) { const cx = rnd() * n, cy = rnd() * n, r = n * (0.04 + rnd() * 0.12), g = x.createRadialGradient(cx, cy, 0, cx, cy, r), a = 0.2 + rnd() * 0.25; g.addColorStop(0, B ? `rgba(255,255,255,${a})` : (rnd() < 0.5 ? `rgba(120,150,60,${a})` : `rgba(55,80,35,${a})`)); g.addColorStop(1, "rgba(0,0,0,0)"); x.fillStyle = g; x.fillRect(cx - r, cy - r, 2 * r, 2 * r); }
+      for (let i = 0; i < 26000; i++) { const xx = rnd() * n, yy = rnd() * n, l = 2 + rnd() * 5; x.strokeStyle = B ? `rgba(255,255,255,${rnd() * 0.5})` : `hsla(${78 + rnd() * 30},${35 + rnd() * 25}%,${22 + rnd() * 22}%,.85)`; x.lineWidth = 1; x.beginPath(); x.moveTo(xx, yy); x.lineTo(xx + rnd() * 2 - 1, yy - l); x.stroke(); }
+    },
+    paving: () => (x, n, B, rnd) => {                             // beton bruschatka 200×100 mm
+      const rows = 12, cols = 6, rh = n / rows, cw = n / cols;
+      x.fillStyle = B ? "#2a2a2a" : "#7a7670"; x.fillRect(0, 0, n, n);
+      for (let r = 0; r < rows; r++) for (let c = -1; c <= cols; c++) { const off = (r % 2) * cw / 2; x.fillStyle = B ? "#cfcfcf" : shade("#a8a39a", 0.85 + rnd() * 0.25); x.fillRect(c * cw + off + 2, r * rh + 2, cw - 4, rh - 4); }
+      noise(x, n, rnd, 0.25, 9000);
+    },
+  };
+  const PROPS = { brick: [0.9, 0, 0.022], stone: [0.62, 0, 0.012], panel: [0.86, 0, 0.012], tile: [0.28, 0, 0.012], wood: [0.72, 0, 0.018], seam: [0.36, 0.55, 0.01],
+                  rubble: [0.92, 0, 0.035], plaster: [0.94, 0, 0.006], roof: [0.78, 0, 0.03], grass: [1, 0, 0.02], paving: [0.85, 0, 0.015] };
+  // kind — DRAW dagi tur; rep — tekstura qoplaydigan o'lcham (m); wuv — quti (Box) UV'lari metrga o'tkaziladi
+  function realMat(kind, base, opts = {}) {
+    const k = DRAW[kind] ? kind : "plaster", rep = opts.rep || (kind === "grass" ? 4 : REAL_TILE), size = kind === "grass" ? 1024 : 1024;
+    const P = texPair(`${k}|${base}|${rep}`, size, DRAW[k](base || "#cccccc"), rep), pr = PROPS[k];
+    const m = new THREE.MeshStandardMaterial({ color: 0xffffff, map: P.map, bumpMap: P.bump, bumpScale: pr[2], roughness: pr[0], metalness: pr[1] });
+    m.userData.wuv = opts.wuv !== false; m.userData.real = 1;
+    return m;
+  }
+  // Box geometriya UV'lari 0..1 dan metrga: tekstura har qanday o'lchamdagi qutida bir xil zichlikda turadi
+  function worldUV(geo) {
+    if (geo.userData.wuv || !geo.parameters || geo.type !== "BoxGeometry") return;
+    const { width: w, height: h, depth: d } = geo.parameters, uv = geo.attributes.uv, dims = [[d, h], [d, h], [w, d], [w, d], [w, h], [w, h]];
+    for (let f = 0; f < 6; f++) for (let v = 0; v < 4; v++) { const i = f * 4 + v; uv.setXY(i, uv.getX(i) * dims[f][0], uv.getY(i) * dims[f][1]); }
+    uv.needsUpdate = true; geo.userData.wuv = true;
+  }
+  // Rang boshqaruvi: sRGB chiqishda material ranglari chiziqli bo'lishi kerak (bir marta o'tkaziladi)
+  function realPost(root) {
+    if (!real || !root) return;
+    root.traverse(o => {
+      const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      ms.forEach(m => {
+        if (m.userData.wuv && o.geometry) worldUV(o.geometry);
+        if (m.userData.lin) return; m.userData.lin = 1;
+        if (m.isShaderMaterial) return;
+        if (m.color && !m.userData.real) m.color.convertSRGBToLinear();
+        if (m.emissive) m.emissive.convertSRGBToLinear();
+        if (m.map && m.map.encoding !== THREE.sRGBEncoding) { m.map.encoding = THREE.sRGBEncoding; m.map.needsUpdate = true; }
+        if (o.isSprite) m.toneMapped = false;
+        m.needsUpdate = true;
+      });
+    });
+  }
+  function applyRenderer() {
+    renderer.outputEncoding = real ? THREE.sRGBEncoding : THREE.LinearEncoding;
+    renderer.toneMapping = real ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
+    renderer.toneMappingExposure = 1.0;
+    sun.shadow.mapSize.set(real ? 4096 : 2048, real ? 4096 : 2048);
+    if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+  }
+  // ---- Osmon: gradient gumbaz (+ quyosh gardishi); xuddi shu gumbazdan atrof yorug'ligi xaritasi ----
+  const SKY_V = "varying vec3 vD; void main(){ vD = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }";
+  // Rang chiziqli fazoga o'tkaziladi va linearToOutputTexel bilan joriy nishon kodlashiga yoziladi:
+  // ekranda — sRGB, PMREM nishonida — RGBE. Kodlashsiz xom vec4(c, 1.0) RGBE'da alfa=1 → 2^127 deb o'qilib,
+  // atrof xaritasi Infinity/NaN bilan to'lardi va barcha PBR materiallar qora chiqardi.
+  const SKY_F = `uniform vec3 top; uniform vec3 hor; uniform vec3 bot; uniform vec3 sunDir; uniform vec3 sunCol; varying vec3 vD;
+    void main(){ vec3 d = normalize(vD); float h = d.y;
+      vec3 c = h > 0.0 ? mix(hor, top, pow(clamp(h, 0.0, 1.0), 0.5)) : mix(hor, bot, clamp(-h * 6.0, 0.0, 1.0));
+      float s = max(dot(d, normalize(sunDir)), 0.0); c += sunCol * (pow(s, 900.0) * 3.0 + pow(s, 14.0) * 0.22 + pow(s, 3.0) * 0.06);
+      c = pow(max(c, vec3(0.0)), vec3(2.2));
+      gl_FragColor = linearToOutputTexel(vec4(c, 1.0)); }`;
+  const skyMat = () => new THREE.ShaderMaterial({ vertexShader: SKY_V, fragmentShader: SKY_F, side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { top: { value: new THREE.Color() }, hor: { value: new THREE.Color() }, bot: { value: new THREE.Color() }, sunDir: { value: new THREE.Vector3(0, 1, 0) }, sunCol: { value: new THREE.Color() } } });
+  function ensureSky() {
+    if (skyDome) return;
+    skyDome = new THREE.Mesh(new THREE.SphereGeometry(1400, 48, 24), skyMat()); skyDome.renderOrder = -10; skyDome.frustumCulled = false;
+    skyDome.raycast = () => {};
+    envScene = new THREE.Scene(); envDome = new THREE.Mesh(new THREE.SphereGeometry(50, 48, 24), skyMat()); envScene.add(envDome);
+    pmrem = new THREE.PMREMGenerator(renderer);
+  }
+  const mixHex = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), clamp(k, 0, 1));
+  function updateSky() {
+    if (!real || !skyDome) return;
+    const dir = sun.position.clone().sub(sun.target.position).normalize(), el = Math.asin(clamp(dir.y, -1, 1)), day = clamp(el / 0.35, 0, 1), dusk = 1 - clamp((el - 0.04) / 0.3, 0, 1);
+    const top = mixHex("#0f1d33", mixHex("#2f6cb5", "#3b78c4", day).getHex(), clamp(el / 0.08 + 0.15, 0, 1));
+    const hor = mixHex(mixHex("#cfe0ee", "#f2c49b", dusk).getHex(), "#33405a", el < 0 ? 1 : 0);
+    const bot = mixHex("#4f5a46", "#7e8a6c", day), sc = mixHex("#ffb070", "#fff3dd", day);
+    [skyDome, envDome].forEach(m => { const u = m.material.uniforms; u.top.value.copy(top); u.hor.value.copy(hor); u.bot.value.copy(bot); u.sunDir.value.copy(dir); u.sunCol.value.copy(sc); });
+    sun.color.copy(sc); sun.intensity = el > 0 ? 0.6 + 2.6 * Math.sin(Math.min(el, 1.2)) : 0.08;
+    hemi.color.copy(top.clone().lerp(new THREE.Color(1, 1, 1), 0.6)); hemi.groundColor.copy(bot); hemi.intensity = 0.25 + 0.2 * day;
+    const fogC = hor.clone().convertSRGBToLinear();
+    scene.fog = new THREE.Fog(fogC, Math.max(120, baseDist * 2.5), 1300);
+    clearTimeout(envTimer);
+    envTimer = setTimeout(() => {                                    // atrof yorug'ligi xaritasi (slayder tez surilganda bir marta)
+      if (!real || !pmrem) return;
+      const rt = pmrem.fromScene(envScene, 0, 0.1, 200);
+      if (envRT) envRT.dispose(); envRT = rt; scene.environment = rt.texture; request();
+    }, 60);
+  }
+  // ---- Atrof: maysa, otmostka, uzoqdagi daraxtlar ----
+  function realSurroundings(layout, mx, mz, span) {
+    if (!real) return;
+    const env = new THREE.Group(); group.add(env);
+    const gm = track(realMat("grass", null, { rep: 4, wuv: false })); gm.map = gm.map.clone(); gm.bumpMap = gm.bumpMap.clone();
+    [gm.map, gm.bumpMap].forEach(t => { t.repeat.set(900 / 4, 900 / 4); t.needsUpdate = true; track(t); });
+    vrGround.material = gm; vrGround.position.y = -0.01; vrGround.visible = true;
+    const pav = track(realMat("paving", null, { rep: 1.2 }));
+    layout.forEach(l => {                                            // otmostka: uy atrofida 1 m beton yo'lak
+      const a = new THREE.Mesh(track(new THREE.BoxGeometry(l.W + 2, 0.04, l.D + 2)), pav);
+      a.position.set(l.cx, 0.0, l.cz); a.rotation.y = (l.rot * Math.PI) / 180; a.receiveShadow = true; env.add(a);
+    });
+    // uzoqdagi daraxtlar halqasi (uy va hovliga tegmaydi)
+    const rnd = seeded(31), trunkG = track(new THREE.CylinderGeometry(0.14, 0.24, 1, 7)), crownG = track(new THREE.IcosahedronGeometry(1, 1));
+    const bark = track(new THREE.MeshStandardMaterial({ color: new THREE.Color("#5b4331").convertSRGBToLinear(), roughness: 1 }));
+    const leaves = ["#3f6b2c", "#4f7d33", "#5b8a3c", "#46703a", "#6a8f3f"].map(c => track(new THREE.MeshStandardMaterial({ color: new THREE.Color(c).convertSRGBToLinear(), roughness: 0.95, flatShading: true })));
+    const R0 = span / 2 + 22;
+    for (let i = 0; i < 46; i++) {
+      const ang = rnd() * Math.PI * 2, r = R0 + rnd() * 70, x = mx + Math.cos(ang) * r, z = mz + Math.sin(ang) * r;
+      if (yardR && x > yardR.x0 - 4 && x < yardR.x1 + 4 && z > yardR.z0 - 4 && z < yardR.z1 + 10) continue;
+      const h = 4 + rnd() * 6, t = new THREE.Group(); t.position.set(x, 0, z);
+      const tr = new THREE.Mesh(trunkG, bark); tr.scale.set(1, h * 0.45, 1); tr.position.y = h * 0.225; tr.castShadow = true; t.add(tr);
+      const m = leaves[Math.floor(rnd() * leaves.length)];
+      for (let k = 0; k < 3; k++) { const c = new THREE.Mesh(crownG, m), s = h * (0.22 + rnd() * 0.14); c.scale.set(s, s * (0.85 + rnd() * 0.3), s); c.position.set((rnd() - 0.5) * h * 0.25, h * (0.55 + k * 0.12), (rnd() - 0.5) * h * 0.25); c.castShadow = true; c.receiveShadow = true; t.add(c); }
+      t.traverse(o => { o.raycast = () => {}; });
+      env.add(t);
+    }
+    if (skyDome.parent !== scene) scene.add(skyDome);
+    skyDome.position.set(mx, 0, mz);
+  }
+  function setReal(on) {
+    real = on;
+    try { localStorage.setItem("ustun-3d-real", on ? "1" : "0"); } catch {}
+    const b = bar && bar.querySelector('[data-v="real"]'); if (b) b.setAttribute("aria-pressed", String(on));
+    applyRenderer();
+    if (!on) { if (skyDome && skyDome.parent) skyDome.parent.remove(skyDome); scene.environment = null; scene.fog = null; }
+    if (lastArgs) { builtSig = ""; schedule(); }
+  }
+
   // ---------- Bitta uyni yig'ish (markazi koordinata boshida, asosi y=0 da) ----------
   function makeBuilding(p, cells, sh, interior) {
     const out = new THREE.Group();
@@ -178,6 +404,7 @@
 
     const glassy = p.material === "shisha";                       // butunlay oynali bino: devor — shaffof vitraj
     const wallMat = (cw, ch) => {
+      if (real && !glassy) return track(realMat(mat.pattern || "plaster", mat.fill));      // haqiqiy o'lchamdagi naqsh, metrlarda
       const m = new THREE.MeshStandardMaterial(glassy ? { color: 0xdbe9f3, roughness: 0.08, metalness: 0.35, transparent: true, opacity: 0.5 }
                                                       : { color: hasTex ? 0xffffff : mat.fill, roughness: 0.92, metalness: 0 });
       if (hasTex) {
@@ -187,9 +414,9 @@
       }
       return track(m);
     };
-    const ledgeMat = track(new THREE.MeshStandardMaterial({ color: new THREE.Color(mat.fill).multiplyScalar(0.82), roughness: 0.9 }));
-    const woodMat = track(new THREE.MeshStandardMaterial({ color: 0x6b4a2e, roughness: 0.7 }));
-    const plainMat = track(new THREE.MeshStandardMaterial({ color: mat.fill, roughness: 0.9 }));
+    const ledgeMat = track(real ? realMat("plaster", shade(mat.fill, 0.82)) : new THREE.MeshStandardMaterial({ color: new THREE.Color(mat.fill).multiplyScalar(0.82), roughness: 0.9 }));
+    const woodMat = track(real ? realMat("wood", "#6b4a2e", { rep: 1.2 }) : new THREE.MeshStandardMaterial({ color: 0x6b4a2e, roughness: 0.7 }));
+    const plainMat = track(real ? realMat("plaster", glassy ? "#d9dde0" : mat.fill) : new THREE.MeshStandardMaterial({ color: mat.fill, roughness: 0.9 }));
 
     function cellTemplate(type, cw, ch, wm) {
       const grp = new THREE.Group(), o = OPENING[type];
@@ -395,7 +622,7 @@
     function sphereBuilding() {
       const S = g.sphere, R = S.R, cy = S.cy, th = y => Math.acos(Math.max(-1, Math.min(1, (y - cy) / R)));   // balandlik -> qutb burchagi
       const shell = new THREE.Group(), bands = new THREE.Group();
-      const shellM = glassy ? wallMat(2 * Math.PI * R, 2 * R) : (() => { const m = wallMat(2 * Math.PI * R / 6, R); if (m.map) m.map.repeat.set(6 / (2 * Math.PI * R / 6), 3 / R); return m; })();
+      const shellM = glassy ? wallMat(2 * Math.PI * R, 2 * R) : (() => { const m = wallMat(2 * Math.PI * R / 6, R); if (m.map && !m.userData.real) m.map.repeat.set(6 / (2 * Math.PI * R / 6), 3 / R); return m; })();
       shell.add(mk(track(new THREE.SphereGeometry(R, 56, 36, 0, Math.PI * 2, 0, th(0))), shellM, 0, cy, 0));
       const winT = upperType(p);
       if (winT !== "wall" && !glassy) for (let f = 0; f < p.floors; f++) {   // har qavatda oyna halqasi (ramalar bilan)
@@ -803,9 +1030,10 @@
     const accent = cssColor("--accent", "#2b4acb");
     accentCss = accent.getStyle();
     const shared = {
-      glassMat: track(new THREE.MeshStandardMaterial({ color: 0x4d7396, roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.72, side: THREE.DoubleSide })),
-      ironMat: track(new THREE.MeshStandardMaterial({ color: 0x2a2f33, roughness: 0.6 })),
-      roofMat: track(new THREE.MeshStandardMaterial({ color: 0x6a5047, roughness: 0.8 })),
+      glassMat: track(real ? new THREE.MeshStandardMaterial({ color: 0x1e2c38, roughness: 0.03, metalness: 0.92, envMapIntensity: 1.35, transparent: true, opacity: 0.9, side: THREE.DoubleSide })   // osmonni aks ettiradi
+                           : new THREE.MeshStandardMaterial({ color: 0x4d7396, roughness: 0.12, metalness: 0.15, transparent: true, opacity: 0.72, side: THREE.DoubleSide })),
+      ironMat: track(new THREE.MeshStandardMaterial({ color: 0x2a2f33, roughness: real ? 0.45 : 0.6, metalness: real ? 0.6 : 0 })),
+      roofMat: track(real ? realMat("roof", "#7e4632") : new THREE.MeshStandardMaterial({ color: 0x6a5047, roughness: 0.8 })),
     };
 
     const items = site.list.map(b => makeBuilding(b.params, b.cells, shared, b.interior));
@@ -896,6 +1124,11 @@
     sunBox = { cx: mx, cz: mz, dist: s * 3 + 40 };
     applySun();
     buildYard(site);
+    if (real) {                                                      // realistik: maket plintasi va to'r o'rniga maysa, osmon, daraxtlar
+      ensureSky(); plinth.visible = false; grid.visible = false; shadowPlane.visible = false;
+      realSurroundings(layout, mx, mz, Math.max(totalW, Dmax));
+    }
+    updateSky(); realPost(group);
     applyCut();
     if (vr.on) { let n = 0; while (vrBlocked(vr.x, vr.z) && n++ < 400) vr.z += 0.5; }   // uy kattalashsa, odam fasad oldiga suriladi
   }
@@ -1146,10 +1379,11 @@
       yardR = R; yardFence = y.fence;
       yardGroup = new THREE.Group(); group.add(yardGroup);
       if (plinth) { plinth.position.set(cx, -0.1, cz + 1.5); plinth.scale.set(w + 4, 1, d + 7); }   // plinta hovli va ko'cha bo'yini qoplaydi
-      const lawn = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(w, d)), ymat(0x6f9a52, { roughness: 1 }));
+      const lawnM = real ? (() => { const m = ytrack(realMat("grass", null, { rep: 4, wuv: false })); m.map = ytrack(m.map.clone()); m.bumpMap = ytrack(m.bumpMap.clone()); [m.map, m.bumpMap].forEach(t => { t.repeat.set(w / 4, d / 4); t.needsUpdate = true; }); return m; })() : ymat(0x6f9a52, { roughness: 1 });
+      const lawn = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(w, d)), lawnM);
       lawn.rotation.x = -Math.PI / 2; lawn.position.set(cx, 0.012, cz); lawn.receiveShadow = true; yardGroup.add(lawn);
       const P = yardPath(L, R);
-      if (P) ybox(P.w, 0.03, P.z1 - P.z0, ymat(0xcdbfa6), P.x, 0.02, (P.z0 + P.z1) / 2, yardGroup, false);
+      if (P) ybox(P.w, 0.03, P.z1 - P.z0, real ? ytrack(realMat("paving", null)) : ymat(0xcdbfa6), P.x, 0.02, (P.z0 + P.z1) / 2, yardGroup, false);
       const F = y.fence;
       if (F !== "yoq") {
         const H = F === "devor" ? 2.0 : F === "panjara" ? 1.7 : 1.5, T2 = F === "devor" ? 0.3 : 0.1;
@@ -1213,6 +1447,7 @@
     sun.position.set(sunBox.cx + east * sunBox.dist, up * sunBox.dist, sunBox.cz - north * sunBox.dist);  // shimol = −z, old fasad janubga qaraydi
     sun.intensity = el > 0 ? 0.25 + 0.85 * Math.sin(el) : 0.05;
     hemi.intensity = el > 0 ? 0.6 + 0.35 * Math.sin(el) : 0.35;
+    updateSky();
   }
   function snapshot() {
     render();                                                     // chizilgan zahoti olinadi: bufer hali tozalanmagan
@@ -1269,9 +1504,12 @@
   const vrBlocked = (x, z) => fenceAt(x, z) || lastLayout.some(l => l.coll ? collBlocked(l, x, z) : Math.abs(x - l.cx) < l.w / 2 + 0.6 && Math.abs(z - l.cz) < l.d / 2 + 0.6);
 
   function setVrScene(on) {
-    scene.background = on ? new THREE.Color(SKY) : null;
-    scene.fog = on ? new THREE.Fog(SKY, 70, 420) : null;
-    if (vrGround) vrGround.visible = on;
+    if (real) { if (vrGround) vrGround.visible = true; scene.background = null; updateSky(); }    // realistik: osmon gumbazi va tuman doim bor
+    else {
+      scene.background = on ? new THREE.Color(SKY) : null;
+      scene.fog = on ? new THREE.Fog(SKY, 70, 420) : null;
+      if (vrGround) vrGround.visible = on;
+    }
     applyCut();
     if (on) { labels.forEach(l => { l.sprite.visible = false; }); plates.forEach(p => { p.visible = false; }); }
     else refreshMarks();
@@ -1656,6 +1894,7 @@
     sun = new THREE.DirectionalLight(0xfff1dc, 0.9);
     sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
     scene.add(sun, sun.target);
+    applyRenderer();
 
     bar = document.createElement("div"); bar.className = "v3-bar";
     bar.innerHTML = '<button type="button" data-v="corner">Burchak</button><button type="button" data-v="front">Old</button>' +
@@ -1663,6 +1902,7 @@
       '<label class="v3-sun" title="Quyosh holati: tengkunlik, Toshkent">Quyosh <input type="range" min="5" max="19" step="0.5" value="15" aria-label="Quyosh soati"><output>15:00</output></label>' +
       '<button type="button" data-v="move" aria-pressed="false" title="Uylarni sichqoncha yoki barmoq bilan sudrab ko\'chirish">Ko\'chirish</button><button type="button" data-v="rot" title="Faol uyni 90° burish">↻ 90°</button>' +
       '<button type="button" data-v="cut" aria-pressed="false" title="Kesim: tomni olib, ichki xonalarni ko\'rish. Qayta bosilsa pastki qavatga o\'tadi">Kesim</button>' +
+      '<button type="button" data-v="real" aria-pressed="' + real + '" title="Realistik: haqiqiy materiallar, osmon, maysa va daraxtlar. O\'chirilsa — oq maket">Realistik</button>' +
       '<span class="sp"></span><button type="button" data-v="vr" class="v3-vrbtn" title="VR rejimi: shlem yoki telefon va karton kozoynak">VR</button><button type="button" data-v="png" title="3D rasmni saqlash">PNG</button><button type="button" data-v="out" aria-label="Uzoqlashtirish">−</button><button type="button" data-v="in" aria-label="Yaqinlashtirish">+</button>' +
       '<button type="button" data-v="auto" aria-pressed="' + auto + '">Aylanish</button>';
     host.appendChild(bar);
@@ -1754,6 +1994,7 @@
       else if (v === "vr") enterVR();
       else if (v === "move") setMoveMode(!moveMode);
       else if (v === "cut") cycleCut();
+      else if (v === "real") setReal(!real);
       else if (v === "rot" && window.View3D.onRotate && !window.View3D.onRotate(activeIdx)) {
         const h = host.querySelector(".v3-hint"), t = h.textContent; h.textContent = "Burishga joy yetmaydi — uyni bo'shroq joyga suring"; setTimeout(() => { h.textContent = t; }, 1800);
       }
@@ -1865,7 +2106,7 @@
           clearTimeout(posTimer); posTimer = setTimeout(() => { if (!mv && lastArgs) { builtSig = ""; schedule(); } }, 450);
         }
         const ys = JSON.stringify(site.yard) + ps;
-        if (ys !== builtYard) { buildYard(site); builtYard = ys; }   // hovli o'zgardi: faqat hovli qayta yig'iladi
+        if (ys !== builtYard) { buildYard(site); builtYard = ys; realPost(yardGroup); }   // hovli o'zgardi: faqat hovli qayta yig'iladi
         refreshMarks(); request();
       } else {
         activeIdx = clamp(site.active, 0, site.list.length - 1);

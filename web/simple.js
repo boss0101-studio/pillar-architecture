@@ -1,10 +1,11 @@
-// Sodda rejim: yangi foydalanuvchi faqat asosiy boshqaruvlarni ko'radi (qavat, shakl, tom, material, asosiy asboblar, saqlash).
+// Sodda rejim: faqat asosiy boshqaruvlar (qavat, shakl, tom, material, asosiy asboblar, saqlash).
 // Qolgani — qo'shimcha o'lchamlar, geometrik chiziqlar, formulalar, JSON, kam ishlatiladigan asboblar — "To'liq" rejimda.
+// Standart — To'liq rejim (yangi foydalanuvchi ham hamma imkoniyatni ko'radi); Sodda rejim faqat o'zi tanlasa yoqiladi.
 // Hech narsa o'chirilmaydi: style.css dagi html.simple qoidalari faqat yashiradi. Tanlov shu brauzerda eslab qolinadi ("ustun-rejim").
 const UstunSimple = (function () {
   const KEY = "ustun-rejim";
-  let simple = true;
-  try { simple = localStorage.getItem(KEY) !== "full"; } catch {}
+  let simple = false;
+  try { simple = localStorage.getItem(KEY) === "simple"; } catch {}
   const root = document.documentElement;
   root.classList.toggle("simple", simple);
 

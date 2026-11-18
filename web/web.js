@@ -469,14 +469,15 @@ $("galereya").addEventListener("click", async e => {
   const open = e.target.closest("[data-open]");
   if (open) {
     const d = findDesign(open.dataset.open);
-    if (d) loadIntoDesigner(d.buildings, d.gap, d.name + " (nusxa)", `"${d.name}" ochildi. O'zgartirib, yangi nom bilan saqlashingiz mumkin.`, d.yard);
+    // nom maydoni (input qiymati) avtomatik tarjima qilinmaydi — "nusxa" so'zi joriy tilga shu yerda o'giriladi
+    if (d) loadIntoDesigner(d.buildings, d.gap, `${d.name} (${window.UstunI18n ? UstunI18n.t("nusxa") : "nusxa"})`, `"${d.name}" ochildi. O'zgartirib, yangi nom bilan saqlashingiz mumkin.`, d.yard);
     return;
   }
   const del = e.target.closest("[data-del]");
   if (!del) return;
   // Ikki bosqichli o'chirish: birinchi bosish tasdiqlashni so'raydi
   if (del.dataset.armed !== "true") {
-    del.dataset.armed = "true"; del.textContent = "Tasdiqlash";
+    del.dataset.armed = "true"; del.textContent = "Tasdiqlang";
     setTimeout(() => { if (del.isConnected) { del.dataset.armed = "false"; del.textContent = "O'chirish"; } }, 3000);
     return;
   }

@@ -320,7 +320,7 @@ async function openDesign(id, scroll) {
     ({ params, cells } = Site.current());
     undoStack.length = 0; redoStack.length = 0;
     savedSnap = snap();
-    $("dName").value = d.name + " (nusxa)";
+    $("dName").value = `${d.name} (${window.UstunI18n ? UstunI18n.t("nusxa") : "nusxa"})`;   // input qiymati avtomatik tarjima qilinmaydi
     $("dAuthor").value = "";
     $("saveMsg").textContent = `"${d.name}" ochildi. O'zgartirib, yangi nom bilan saqlashingiz mumkin.`;
     $("saveMsg").className = "msg ok";

@@ -93,12 +93,12 @@ async function loadDesignsAdmin() {
     </tr>`).join("");
 }
 
-// O'chirish ikki bosqichli: birinchi bosish tugmani "Tasdiqlash"ga aylantiradi
+// O'chirish ikki bosqichli: birinchi bosish tugmani "Tasdiqlang"ga aylantiradi
 async function onDelete(e) {
   const btn = e.target.closest(".btn-danger");
   if (!btn) return;
   if (btn.dataset.armed !== "true") {
-    btn.dataset.armed = "true"; btn.textContent = "Tasdiqlash";
+    btn.dataset.armed = "true"; btn.textContent = "Tasdiqlang";
     setTimeout(() => { btn.dataset.armed = "false"; btn.textContent = "O'chirish"; }, 3000);
     return;
   }

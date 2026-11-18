@@ -170,6 +170,8 @@ def req_int(data, key, lo, hi, optional=False):
     val = data.get(key)
     if optional and val in (None, ""):
         return None
+    if isinstance(val, bool):                 # true/false son emas (int(True) == 1 bo'lib o'tib ketardi)
+        raise ValidationError(f"'{key}' butun son bo'lishi kerak")
     try:
         num = int(val)
     except (TypeError, ValueError):
@@ -187,11 +189,14 @@ def req_choice(data, key, choices):
 
 
 def req_float(data, key, lo, hi):
+    val = data.get(key)
     try:
-        num = float(data.get(key))
+        if isinstance(val, bool):
+            raise ValueError
+        num = float(val)
     except (TypeError, ValueError):
         raise ValidationError(f"'{key}' son bo'lishi kerak")
-    if not lo <= num <= hi:
+    if not lo <= num <= hi:                   # NaN bu tekshiruvdan o'tmaydi (taqqoslash har doim False)
         raise ValidationError(f"'{key}' {lo} va {hi} oralig'ida bo'lishi kerak")
     return round(num, 2)
 
@@ -864,6 +869,9 @@ class Handler(SimpleHTTPRequestHandler):
             return self.send_json({"id": cur.lastrowid, "ok": True}, HTTPStatus.CREATED)
 
         # ---- quyidagilar faqat admin uchun ----
+        # Mavjud bo'lmagan manzil — 404 (aks holda har qanday noto'g'ri yo'l "Admin token noto'g'ri" deb chalg'itardi)
+        if not (m or path in ("/api/orders", "/api/requests", "/api/projects")):
+            return self.error(HTTPStatus.NOT_FOUND, "Bunday API yo'q")
         if not self.is_admin():
             return self.error(HTTPStatus.UNAUTHORIZED, "Admin token noto'g'ri yoki berilmagan")
 

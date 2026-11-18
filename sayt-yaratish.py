@@ -60,7 +60,7 @@ def main():
     page = (SRC / "index.html").read_text(encoding="utf-8")
     lines = page.splitlines()
     # Artifact uchun yozilgan sahifada <head> yo'q: <title> qatori o'rniga to'liq head qo'yamiz
-    while lines and lines[0].lstrip().lower().startswith(("<!doctype", "<title>", "<meta charset")):   # to'liq head o'zimizniki
+    while lines and lines[0].lstrip().lower().startswith(("<!doctype", "<title>", "<meta charset", '<meta name="viewport"')):   # to'liq head o'zimizniki
         lines = lines[1:]
     body_at = next(i for i, l in enumerate(lines) if l.lstrip().startswith("<nav"))
     html = head(url) + "\n".join(lines[:body_at]) + "\n</head>\n<body>\n" + "\n".join(lines[body_at:]) + "\n</body>\n</html>\n"

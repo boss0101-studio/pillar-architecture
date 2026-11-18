@@ -19,3 +19,8 @@ Hozirgi `pillar-reklama-uz.mp4` diktori — ElevenLabs (ovoz "Asilbek", matn: `e
 Qayta yasashda generator `_ovoz/uz/full.mp3` ni o'qib, sahnalarga pauzalar o'rtasidan bo'ladi: `CUTS_S = [5.37, 13.78, 20.64, 29.45, 35.63, 41.43, 47.90, 54.62]` (s).
 Buning uchun `web/_video.html` dagi diktor yuklash qatoridan keyin full.mp3 ni CUTS_S bo'yicha kesadigan kod qo'shiladi (generator.html'da yo'q — vaqtinchalik nusxada qilingan).
 Ekran yozuvlari (`TX.uz`) hali eski ssenariyda.
+
+## Logotip (2026-11-18)
+Videoda "Peshtoq" logotipi: 1-sahnada chap yuqorida, har sahnada o'ng yuqori burchakda (ixcham), yakuniy sahnada katta to'liq logo (+ "architecture").
+Geometriya `generator.html` dagi `BRAND` o'zgarmasida — `brend/yaratish.py` dan olingan (ARKA, WORD, SUB, SW, KW, HW). Logo o'zgarsa, shu qiymatlarni qayta ko'chiring.
+Shriftlar yuklanmasa (fonts.gstatic.com ochilmasa) `RUN()` xato beradi — video zaxira shriftda chiqib qolmasin.

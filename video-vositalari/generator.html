@@ -103,7 +103,20 @@ function sketchify(img) {
   }
   g0.putImageData(out, 0, 0); return c0;
 }
-function logo(px, py, size = 54, a = 1) { x.save(); x.globalAlpha = a; x.font = `800 ${size}px ${LOGO_F}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", px, py); const w = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", px + w, py); x.restore(); }
+// Logotip "Peshtoq" (brend/yaratish.py dan olingan geometriya, 64 birlikli to'r): firuza portal + arka, "pillar" va "architecture"
+const BRAND = {"arka":"M10 10H54V58H10Z M22 58V33C22 24.5 27 19 32 14C37 19 42 24.5 42 33V58Z","word":[[0.0,"M2 8V34M11 8a9 9 0 1 1 0 18a9 9 0 1 1 0-18"],[24.5,"M2 8v18M2 0.5v4.5"],[33.0,"M2 0v26"],[41.5,"M2 0v26"],[50.0,"M9 8a9 9 0 1 0 0 18a9 9 0 1 0 0-18M18 8v18"],[74.5,"M2 8v18M2 17a9 9 0 0 1 9-9h2.5"]],"sub":[[0.0,"M9 8a9 9 0 1 0 0 18a9 9 0 1 0 0-18M18 8v18"],[25.44,"M2 8v18M2 17a9 9 0 0 1 9-9h2.5"],[44.88,"M16.4 11.6A9 9 0 1 0 16.4 22.4"],[67.32,"M2 0v26M2 17a8 8 0 0 1 16 0v9"],[92.76,"M2 8v18M2 0.5v4.5"],[102.2,"M5 1v20a5 5 0 0 0 5 5h2.5M0 9.5h12"],[120.64,"M1 17h16A8.2 8.2 0 1 0 14.9 22.9"],[144.08,"M16.4 11.6A9 9 0 1 0 16.4 22.4"],[166.52,"M5 1v20a5 5 0 0 0 5 5h2.5M0 9.5h12"],[184.95,"M2 8v9a7 7 0 0 0 14 0M16 8v18"],[208.39,"M2 8v18M2 17a9 9 0 0 1 9-9h2.5"],[227.83,"M1 17h16A8.2 8.2 0 1 0 14.9 22.9"]],"subS":0.36,"sw":4.2,"kw":171.5,"hw":176.5};
+const BRAND_P = { arka: new Path2D(BRAND.arka), word: BRAND.word.map(([dx, d]) => [dx, new Path2D(d)]), sub: BRAND.sub.map(([dx, d]) => [dx, new Path2D(d)]) };
+// (px, py) — chap yuqori burchak, h — balandlik (px). full: "architecture" bilan (keng logo), aks holda ixcham (belgi + pillar)
+function brand(px, py, h, a = 1, full = false) {
+  const k = h / 64; x.save(); x.globalAlpha *= a; x.translate(px, py); x.scale(k, k);
+  x.fillStyle = "#4fc2b8"; x.fill(BRAND_P.arka, "evenodd"); x.fillRect(10, 4, 6, 7); x.fillRect(48, 4, 6, 7);
+  x.strokeStyle = "#fff"; x.lineCap = "butt"; x.lineJoin = "miter";
+  const word = (list, ox, oy, s, lw) => { x.save(); x.translate(ox, oy); x.scale(s, s); x.lineWidth = lw; list.forEach(([dx, p]) => { x.save(); x.translate(dx, 0); x.stroke(p); x.restore(); }); x.restore(); };
+  if (full) { word(BRAND_P.word, 84, 4, 1, BRAND.sw); word(BRAND_P.sub, 84, 48, BRAND.subS, BRAND.sw * 0.55); }
+  else word(BRAND_P.word, 80, 15, 1, BRAND.sw);
+  x.restore();
+}
+const brandW = (h, full = false) => (full ? BRAND.hw : BRAND.kw) * h / 64;
 function chip(s, px, py, a, fill = "rgba(255,255,255,.1)", stroke = "rgba(255,255,255,.35)") {
   x.save(); x.globalAlpha = a; x.font = `500 28px ${M}`; const w = x.measureText(s).width + 44; rr(px, py, w, 58, 29); x.fillStyle = fill; x.fill(); x.strokeStyle = stroke; x.lineWidth = 2; x.stroke();
   x.fillStyle = "#fff"; x.textBaseline = "middle"; x.fillText(s, px + 22, py + 30); x.restore(); return w;
@@ -161,7 +174,7 @@ let A = {};   // yuklangan rasmlar
 const SC = [
   { d: 5, draw(t, s) {                                                        // 1. Kirish
     cover(A.h1, lerp(1.14, 1.0, s / 5), .5, .6); shade(.82, .2);
-    logo(140, 150, 64, ease(t / .4));
+    brand(140, 96, 74, ease(t / .4));
     head(t, L("k1"), L("t1"), L("s1"), 140, 560);
   } },
   { d: 6, draw(t, s) {                                                        // 2. Konstruktor
@@ -242,7 +255,7 @@ const SC = [
     t = s / 5;                                                                // animatsiyalar 5 s o'lchovida qoladi
     cover(A.h5, lerp(1.1, 1.0, s / 5), .5, .55); x.fillStyle = "rgba(10,12,14,.62)"; x.fillRect(0, 0, W, H);
     // chapda: logotip va chaqiriq; o'ngda: sayt QR kodi (modullar butun pikselga — telefon kamerasi aniq o'qisin)
-    const k = ease(t / .5); x.save(); x.globalAlpha = k; x.font = `800 220px ${LOGO_F}`; x.fillStyle = "#fff"; x.textBaseline = "alphabetic"; x.fillText("PILLAR", 160, 500); const lw = x.measureText("PILLAR").width; x.fillStyle = ACC; x.fillText(".", 160 + lw, 500); x.restore();
+    brand(160, 214, 300, ease(t / .5), true);                                // to'liq logotip: peshtoq + pillar + architecture
     txt(L("o1"), 166, 580, `500 46px ${B}`, "#fff", t, .2);
     txt(L("o2"), 166, 700, `800 76px ${D}`, "#fff", t, .35);
     txt(L("o3"), 166, 770, `500 36px ${B}`, "rgba(255,255,255,.85)", t, .45);
@@ -265,7 +278,7 @@ function frame(sec) {
   x.globalAlpha = 1; x.fillStyle = VBG; x.fillRect(0, 0, W, H);
   if (i > 0 && s < FADE) { const p = SC[i - 1]; p.draw((s + p.d) / p.d * 1.0 > 1 ? 1 : 1, p.d + s); x.save(); x.globalAlpha = s / FADE; sc.draw(s / sc.d, s); x.restore(); }   // o'tish: oldingi sahna ustiga yangisi ochiladi
   else sc.draw(s / sc.d, s);
-  if (i > 0) logo(W - 250, 90, 46, .9);
+  if (i > 0 && i < SC.length - 1) brand(W - 60 - brandW(52), 50, 52, .9);   // yakuniy sahnada katta logo bor — burchakdagisi takrorlanmasin
   x.fillStyle = "rgba(255,255,255,.15)"; x.fillRect(0, H - 8, W, 8); x.fillStyle = ACC; x.fillRect(0, H - 8, W * sec / TOTAL, 8);
   x.font = `500 26px ${M}`; x.fillStyle = "rgba(255,255,255,.7)"; x.textBaseline = "alphabetic"; x.fillText(`${String(i + 1).padStart(2, "0")} / ${String(SC.length).padStart(2, "0")}`, W - 250, H - 40);
 }
@@ -273,7 +286,9 @@ function frame(sec) {
 async function prepare(lang = "uz") {
   LANG = TX[lang] ? lang : "uz"; [D, B] = FONTS[LANG]; document.documentElement.lang = LANG; SC.forEach((sc, i) => { sc.d = BASE_D[i]; });
   const sample = LANG === "ru" ? "Жж Яя Pillar" : "Pillar ÑñÓó";                       // kirill/lotin qismini ham yuklasin
-  await Promise.all([`800 100px ${LOGO_F}`, `800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `600 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f, sample)));
+  const got = await Promise.all([`800 100px ${LOGO_F}`, `800 100px ${D}`, `400 30px ${B}`, `500 30px ${B}`, `600 30px ${B}`, `500 30px ${M}`, `700 30px ${M}`, `600 30px ${M}`].map(f => document.fonts.load(f, sample)));
+  // Shrift yuklanmasa (internet yo'q yoki fonts.gstatic.com ochilmaydi) video brauzerning zaxira shriftida chiqib qolardi — to'xtatamiz
+  if (got.some(a => !a.length)) throw new Error("Shriftlar yuklanmadi (fonts.gstatic.com). Internetni tekshirib, sahifani qayta oching — video yasalmadi.");
   const [h1, h5, u5, u2, bk, bb, br, bm, be] = await Promise.all(["hero/1.jpg", "hero/5.jpg", "fon/u5.jpg", "fon/u2.jpg", "fon/b-konstruktor.jpg", "fon/b-bolimlar.jpg", "fon/b-rasm.jpg", "fon/b-mahsulotlar.jpg", "fon/b-erkin.jpg"].map(load));
   A = { h1, h5, u5, u2, bk, bb, br, bm, be };
   const q = qrcode(0, "M"); q.addData(SITE_URL); q.make();                              // xatoni tuzatish darajasi M (~15%)

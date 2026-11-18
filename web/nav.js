@@ -1,3 +1,15 @@
+// Logotip ("Peshtoq", brend/yaratish.py — ixcham variant): sahifadagi har bir .brand yozuvi logoga almashtiriladi.
+// Belgi rangi --logo (style.css: och/to'q mavzu, foto ustida oq), yozuv — joriy matn rangi. Qo'shimcha so'z ("admin") saqlanadi.
+(function () {
+  const LOGO = '<svg class="brand-logo" viewBox="0 0 171.5 64" aria-hidden="true" focusable="false"><g style="fill:var(--logo,#11766f)"><path fill-rule="evenodd" d="M10 10H54V58H10Z M22 58V33C22 24.5 27 19 32 14C37 19 42 24.5 42 33V58Z"/><rect x="10" y="4" width="6" height="7"/><rect x="48" y="4" width="6" height="7"/></g><g fill="none" stroke="currentColor" stroke-width="4.2" stroke-linecap="butt" stroke-linejoin="miter" transform="translate(80.00 15.00)"><path transform="translate(0.00 0)" d="M2 8V34M11 8a9 9 0 1 1 0 18a9 9 0 1 1 0-18"/><path transform="translate(24.50 0)" d="M2 8v18M2 0.5v4.5"/><path transform="translate(33.00 0)" d="M2 0v26"/><path transform="translate(41.50 0)" d="M2 0v26"/><path transform="translate(50.00 0)" d="M9 8a9 9 0 1 0 0 18a9 9 0 1 0 0-18M18 8v18"/><path transform="translate(74.50 0)" d="M2 8v18M2 17a9 9 0 0 1 9-9h2.5"/></g></svg>';
+  document.querySelectorAll("a.brand").forEach(a => {
+    const extra = a.textContent.replace(/^\s*Pillar\.?\s*/i, "").trim();
+    a.innerHTML = LOGO + (extra ? `<span class="brand-extra">${extra.replace(/[&<>"]/g, "")}</span>` : "");
+    a.setAttribute("aria-label", "Pillar Architecture" + (extra ? " — " + extra : ""));
+    a.setAttribute("translate", "no");
+  });
+})();
+
 // Menyu tugmasi (gamburger): tor ekranda havolalar to'liq ekranli menyuda ochiladi.
 // Bosh sahifadagi foto ustida menyu shaffof turadi, fotodan o'tgach odatiy fonga qaytadi.
 (function () {

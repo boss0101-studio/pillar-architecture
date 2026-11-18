@@ -41,8 +41,9 @@ def head(url):
 <meta property="og:description" content="{DESC}">
 <meta property="og:url" content="{url}/">
 <meta property="og:locale" content="uz_UZ">
-<meta name="theme-color" content="#14181c">
+<meta name="theme-color" content="#11766f">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <!-- GOOGLE-TASDIQ: Search Console bergan <meta name="google-site-verification" ...> tegini shu qatorga qo'ying -->
 <script type="application/ld+json">{{"@context":"https://schema.org","@type":"WebApplication","name":"Pillar Architecture","url":"{url}/","applicationCategory":"DesignApplication","operatingSystem":"Any","inLanguage":"uz","description":"{DESC}","offers":{{"@type":"Offer","price":"0","priceCurrency":"USD"}}}}</script>
 """
@@ -60,13 +61,14 @@ def main():
     page = (SRC / "index.html").read_text(encoding="utf-8")
     lines = page.splitlines()
     # Artifact uchun yozilgan sahifada <head> yo'q: <title> qatori o'rniga to'liq head qo'yamiz
-    while lines and lines[0].lstrip().lower().startswith(("<!doctype", "<title>", "<meta charset", '<meta name="viewport"')):   # to'liq head o'zimizniki
+    while lines and lines[0].lstrip().lower().startswith(("<!doctype", "<title>", "<meta charset", '<meta name="viewport"', '<link rel="icon"', '<link rel="apple-touch-icon"')):   # to'liq head o'zimizniki
         lines = lines[1:]
     body_at = next(i for i, l in enumerate(lines) if l.lstrip().startswith("<nav"))
     html = head(url) + "\n".join(lines[:body_at]) + "\n</head>\n<body>\n" + "\n".join(lines[body_at:]) + "\n</body>\n</html>\n"
     (OUT / "index.html").write_text(html, encoding="utf-8")
 
-    (OUT / "favicon.svg").write_text(FAVICON, encoding="utf-8")
+    if not (SRC / "favicon.svg").exists():               # odatda web/favicon.svg (brend/yaratish.py) nusxalangan bo'ladi
+        (OUT / "favicon.svg").write_text(FAVICON, encoding="utf-8")
     (OUT / "robots.txt").write_text(f"User-agent: *\nAllow: /\n\nSitemap: {url}/sitemap.xml\n", encoding="utf-8")
     today = datetime.date.today().isoformat()
     (OUT / "sitemap.xml").write_text(

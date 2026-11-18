@@ -186,7 +186,8 @@ if (window.View3D) View3D.onPick = i => Site.select(i);   // 3D'da uyni bosib ta
 window.DesignHost = {
   params: () => params, cells: () => cells,
   refresh() { undoStack.length = 0; redoStack.length = 0; syncControls(); if ($("konstruktor").hidden) showView("konstruktor"); else render(); },
-  load(list, gap, name, note, yard) { firstDesignerVisit = false; loadIntoDesigner(   // tashqaridan kelgan dizaynni "Nimadan boshlaymiz?" oynasi bosib ketmasinlist, gap, name == null ? $("dName").value : name, note, yard); },
+  // tashqaridan kelgan dizaynni (AI, Rasmdan dizayn, Erkin qurish) "Nimadan boshlaymiz?" oynasi bosib ketmasin
+  load(list, gap, name, note, yard) { firstDesignerVisit = false; loadIntoDesigner(list, gap, name == null ? $("dName").value : name, note, yard); },
 };
 if (window.View3D) { View3D.onMove = (i, x, z) => Site.move(i, x, z); View3D.onRotate = i => Site.rotate(i); }   // 3D'da ko'chirish va burish
 if (window.View3D) { View3D.onMoveItem = (k, x, z) => Site.moveItem(k, x, z); View3D.onPickItem = k => { if (Site.ysel !== k) { Site.ysel = k; render(); } }; }   // hovli elementlari

@@ -75,6 +75,100 @@ const AIDesign = (function () {
     const ok = ProjectIO.cleanCells(target, p);                      // faqat ruxsat etilgan turlar va chegaralar qoladi
     Object.keys(target).forEach(k => { if (!(k in ok)) delete target[k]; });
   }
+
+  // ---------- Erkin qurish -> Konstruktor ----------
+  // freebuild.js modeli (metrda, z — ko'cha tomonga) Konstruktor uyiga aylantiriladi: kontur -> eng mos plan shakli (maydonlar
+  // ustma-ust tushishi, IoU bo'yicha), o'lchamlar -> oraliqlar, qavatlar, tom, material, old fasaddagi eshik/derazalar -> kataklar,
+  // ichki devorlar va ichki eshiklar -> ichki rejaning 1 m to'ri. Konstruktor parametrik: egri yoki qiyshiq devorlar yaqinlashtiriladi.
+  const FB_MAT = { gisht: "gisht", gazoblok: "oqgisht", beton: "beton", shisha: "shisha" };
+  const FB_ROOF = { tekis: "tekis", nishab: "nishab", gumbaz: "gumbaz", yoq: "tekis" };
+  const inPoly = (pts, x, z) => { let c = false; for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) { const [xi, zi] = pts[i], [xj, zj] = pts[j]; if ((zi > z) !== (zj > z) && x < ((xj - xi) * (z - zi)) / (zj - zi) + xi) c = !c; } return c; };
+  const polyA = pts => Math.abs(pts.reduce((s, [x, z], i) => { const [x2, z2] = pts[(i + 1) % pts.length]; return s + x * z2 - x2 * z; }, 0) / 2);
+  function fbSegs(level, kind) {
+    const out = [];
+    level.chains.filter(c => c.k === kind).forEach(c => { const n = c.pts.length; for (let i = 0; i < (c.closed ? n : n - 1); i++) out.push([c.pts[i], c.pts[(i + 1) % n]]); });
+    return out;
+  }
+  function segDist(p, [a, b]) {
+    const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1e-9, u = Math.min(1, Math.max(0, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / L2));
+    return Math.hypot(p[0] - a[0] - dx * u, p[1] - a[1] - dz * u);
+  }
+  function fromFreebuild(m) {
+    const levels = (m && Array.isArray(m.levels) ? m.levels : []).filter(l => l && Array.isArray(l.chains));
+    const ring = l => l.chains.filter(c => c.k === "out" && c.closed && c.pts.length >= 3).sort((a, b) => polyA(b.pts) - polyA(a.pts))[0];
+    const base = levels.length && ring(levels[0]);
+    if (!base) throw new Error("Erkin qurishda 1-qavatning yopiq tashqi devori chizilmagan");
+    const P = base.pts, xs = P.map(q => q[0]), zs = P.map(q => q[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), z0 = Math.min(...zs), z1 = Math.max(...zs), W = x1 - x0, D = z1 - z0;
+    const notes = [];
+
+    // Plan shakli: chizilgan kontur va har bir shakl (qanot eni bilan) 0,5 m to'rda solishtiriladi
+    const st = Math.max(0.25, Math.max(W, D) / 60), pts = [];
+    for (let x = x0 + st / 2; x < x1; x += st) for (let z = z0 + st / 2; z < z1; z += st) pts.push([x - x0, z - z0, inPoly(P, x, z)]);
+    let best = { iou: -1, shape: "rect", wing: 0.4 };
+    for (const shape of ["rect", "L", "U", "T", "circle", "octagon", "hexagon", "triangle", "trapezoid"]) {
+      for (const wing of ["L", "U", "T"].includes(shape) ? [0.2, 0.3, 0.4, 0.5, 0.6] : [0.4]) {
+        const ring2 = planShape({ bays: 1, bay_w: W, depth: D, shape, wing }).outer;
+        let i = 0, u = 0; pts.forEach(([x, z, a]) => { const b = inPoly(ring2, x, z); if (a && b) i++; if (a || b) u++; });
+        const iou = u ? i / u : 0; if (iou > best.iou + 1e-6) best = { iou, shape, wing };
+      }
+    }
+    if (best.iou < 0.85) notes.push(`kontur Konstruktordagi "${SHAPES[best.shape]}" shakliga yaqinlashtirildi (${Math.round(best.iou * 100)}% mos)`);
+
+    // Old fasad: kontur ko'cha tomonidagi gorizontal devorlari; oraliqlar soni — eshik/derazalar har xil oraliqqa tushadigan qilib
+    const isFront = ([a, b]) => Math.abs(b[1] - a[1]) < 0.2 * Math.hypot(b[0] - a[0], b[1] - a[1]) && (a[1] + b[1]) / 2 > z1 - Math.max(0.6, D * 0.15);
+    const fronts = levels.map(l => { const r = ring(l) || base, n = r.pts.length; return r.pts.map((q, i) => [q, r.pts[(i + 1) % n]]).filter(isFront); });
+    const frontOpen = levels.map((l, f) => (l.open || []).filter(o => fronts[f].some(s => segDist([o.x, o.z], s) < 0.2)));
+    let bays = 2, cost = Infinity;
+    for (let n = 2; n <= 12; n++) {
+      const bw = W / n; if (bw < 3 && n > 2) continue; if (bw > 7.5 && n < 12) continue;
+      let clash = 0; frontOpen.forEach(list => { const used = {}; list.forEach(o => { const k = Math.min(n - 1, Math.max(0, Math.floor(((o.x - x0) / W) * n))); clash += used[k] ? 1 : 0; used[k] = 1; }); });
+      const c = clash * 10 + Math.abs(bw - 4.2); if (c < cost) { cost = c; bays = n; }
+    }
+    const lv = levels.slice(0, 30), hAvg = lv.reduce((s, l) => s + (Number(l.h) || 3), 0) / lv.length;
+    const anyWin = lv.some((l, f) => (l.open || []).some(o => o.t === "win" && !frontOpen[f].includes(o)));
+    const params = cleanP(DEFAULT_PARAMS, { category: "turar-joy", floors: lv.length, bays, bay_w: W / bays, depth: D, floor_h: hAvg, shape: best.shape, wing: best.wing,
+      roof: FB_ROOF[m.roof] || "tekis", material: FB_MAT[m.outMat] || "gisht", window: anyWin ? "oddiy" : "yoq", ground: "oddiy" });
+    const W2 = params.bays * params.bay_w, D2 = params.depth;
+    if (Math.abs(W2 - W) > 0.3 || Math.abs(D2 - D) > 0.3) notes.push(`o'lcham ${W.toFixed(1)}×${D.toFixed(1)} m -> ${W2.toFixed(1)}×${D2.toFixed(1)} m (Konstruktor chegaralari)`);
+    if (m.roof === "yoq") notes.push("tomsiz uy Konstruktorda tekis tom bilan");
+
+    // Old fasad kataklari: har qavatning har oralig'i aniq belgilanadi (bo'shi — devor)
+    const cells = [];
+    lv.forEach((l, f) => {
+      const row = Array(params.bays).fill("wall");
+      frontOpen[f].forEach(o => {
+        const b = Math.min(params.bays - 1, Math.max(0, Math.floor(((o.x - x0) / W) * params.bays)));
+        const t = o.t === "door" ? (o.w >= 1.6 ? "door2" : "door") : o.w >= 2.2 ? "wide" : o.h >= 1.9 ? "tall" : "win";
+        if (!(row[b] === "door" || row[b] === "door2")) row[b] = t;
+      });
+      row.forEach((type, b) => cells.push({ floor: f + 1, bay: b + 1, type }));
+    });
+
+    // Ichki reja: ichki devorlar 1 m to'r chiziqlariga (Konstruktor ichki rejasi shu to'rda), ichki eshiklar — eshikli katak
+    const sx = W2 / W, sz = D2 / D, gw = Math.max(2, Math.floor(W2)), gd = Math.max(2, Math.floor(D2));
+    let walls = 0;
+    const floors = lv.map(l => {
+      const e = {}, inner = fbSegs(l, "in");
+      inner.forEach(([a, b]) => {
+        const A = [(a[0] - x0) * sx, (a[1] - z0) * sz], B = [(b[0] - x0) * sx, (b[1] - z0) * sz], horiz = Math.abs(B[1] - A[1]) <= Math.abs(B[0] - A[0]);
+        const [u0, u1] = horiz ? [Math.min(A[0], B[0]), Math.max(A[0], B[0])] : [Math.min(A[1], B[1]), Math.max(A[1], B[1])];
+        const line = Math.round(horiz ? (A[1] + B[1]) / 2 : (A[0] + B[0]) / 2), lim = horiz ? gd : gw, cellsN = horiz ? gw : gd;
+        if (line <= 0 || line >= lim) return;                           // tashqi devor ustiga tushgan ichki devor
+        for (let k = Math.max(0, Math.floor(u0)); k < Math.min(cellsN, Math.ceil(u1)); k++) {
+          if (Math.min(u1, k + 1) - Math.max(u0, k) >= 0.5) { e[horiz ? `h:${k},${line}` : `v:${line},${k}`] = 1; walls++; }
+        }
+      });
+      (l.open || []).filter(o => o.t === "door" && inner.some(s => segDist([o.x, o.z], s) < 0.2)).forEach(o => {
+        const X = (o.x - x0) * sx, Z = (o.z - z0) * sz, h = `h:${Math.floor(X)},${Math.round(Z)}`, v = `v:${Math.round(X)},${Math.floor(Z)}`;
+        if (e[h] && (!e[v] || Math.abs(Z - Math.round(Z)) < Math.abs(X - Math.round(X)))) e[h] = 2; else if (e[v]) e[v] = 2;
+      });
+      return { e, items: [] };
+    });
+    const interior = walls ? Interior.clean({ floors }) : undefined;
+    return { params, cells, interior, notes };
+  }
+
   // Faol uy konstruktorning o'zgaruvchilari bilan bir obyekt: joyida o'zgartiramiz, aks holda Site.sync eski qiymatni qaytaradi
   const houseRef = i => (i === Site.active ? { params: host().params(), cells: host().cells(), b: Site.list[i] } : { params: Site.list[i].params, cells: Site.list[i].cells, b: Site.list[i] });
   function setYardItems(a) {
@@ -141,6 +235,14 @@ const AIDesign = (function () {
             const i = pickHouse(a), b = Site.list[i]; Site.sync();
             b.interior = a.mode === "clear" ? undefined : Interior.auto(b.params);
             done.push(`house ${i + 1} interior ${a.mode === "clear" ? "cleared" : "generated"}`);
+            break;
+          }
+          case "from_freebuild": {                                   // Erkin qurishda chizilgan uy Konstruktorga (faqat ilova ichidan, AI uchun emas)
+            const r = fromFreebuild(a.model), c = {}; putCells(c, r.params, r.cells);
+            h.load([{ params: r.params, cells: c }], 10, String(a.name || "Erkin qurishdan").slice(0, 80), "");
+            Site.sync(); Site.list[0].interior = r.interior;
+            done.push(`Erkin qurishdan: ${r.params.floors} qavat, ${r.params.bays}×${r.params.bay_w} m × ${r.params.depth} m, ${SHAPES[r.params.shape]}${r.interior ? ", ichki reja bilan" : ""}`);
+            r.notes.forEach(t => done.push("eslatma: " + t));
             break;
           }
           default: throw new Error(`unknown action "${a && a.type}"`);

@@ -352,6 +352,7 @@
         <button type="button" class="btn-ghost" data-fba="save">Faylga saqlash</button>
         <label class="btn-ghost fb-file">Fayldan ochish<input type="file" accept=".json,application/json" hidden data-fba="open"></label>
         <button type="button" class="btn-danger" data-fba="new">Hammasini tozalash</button>
+        <button type="button" class="btn fb-todes" data-fba="todesigner" title="Chizilgan uyni Konstruktorda tayyor bino sifatida ochish: shakl, o'lcham, qavatlar, tom, material, old fasaddagi eshik-derazalar va ichki devorlar">Konstruktorga o'tkazish →</button>
       </div>
       <div class="fb-levels" id="fbLevels"></div>
       <div class="fb-shape" id="fbShape" hidden>
@@ -536,7 +537,8 @@
     else if (a === "new") {
       if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tasdiqlang: hammasi o'chadi"; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "Hammasini tozalash"; } }, 2500); return; }
       draw = null; commit(() => { M = blank(); }); lv = 0; sel = null; changed();
-    } else if (a === "save") saveFile("erkin-loyiha.json", JSON.stringify({ format: "ustun-erkin", version: 1, ...M }, null, 2));
+    } else if (a === "todesigner") toDesigner();
+    else if (a === "save") saveFile("erkin-loyiha.json", JSON.stringify({ format: "ustun-erkin", version: 1, ...M }, null, 2));
     else if (a === "csv" && lastCalc) {
       const q = s => `"${String(s).replace(/"/g, '""')}"`;
       const rows = [["Material", "Miqdor", "Birlik", "Narx ($)", "Jami ($)"], ...lastCalc.boq.map(x => [x.n, x.q, x.u, x.p, Math.round(x.t)]), ["Jami", "", "", "", Math.round(lastCalc.total)]];
@@ -745,5 +747,21 @@
   // ---------- Ishga tushirish ----------
   init3d();
   changed();
+  // Chizilgan uyni Konstruktorga o'tkazish: aylantirish ai-design.js "from_freebuild" amalida (u Konstruktor kodi bilan birga yuklanadi).
+  // Web: shu sahifaning o'zida; statik sayt: designer.html ochilganda rasm.js amalni bajaradi ("ustun-rasm-acts")
+  function toDesigner() {
+    finishDraw();
+    if (!M.levels[0].chains.some(c => c.k === "out" && c.closed && c.pts.length >= 3)) { flash("Avval 1-qavatda yopiq tashqi devor chizing"); return; }
+    const acts = [{ type: "from_freebuild", name: "Erkin qurishdan", model: JSON.parse(JSON.stringify(M)) }];
+    if (window.AIDesign && typeof showView === "function") {
+      const r = AIDesign.apply(acts);
+      if (r && r.errors && r.errors.length) { flash(r.errors[0].replace(/^step \d+: /, "")); return; }
+      showView("konstruktor");
+      return;
+    }
+    try { localStorage.setItem("ustun-rasm-acts", JSON.stringify(acts)); } catch { flash("Brauzer xotirasiga sig'madi"); return; }
+    location.href = "designer.html";
+  }
+
   window.FreeBuild = { get model() { return M; }, calc, _set(m) { M = clean(m); lv = 0; sel = null; draw = null; changed(); } };   // sinov uchun
 })();

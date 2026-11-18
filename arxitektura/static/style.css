@@ -717,6 +717,7 @@ html.gp-dragging, html.gp-dragging .gp-b.drag { cursor: grabbing; user-select: n
 .fb-tools button[aria-pressed="true"], .fb-levels button[aria-pressed="true"], .fb-3dbar button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
 .fb-bar .btn-ghost, .fb-bar .btn-danger, .fb-levels .btn-ghost { font-size: .78rem; padding: 6px 10px; }
 .fb-bar button:disabled { opacity: .4; }
+.fb-bar .fb-todes { font-size: .8rem; padding: 6px 12px; }
 .fb-file { cursor: pointer; }
 .fb-opts { font-size: .78rem; padding: 8px 10px; border: 1px solid var(--line); background: var(--surface); gap: 8px 14px; }
 .fb-opts label, .fb-lh, .fb-side label { display: inline-flex; align-items: center; gap: 5px; }

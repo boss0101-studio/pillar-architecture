@@ -362,4 +362,5 @@ render();
 window.playBuild && window.playBuild();
 loadGallery();
 // Birinchi kirish: qoralama ham, ochilgan dizayn ham yo'q — boshlang'ich nuqtani tanlashni taklif qilamiz
-if (!startId && !hasDraft) openNewDialog();
+const incoming = (() => { try { return !!localStorage.getItem("ustun-rasm-acts"); } catch { return false; } })();   // Rasmdan dizayn / Erkin qurishdan kelgan uy
+if (!startId && !hasDraft && !incoming) openNewDialog();

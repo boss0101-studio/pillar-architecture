@@ -807,6 +807,10 @@ html.gp-dragging, html.gp-dragging .gp-b.drag { cursor: grabbing; user-select: n
 .bento-t:hover .bt-vis { transform: translateY(-3px); }
 .bt-facade { flex: 1; min-height: 220px; display: grid; place-items: center; background: var(--bg); border: 1px solid var(--line); padding: 10px; }
 .bt-facade svg { width: 100%; height: auto; max-height: 340px; }
+.bt-photo { flex: 1; position: relative; min-height: 220px; margin: 6px 0 0; overflow: hidden; border: 1px solid var(--line); background: var(--bg); }
+.bt-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }   /* kartaning butun maydonini to'ldiradi */
+.bento-t:hover .bt-photo img { transform: scale(1.04); }
+.bt-photo figcaption { position: absolute; right: 8px; bottom: 6px; font: 500 .68rem/1.3 var(--font-mono); color: #fff; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); }
 svg.bv { height: auto; max-height: 150px; }
 .bv-grid { fill: none; stroke: var(--line); stroke-width: .6; }
 .bv-wall { fill: none; stroke: var(--fg); stroke-width: 4.5; stroke-linejoin: miter; }

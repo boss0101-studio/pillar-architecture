@@ -21,12 +21,7 @@
 // ---------- Imkoniyatlar mozaikasi va raqamlar ----------
 (function () {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  // 01-kartochka: jonli fasad chizmasi (konstruktordagi bilan bir xil chizuvchi)
-  const bf = document.getElementById("bentoFacade");
-  if (bf && typeof renderFacade === "function") {
-    const p = { ...DEFAULT_PARAMS, category: "jamoat", floors: 2, bays: 7, floor_h: 4.2, bay_w: 4.0, depth: 16, roof: "gumbaz", material: "ganch", window: "arkali", ground: "arkada" }, t = { cells: {} };
-    bf.innerHTML = renderFacade(p, t.cells, { uid: "bento", dims: true });
-  }
+  // 01-kartochka: zamonaviy villa fotosurati (index.html, fon/bento-uy.jpg — Unsplash)
   // Ko'ringanda: devor chizilishi va raqamlar sanalishi bir marta ishlaydi
   const fmt = (v, d) => v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
   function count(el) {

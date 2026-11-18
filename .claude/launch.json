@@ -5,6 +5,7 @@
       "name": "arxitektura",
       "runtimeExecutable": "python",
       "runtimeArgs": [
+        "-u",
         "C:\\Users\\user\\Desktop\\ustun-arxitektura\\arxitektura\\server.py"
       ],
       "port": 8000

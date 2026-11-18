@@ -376,15 +376,32 @@ def ai_status():
     return True, ""
 
 
-def ai_rate_ok(ip):
+def rate_ok(bucket, ip, limit, window):
+    """Sirpanuvchi oyna: bitta IP `window` soniyada `bucket` bo'yicha ko'pi bilan `limit` ta so'rov.
+    Muddati o'tgan yozuvlar tozalanadi — lug'at cheksiz o'smaydi."""
     now = time.time()
     with _ai_lock:
-        hits = [t for t in _ai_hits.get(ip, []) if now - t < AI_WINDOW]
-        ok = len(hits) < AI_LIMIT
+        key = (bucket, ip)
+        hits = [t for t in _ai_hits.get(key, []) if now - t < window]
+        ok = len(hits) < limit
         if ok:
             hits.append(now)
-        _ai_hits[ip] = hits
+        if hits:
+            _ai_hits[key] = hits
+        else:
+            _ai_hits.pop(key, None)
+        if len(_ai_hits) > 5000:                     # ko'p IP'dan kelgan eski yozuvlarni vaqti-vaqti bilan supurish
+            for k in [k for k, v in _ai_hits.items() if not v or now - v[-1] >= window]:
+                _ai_hits.pop(k, None)
         return ok
+
+
+def ai_rate_ok(ip):
+    return rate_ok("ai", ip, AI_LIMIT, AI_WINDOW)
+
+
+# Ariza, buyurtma va dizayn yuborish: bitta IP 10 daqiqada 10 tagacha (spam va bazani to'ldirishdan himoya)
+WRITE_LIMIT, WRITE_WINDOW = 10, 600
 
 
 def validate_ai(data):
@@ -665,7 +682,9 @@ def estimate(data):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = "ArxitekturaServer/1.0"
+    server_version = "ArxitekturaServer"
+    sys_version = ""                          # sarlavhada Python versiyasi oshkor qilinmaydi
+    timeout = 30                              # sekin/osilib qolgan ulanish 30 soniyada uziladi (slowloris)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=STATIC_DIR, **kwargs)
@@ -675,7 +694,17 @@ class Handler(SimpleHTTPRequestHandler):
         # Statik fayllar har safar tekshiriladi: o'zgartirilgan CSS/JS eski nusxada qolib ketmasin
         if not self.path.startswith("/api/"):
             self.send_header("Cache-Control", "no-cache")
+        # Xavfsizlik sarlavhalari: MIME turini taxmin qilmaslik, sahifani boshqa sayt ichiga joylashni taqiqlash (clickjacking)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("X-Frame-Options", "DENY")
+        self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+        self.send_header("Referrer-Policy", "strict-origin-when-cross-origin")
         super().end_headers()
+
+    def list_directory(self, path):
+        # Papka ichidagi fayllar ro'yxati ko'rsatilmaydi
+        self.send_error(HTTPStatus.NOT_FOUND, "Topilmadi")
+        return None
 
     def send_json(self, payload, status=HTTPStatus.OK):
         body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -690,7 +719,10 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_json({"error": message}, status)
 
     def read_json(self, limit=600 * 1024):
-        length = int(self.headers.get("Content-Length") or 0)
+        raw_len = (self.headers.get("Content-Length") or "0").strip()
+        if not raw_len.isdigit():             # manfiy yoki son bo'lmagan qiymat: read(-1) ulanish yopilguncha osilib qolardi
+            raise ValidationError("Content-Length noto'g'ri")
+        length = int(raw_len)
         if length > limit:                    # 3 ta uy, 30 qavatgacha ichki reja bilan ham sig'adi (AI rasmli so'rov — kattaroq chegara)
             raise ValidationError("So'rov hajmi juda katta")
         try:
@@ -722,6 +754,10 @@ class Handler(SimpleHTTPRequestHandler):
     def dispatch(self, method, url):
         path = url.path.rstrip("/")
         m = re.fullmatch(r"/api/(projects|requests|designs|orders)/(\d+)", path)
+
+        if method == "POST" and path in ("/api/requests", "/api/orders", "/api/designs") and not self.is_admin():
+            if not rate_ok("write", self.client_address[0], WRITE_LIMIT, WRITE_WINDOW):
+                return self.error(HTTPStatus.TOO_MANY_REQUESTS, "Juda ko'p yuborildi: 10 daqiqada 10 tagacha. Biroz kuting.")
 
         if method == "GET" and path == "/api/ai/status":
             ok, why = ai_status()

@@ -94,17 +94,34 @@ const Site = (function () {
     },
     // Yangi element hovlidagi birinchi bo'sh joyga (ko'cha tomondan boshlab) qo'yiladi
     addItem(t) {
+      if (!this.place(t, false)) return false;
+      this.onChange && this.onChange(); return true;
+    },
+    // Bo'sh joy qidirish: back — uy ortidan (bog' maydoni) boshlab; topilsa element qo'shiladi va tanlanadi
+    place(t, back) {
       if (!YARD_ITEMS[t] || !this.yard.on || this.yard.items.length >= YARD_MAX_ITEMS) return false;
       const R = this.yardRect(), s = YARD_ITEMS[t];
-      for (let z = snap(R.z1 - s.d / 2 - 0.5); z >= R.z0 + s.d / 2; z -= 1) for (let x = snap(R.x0 + s.w / 2 + 0.5); x <= R.x1 - s.w / 2; x += 1) {
-        const f = { cx: x, cz: z, w: s.w, d: s.d };
-        if (this.itemFree(f, -1)) {
-          this.yard.items.push({ t, x, z, rot: 0 }); this.ysel = this.yard.items.length - 1;
-          this.onChange && this.onChange(); return true;
+      const zs = [], xs = [];
+      for (let z = snap(R.z1 - s.d / 2 - 0.5); z >= R.z0 + s.d / 2; z -= 1) zs.push(z);
+      for (let x = snap(R.x0 + s.w / 2 + 0.5); x <= R.x1 - s.w / 2; x += 1) xs.push(x);
+      if (back) zs.reverse();
+      for (const z of zs) for (const x of xs) {
+        if (this.itemFree({ cx: x, cz: z, w: s.w, d: s.d }, -1)) {
+          this.yard.items.push({ t, x, z, rot: 0 }); this.ysel = this.yard.items.length - 1; return true;
         }
       }
       return false;
     },
+    // Tayyor to'plamlar: "garden" — uy ortida bog' (maydon kamida 16 m), "rest" — dam olish hovlisi
+    preset(kind) {
+      const garden = kind === "garden";
+      if (!this.yard.on || (garden && (this.yard.garden || 0) < 16)) this.yard = cleanYard({ ...this.yard, on: true, garden: garden ? Math.max(16, this.yard.garden || 0) : this.yard.garden });
+      const set = garden ? ["fruit", "fruit", "fruit", "fruit", "ishkom", "veg", "veg", "rose", "rose", "greenhouse", "bench", "hedge", "hedge", "well"]
+                         : ["swim", "lounger", "lounger", "umbrella", "ayvon", "bbq", "suri", "lawn", "lamp", "lamp"];
+      let n = 0; set.forEach(t => { if (this.place(t, garden)) n++; });
+      this.onChange && this.onChange(); return n;
+    },
+    clearItems() { this.yard.items = []; this.ysel = -1; this.onChange && this.onChange(); },
     moveItem(k, x, z) {
       const it = this.yard.items[k]; if (!it) return false;
       const R = this.yardRect(), f0 = itemFoot(it), cl = (v, a, b) => (a > b ? (a + b) / 2 : clamp(v, a, b));

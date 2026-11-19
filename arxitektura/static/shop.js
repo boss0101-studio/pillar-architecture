@@ -3,7 +3,7 @@
 // katalog products.json faylidan o'qiladi, buyurtma esa shu brauzerga saqlanadi.
 const Shop = (function () {
   const CART_KEY = "ustun-cart", ORDERS_KEY = "ustun-orders";
-  const CATS = { material: "Fasad materiallari", element: "Deraza va eshiklar", tom: "Tom va yopma", qurilish: "Qurilish materiallari",
+  const CATS = { material: "Fasad materiallari", element: "Deraza va eshiklar", eshik: "Eshiklar va darvozalar", tom: "Tom va yopma", qurilish: "Qurilish materiallari",
     ichki: "Ichki pardoz", mebel: "Mebel", texnika: "Maishiy texnika", santexnika: "Santexnika va hammom", bezak: "Bezak va yoritish",
     muhandislik: "Muhandislik tizimlari", hovli: "Hovli va obodonlashtirish", xizmat: "Xizmatlar" };
   const nf = n => Math.round(n).toLocaleString("ru-RU");
@@ -62,6 +62,8 @@ const Shop = (function () {
   const brickRows = (x, y, w, h, n) => Array.from({ length: n }, (_, r) => `<path d="M${x} ${y + (r + 1) * h / n}H${x + w}" ${K}/>` +
     Array.from({ length: 4 }, (_, c) => `<path d="M${x + (c + (r % 2 ? 0.5 : 0)) * w / 4 + w / 8} ${y + r * h / n}v${h / n}" ${K}/>`).join("")).join("");
   const ICONS = {
+    lock: `<rect x="42" y="10" width="36" height="60" rx="6" fill="#2a2f33" ${K}/><rect x="48" y="18" width="24" height="16" rx="2" fill="#9fc0dc"/><circle cx="60" cy="50" r="8" fill="#5b6266" stroke="#d9d4c8" stroke-width="2"/>`,
+    handle: `<rect x="50" y="14" width="14" height="52" rx="6" fill="#d9b24c" ${K}/><path d="M57 30h40" stroke="#d9b24c" stroke-width="8" stroke-linecap="round"/><path d="M57 30h40" stroke="#1f2326" stroke-width="1" fill="none"/><circle cx="57" cy="52" r="3" fill="#1f2326"/>`,
     panel: `<rect x="20" y="12" width="38" height="56" fill="#bfc3c0" ${K}/><rect x="62" y="12" width="38" height="56" fill="#aeb3b0" ${K}/>`,
     plaster: `<rect x="16" y="12" width="88" height="56" fill="#e8dcc4" ${K}/><path d="M24 24q8-4 16 0t16 0 16 0 16 0M24 40q8-4 16 0t16 0 16 0 16 0M24 56q8-4 16 0t16 0 16 0 16 0" fill="none" stroke="#b9a983" stroke-width="2"/>`,
     brick: `<rect x="16" y="14" width="88" height="52" fill="${B}" ${K}/>${brickRows(16, 14, 88, 52, 4)}`,
@@ -148,6 +150,33 @@ const Shop = (function () {
     return o.join("");
   }
   // Hovli bezagi rasmlari (yon tomondan)
+  // Eshik turlari: ramka, tavaqa rangi (p.dc) va turga xos belgilar (filenka, o'yma naqsh, shisha, qulflar...)
+  function doorIcon(st, c) {
+    const fr = `<rect x="34" y="6" width="52" height="70" fill="#5b6266" ${K}/>`, glass = "#9fc0dc";
+    const leaf = (x, w, fill = c) => `<rect x="${x}" y="10" width="${w}" height="66" fill="${fill}" ${K}/>`;
+    const knob = x => `<circle cx="${x}" cy="44" r="2.6" fill="#d9b24c" stroke="#1f2326"/>`;
+    switch (st) {
+      case "carved": return fr + leaf(38, 44) + [18, 36, 54].map(y => `<rect x="44" y="${y}" width="32" height="14" fill="none" ${K}/><path d="M60 ${y + 2}l6 5-6 5-6-5z" fill="#5b3f22"/>`).join("") + knob(78);
+      case "metal": return fr + leaf(38, 44) + `<rect x="44" y="16" width="32" height="54" fill="none" stroke="#1f2326" stroke-opacity=".5"/>` + knob(78);
+      case "armored": return fr + leaf(38, 44) + [24, 40, 56].map(y => `<rect x="72" y="${y}" width="6" height="4" fill="#d9d4c8"/>`).join("") + `<path d="M44 16h32v54H44z" fill="none" stroke="#000" stroke-opacity=".45"/>` + knob(68);
+      case "alu": return fr + leaf(38, 44) + `<rect x="44" y="16" width="32" height="52" fill="${glass}" ${K}/>` + `<path d="M74 34v18" stroke="#1f2326" stroke-width="3"/>`;
+      case "pvc": return fr + leaf(38, 44) + `<rect x="44" y="16" width="32" height="22" fill="${glass}" ${K}/><rect x="44" y="44" width="32" height="24" fill="none" ${K}/>` + knob(78);
+      case "glass": return `<rect x="36" y="8" width="48" height="68" fill="${glass}" fill-opacity=".8" ${K}/><path d="M60 8v68" ${K}/><path d="M55 36v12M65 36v12" stroke="#1f2326" stroke-width="3"/>`;
+      case "double": return `<rect x="24" y="6" width="72" height="70" fill="#5b6266" ${K}/>` + leaf(28, 32) + leaf(60, 32) + `<rect x="33" y="18" width="22" height="22" fill="none" ${K}/><rect x="65" y="18" width="22" height="22" fill="none" ${K}/>` + knob(56) + knob(64);
+      case "arch": return `<path d="M36 76V32a24 24 0 0 1 48 0v44z" fill="${c}" ${K}/><path d="M42 32a18 18 0 0 1 36 0z" fill="${glass}" ${K}/><path d="M44 42h32v26H44z" fill="none" ${K}/>` + knob(76);
+      case "forged": return fr + leaf(38, 44, glass) + `<path d="M48 10v66M60 10v66M72 10v66M38 30h44M38 56h44" stroke="${c}" stroke-width="3"/>` + [30, 56].map(y => `<circle cx="60" cy="${y}" r="5" fill="none" stroke="${c}" stroke-width="2"/>`).join("");
+      case "glassin": return fr + leaf(38, 44) + `<rect x="44" y="16" width="32" height="40" fill="${glass}" fill-opacity=".85" ${K}/>` + knob(78);
+      case "mdf": return fr + leaf(38, 44) + `<path d="M38 28h44M38 58h44" stroke="#1f2326" stroke-opacity=".25"/>` + knob(78);
+      case "veneer": return fr + leaf(38, 44) + [0, 1, 2, 3, 4].map(i => `<path d="M${44 + i * 7} 12q3 32 0 62" fill="none" stroke="#5b3f22" stroke-opacity=".35"/>`).join("") + knob(78);
+      case "sliding": return `<path d="M18 8h84" stroke="#1f2326" stroke-width="4"/><rect x="22" y="10" width="40" height="66" fill="${c}" ${K}/><rect x="56" y="12" width="40" height="64" fill="${c}" ${K}/><rect x="62" y="18" width="28" height="50" fill="${glass}" fill-opacity=".6"/><path d="M40 70h14M74 70h14" stroke="#1f2326" stroke-width="2"/>`;
+      case "folding": return [0, 1, 2, 3].map(i => `<path d="M${30 + i * 15} ${i % 2 ? 12 : 8}l15 ${i % 2 ? -4 : 4}v64l-15 ${i % 2 ? 4 : -4}z" fill="${c}" ${K}/>`).join("");
+      case "gate": return `<path d="M10 76V20h100v56" fill="none" stroke="#1f2326" stroke-width="3"/>` + [0, 1].map(h => `<rect x="${14 + h * 47}" y="24" width="45" height="52" fill="none" stroke="${c}" stroke-width="3"/>` + [1, 2, 3, 4].map(i => `<path d="M${14 + h * 47 + i * 9} 24v52" stroke="${c}" stroke-width="2"/>`).join("") + `<path d="M${14 + h * 47} 24q22.5 -14 45 0" fill="none" stroke="${c}" stroke-width="3"/>`).join("");
+      case "gatewood": return `<rect x="12" y="10" width="96" height="66" fill="#5b3f22" ${K}/>` + [0, 1].map(h => `<rect x="${16 + h * 45}" y="14" width="43" height="62" fill="${c}" ${K}/>` + [22, 44].map(y => `<rect x="${22 + h * 45}" y="${y}" width="31" height="16" fill="none" ${K}/><path d="M${37.5 + h * 45} ${y + 3}l5 5-5 5-5-5z" fill="#3a2614"/>`).join("")).join("");
+      case "gateslide": return `<path d="M4 74h112" stroke="#1f2326" stroke-width="3"/><rect x="10" y="22" width="88" height="48" fill="${c}" ${K}/>` + [1, 2, 3, 4, 5, 6, 7].map(i => `<path d="M${10 + i * 11} 22v48" stroke="#1f2326" stroke-opacity=".35"/>`).join("") + `<rect x="100" y="56" width="12" height="16" fill="#2a2f33"/>`;
+      case "roller": return `<rect x="16" y="8" width="88" height="12" fill="#5b6266" ${K}/><rect x="20" y="20" width="80" height="56" fill="${c}" ${K}/>` + Array.from({ length: 9 }, (_, i) => `<path d="M20 ${26 + i * 6}h80" stroke="#1f2326" stroke-opacity=".3"/>`).join("");
+      default: return fr + leaf(38, 44) + `<rect x="44" y="16" width="32" height="22" fill="none" ${K}/><rect x="44" y="44" width="32" height="24" fill="none" ${K}/>` + knob(78);
+    }
+  }
   const YARD_ICONS = {
     bbq: `<rect x="34" y="30" width="52" height="16" fill="#2a2f33"/><path d="M38 46l-6 26M82 46l6 26M60 46v26" stroke="#2a2f33" stroke-width="3"/><path d="M38 30q4-10 8 0q4-10 8 0q4-10 8 0q4-10 8 0q4-10 8 0" fill="none" stroke="#e3732e" stroke-width="3"/>`,
     lounger: `<path d="M20 52h56l26-24" stroke="#3d7fc4" stroke-width="8" fill="none"/><path d="M26 56v16M70 56v16M98 34v38" stroke="#1f2326" stroke-width="3"/>`,
@@ -164,10 +193,18 @@ const Shop = (function () {
     bench: `<rect x="18" y="44" width="84" height="6" fill="#c49a6c" ${K}/><rect x="18" y="28" width="84" height="6" fill="#c49a6c" ${K}/><path d="M24 50v22M96 50v22M24 34v10M96 34v10" stroke="#2a2f33" stroke-width="4"/>`,
     playground: `<rect x="16" y="34" width="26" height="38" fill="#3d7fc4" ${K}/><path d="M42 38l40 34" stroke="#f2c33a" stroke-width="7"/><path d="M84 12v60M108 12v60M84 12h24M96 12v34" stroke="#2a2f33" stroke-width="3"/><rect x="90" y="46" width="12" height="4" fill="#f2c33a"/>`,
     greenhouse: `<path d="M14 72V40a46 30 0 0 1 92 0v32z" fill="#cfe6e8" fill-opacity=".7" ${K}/><path d="M60 10v62M36 16v56M84 16v56" stroke="#8aa4a8" stroke-width="2"/><path d="M22 66h76" stroke="#3f8f4a" stroke-width="6"/>`,
+    rose: `<rect x="14" y="54" width="92" height="16" fill="#6d4c33" ${K}/>${[0, 1, 2, 3, 4].map(i => `<circle cx="${24 + i * 18}" cy="44" r="9" fill="#3f8f4a"/><circle cx="${24 + i * 18}" cy="38" r="4" fill="#c8243c"/>`).join("")}`,
+    veg: `<rect x="10" y="40" width="100" height="32" fill="#6d4c33" ${K}/>${[0, 1, 2].map(r => [0, 1, 2, 3, 4, 5].map(i => `<circle cx="${18 + i * 17}" cy="${48 + r * 9}" r="4" fill="${r === 1 ? "#7aa63f" : "#3f8f4a"}"/>`).join("")).join("")}`,
+    hedge: `<rect x="8" y="34" width="104" height="38" rx="8" fill="#3f7a3a" ${K}/><path d="M14 44h92M14 56h92" stroke="#2d5a2a" stroke-width="2"/>`,
+    jacuzzi: `<ellipse cx="60" cy="54" rx="46" ry="18" fill="#ece6da" ${K}/><ellipse cx="60" cy="52" rx="38" ry="12" fill="#58c2e8"/>${[0, 1, 2].map(i => `<circle cx="${44 + i * 16}" cy="50" r="3" fill="#fff"/>`).join("")}`,
+    firepit: `<ellipse cx="60" cy="62" rx="30" ry="10" fill="#9a9893" ${K}/><path d="M50 58q4-22 10-30q6 10 10 30z" fill="#e3732e"/><path d="M56 58q2-10 4-14q2 6 4 14z" fill="#f2c33a"/>`,
+    well: `<rect x="34" y="44" width="52" height="28" fill="#9a9893" ${K}/><path d="M38 44V18M82 44V18" stroke="#5b3f22" stroke-width="4"/><path d="M30 20l30-10 30 10z" fill="#6a5047" ${K}/><path d="M60 22v16" stroke="#1f2326"/>`,
+    shed: `<rect x="22" y="34" width="76" height="40" fill="#a07a52" ${K}/><path d="M16 36l44-24 44 24z" fill="#6a5047" ${K}/><rect x="52" y="48" width="16" height="26" fill="#5b3f22" ${K}/>`,
     swim: `<rect x="10" y="30" width="100" height="40" fill="#d9d4c8" ${K}/><rect x="16" y="36" width="88" height="28" fill="#4a90d9"/><path d="M60 36v28" stroke="#f7f8f7" stroke-width="2" stroke-dasharray="4 3"/><path d="M98 30V14h8M104 14v16" stroke="#8e99a2" stroke-width="3" fill="none"/>`,
   };
   function visual(p) {
     if (p.furn) { const f = furnIcon(p.furn); if (f) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/><path d="M0 72h120" stroke="#b9b2a4" stroke-width="2"/>${f}</svg>`; }
+    if (p.door) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/><path d="M0 77h120" stroke="#b9b2a4" stroke-width="2"/>${doorIcon(p.door, /^#[0-9a-f]{6}$/i.test(p.dc || "") ? p.dc : "#c49a6c")}</svg>`;
     if (p.yard && YARD_ICONS[p.yard]) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#cfe0c3"/>${YARD_ICONS[p.yard]}</svg>`;
     if (p.icon && ICONS[p.icon]) return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/>${ICONS[p.icon]}</svg>`;
     if (p.draw && typeof drawCell === "function") return `<svg viewBox="0 0 120 80" aria-hidden="true"><rect width="120" height="80" fill="#d9d4c8"/>${drawCell(p.draw, 30, 2, 60, 76)}</svg>`;

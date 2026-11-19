@@ -1711,3 +1711,8 @@ body::before, body::after, html.bg-photo body::after { content: none; display: n
 .v3-int button:disabled { opacity: .4; cursor: default; }
 .v3-int .v3i-sw { width: 22px; height: 22px; padding: 0; }
 .v3-int .v3i-sw[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---------- Konstruktor: uy tomonlari va hovli quruvchi ---------- */
+.side-cap { margin: 8px 0 4px; font-size: .74rem; color: var(--muted); }
+.gp-ybuild { display: grid; gap: 4px; margin: 8px 0; padding: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.gp-ybuild > .gp-bar:first-child b { font-size: .86rem; }

@@ -57,7 +57,7 @@ $("tools").innerHTML = ["balc", "win", "wide", "arch", "slit", "round", "lattice
 function syncControls() {
   RANGES.forEach(k => { $(k).value = params[k]; $(k + "Out").textContent = String(params[k]).replace(".", ","); });
   document.querySelectorAll(".seg").forEach(seg => {
-    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === params[seg.dataset.name]));
+    seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === (params[seg.dataset.name] ?? DEFAULT_PARAMS[seg.dataset.name])));
   });
   $("materials").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.v === params.material));
   $("category").value = params.category;

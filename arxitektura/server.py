@@ -46,6 +46,14 @@ DESIGN_CHOICES = {
     "window": {"oddiy", "arkali", "panorama", "tor", "dumaloq", "panjara", "baland", "kvadrat", "uchtabaqa", "yoq"},
     "ground": {"oddiy", "arkada", "vitrina"},
 }
+# Uy tomonlari (ixtiyoriy: eski dizaynlarda yo'q): orqa/yon derazalar, tom qoplamasi, poydevor — building.js SIDE_WINDOWS, ROOF_MATS, BASES
+SIDE_CHOICES = {"mos"} | DESIGN_CHOICES["window"]
+OPTIONAL_CHOICES = {
+    "back": (SIDE_CHOICES, "mos"),
+    "side": (SIDE_CHOICES, "mos"),
+    "roof_mat": ({"standart", "cherepitsa", "shingla", "metall", "shifer", "mis", "yashil"}, "standart"),
+    "base": ({"yoq", "beton", "tosh", "gisht", "granit"}, "yoq"),
+}
 DESIGN_SHAPES = {"rect", "L", "U", "T", "court", "circle", "sphere", "octagon", "hexagon", "triangle", "trapezoid"}
 MAX_BUILDINGS = 3   # bitta majmuada eng ko'pi bilan nechta uy
 # Ichki reja: mebel turlari (interior.js katalogi bilan bir xil) va chegaralar
@@ -212,6 +220,8 @@ def validate_building(raw):
     # Plan shakli (building.js SHAPES) va qanot eni — ixtiyoriy: eski dizaynlar to'rtburchak bo'lib qoladi
     params["shape"] = req_choice(raw_params, "shape", DESIGN_SHAPES) if raw_params.get("shape") is not None else "rect"
     params["wing"] = req_float(raw_params, "wing", 0.2, 0.6) if raw_params.get("wing") is not None else 0.4
+    for k, (choices, default) in OPTIONAL_CHOICES.items():
+        params[k] = req_choice(raw_params, k, choices) if raw_params.get(k) is not None else default
     if isinstance(raw_params.get("color"), str) and re.fullmatch(r"#[0-9a-fA-F]{6}", raw_params["color"]):
         params["color"] = raw_params["color"].lower()          # rasmdan olingan devor rangi (ixtiyoriy)
 
@@ -310,9 +320,10 @@ def validate_interior(raw):
 
 
 YARD_ITEM_TYPES = ("tree", "bed", "pool", "suri", "car", "garage", "swim", "pine", "fruit", "bush", "fountain", "gazebo", "tandir", "bench", "play", "lamp", "greenhouse",
-                   "bbq", "lounger", "umbrella", "pot", "swing", "doghouse", "ishkom")
+                   "bbq", "lounger", "umbrella", "pot", "swing", "doghouse", "ishkom",
+                   "hedge", "veg", "rose", "lawn", "path", "jacuzzi", "ayvon", "firepit", "well", "shed")
 FENCE_TYPES = ("devor", "panjara", "yogoch", "yoq")
-MAX_YARD_ITEMS = 40
+MAX_YARD_ITEMS = 60
 
 
 def validate_yard(raw):
@@ -326,7 +337,11 @@ def validate_yard(raw):
     except (TypeError, ValueError):
         raise ValidationError("Hovli chekinishi son bo'lishi kerak")
     fence = raw.get("fence", "devor")
-    if not 2 <= margin <= 20 or fence not in FENCE_TYPES:
+    try:
+        garden = float(raw.get("garden") or 0)          # uy ortidagi alohida bog' maydoni, m
+    except (TypeError, ValueError):
+        raise ValidationError("Bog' maydoni son bo'lishi kerak")
+    if not 2 <= margin <= 20 or not 0 <= garden <= 40 or fence not in FENCE_TYPES:
         raise ValidationError("Hovli sozlamalari noto'g'ri")
     raw_items = raw.get("items") or []
     if not isinstance(raw_items, list) or len(raw_items) > MAX_YARD_ITEMS:
@@ -342,7 +357,7 @@ def validate_yard(raw):
         if not (-400 <= x <= 400 and -400 <= z <= 400) or rot not in (0, 90):
             raise ValidationError("Hovli elementi chegaradan tashqarida")
         items.append({"t": it["t"], "x": round(x, 2), "z": round(z, 2), "rot": rot})
-    return {"on": bool(raw.get("on")), "margin": round(margin, 1), "fence": fence, "items": items}
+    return {"on": bool(raw.get("on")), "margin": round(margin, 1), "garden": round(garden), "fence": fence, "items": items}
 
 
 # ---------- AI yordamchi (ixtiyoriy) ----------
@@ -616,7 +631,7 @@ def seed_products(conn):
     )
     # faqat ko'rinish uchun maydonlar (rasm belgisi) bazaga yozilmaydi — xotirada turadi
     PRODUCT_LOOK.clear()
-    PRODUCT_LOOK.update({p["id"]: {k: p[k] for k in ("icon", "draw", "furn", "yard") if p.get(k)} for p in items})
+    PRODUCT_LOOK.update({p["id"]: {k: p[k] for k in ("icon", "draw", "furn", "yard", "door", "dc") if p.get(k)} for p in items})
 
 
 PRODUCT_LOOK = {}

@@ -479,7 +479,13 @@
     const out = new THREE.Group();
     const g = geometry(p), mat = matOf(p);
     const { W, D, Hb } = g;
-    const { glassMat, ironMat, roofMat } = sh;
+    const { glassMat, ironMat } = sh;
+    let roofMat = sh.roofMat;
+    const RM = p.roof_mat && p.roof_mat !== "standart" && ROOF_MATS[p.roof_mat];     // tanlangan tom qoplamasi (shu uy uchun)
+    if (RM) roofMat = track(real ? realMat(RM.kind, RM.real, { rep: RM.kind === "grass" ? 4 : 1.2 })
+                                 : new THREE.MeshStandardMaterial({ color: RM.fill, roughness: RM.kind === "seam" ? 0.45 : 0.85, metalness: RM.kind === "seam" ? 0.4 : 0 }));
+    const BS = BASES[p.base] && BASES[p.base].fill ? BASES[p.base] : null;           // poydevor (sokol)
+    const baseMat = BS ? track(real ? realMat(BS.kind, BS.fill) : new THREE.MeshStandardMaterial({ color: BS.fill, roughness: 0.9 })) : null;
     const maxAniso = renderer.capabilities.getMaxAnisotropy();
     const baseTex = track(makeTex(mat.pattern, mat.fill) || { dispose() {} });
     const hasTex = !!mat.pattern;
@@ -592,7 +598,7 @@
               const x = e.x1 + e.dx * (c + 0.5) * cw, b = Math.min(p.bays - 1, Math.max(0, Math.floor(x / p.bay_w)));
               return cellType(p, cells, f, b);
             }
-            return upper;
+            return Math.abs(e.dx) >= Math.abs(e.dz) ? backType(p) : sideType(p);   // orqa (x bo'ylab) va yon qirralar
           };
         }
         const w = makeWall(cols, cw, typeAt);
@@ -620,6 +626,7 @@
       if (dark) out.add(dark);
       // Qavat belbog'lari: faqat tashqi devor bo'ylab tasma (ichi bo'sh — kesimda xonalar tepadan ko'rinadi)
       const bands = ps.rings.map((r, i) => (i ? [offsetRing(r, -0.02), offsetRing(r, 0.08)] : [offsetRing(r, 0.08), offsetRing(r, -0.02)]));
+      if (baseMat) ps.rings.forEach((r, i) => out.add(prism(i ? [offsetRing(r, -0.02), offsetRing(r, 0.1)] : [offsetRing(r, 0.1), offsetRing(r, -0.02)], BASE_H, 0, baseMat)));   // poydevor
       for (let f = 1; f < p.floors; f++) bands.forEach(b => out.add(prism(b, 0.12, f * p.floor_h - 0.06, ledgeMat)));
 
       const roofMark = out.children.length;
@@ -730,14 +737,23 @@
     front.position.set(-W / 2, 0, D / 2 - T); out.add(front);
     front.userData.front = { bw: p.bay_w, fh: p.floor_h, floors: p.floors, bays: p.bays };   // VR'da qaralgan katakni topish uchun
 
-    const back = makeWall(p.bays, p.bay_w, () => upper);
+    const back = makeWall(p.bays, p.bay_w, () => backType(p));
     back.rotation.y = Math.PI; back.position.set(W / 2, 0, -(D / 2 - T)); out.add(back);
 
-    const right = makeWall(sideCols, sideW, () => upper);
+    const right = makeWall(sideCols, sideW, () => sideType(p));
     right.rotation.y = Math.PI / 2; right.position.set(W / 2 - T, 0, D / 2); out.add(right);
 
-    const left = makeWall(sideCols, sideW, () => upper);
+    const left = makeWall(sideCols, sideW, () => sideType(p));
     left.rotation.y = -Math.PI / 2; left.position.set(-(W / 2 - T), 0, -D / 2); out.add(left);
+    if (baseMat) {                                                  // poydevor: 10 sm chiqib turgan belbog', old tomonda eshik va darvozalar ostida uziladi
+      const bh = BASE_H, bt = 0.1;
+      out.add(box(W + 2 * bt, bh, bt, baseMat, 0, bh / 2, -D / 2 - bt / 2), box(bt, bh, D, baseMat, W / 2 + bt / 2, bh / 2, 0), box(bt, bh, D, baseMat, -W / 2 - bt / 2, bh / 2, 0));
+      for (let b = 0; b < p.bays; b++) {
+        if (BASE_GAP.has(cellType(p, cells, 0, b))) continue;
+        const xa = b === 0 ? -W / 2 - bt : -W / 2 + b * p.bay_w, xb = b === p.bays - 1 ? W / 2 + bt : -W / 2 + (b + 1) * p.bay_w;
+        out.add(box(xb - xa, bh, bt, baseMat, (xa + xb) / 2, bh / 2, D / 2 + bt / 2));
+      }
+    }
 
 
     // ---------- Ichki makon (Interior): qavat plitalari, xona devorlari, mebel va zina ----------
@@ -1668,6 +1684,50 @@
       ybox(2.4, 0.03, 2.4, M.carpet, 0, 0.465, 0, g, false);
       [[-1.4, -1.4], [1.4, -1.4], [-1.4, 1.4], [1.4, 1.4]].forEach(([x, z]) => ybox(0.12, 2.5, 0.12, M.wood, x, 1.7, z, g));
       ybox(3.4, 0.14, 3.4, M.vine, 0, 3.0, 0, g);
+    } else if (it.t === "hedge") {                                // jonli to'siq: qirqilgan buta devori
+      ybox(4, 1.2, 0.8, M.leaf2, 0, 0.6, 0, g);
+      ybox(3.9, 0.1, 0.7, M.leaf, 0, 1.22, 0, g, false);
+    } else if (it.t === "veg") {                                  // poliz: tuproq pushtalari va ko'katlar
+      ybox(4, 0.18, 2.4, M.soil, 0, 0.09, 0, g);
+      for (let r = 0; r < 3; r++) for (let i = 0; i < 7; i++) ymesh(ytrack(new THREE.SphereGeometry(0.16, 7, 5)), r === 1 ? ymat(0x7aa63f) : M.leaf2, -1.65 + i * 0.55, 0.26, -0.75 + r * 0.75, g, false).scale.set(1, 0.7, 1);
+    } else if (it.t === "rose") {                                 // atirgulzor: buta va qizil gullar
+      ybox(2.4, 0.22, 1.2, M.soil, 0, 0.11, 0, g);
+      const rm = ymat(0xc8243c);
+      for (let i = 0; i < 6; i++) {
+        const x = -0.9 + (i % 3) * 0.9, z = i < 3 ? -0.28 : 0.28;
+        ymesh(ytrack(new THREE.SphereGeometry(0.28, 9, 7)), M.leaf, x, 0.45, z, g);
+        for (let j = 0; j < 3; j++) ymesh(ytrack(new THREE.SphereGeometry(0.07, 6, 5)), rm, x + Math.cos(j * 2.1) * 0.2, 0.62, z + Math.sin(j * 2.1) * 0.2, g, false);
+      }
+    } else if (it.t === "lawn") {                                 // maysazor: tekis yashil maydon, chekkasi bordyur
+      const pad = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(6, 4)), ymat(0x5f9446, { roughness: 1 })); pad.rotation.x = -Math.PI / 2; pad.position.y = 0.025; pad.receiveShadow = true; g.add(pad);
+      ybox(6.1, 0.06, 0.08, M.stone, 0, 0.03, 2.0, g, false); ybox(6.1, 0.06, 0.08, M.stone, 0, 0.03, -2.0, g, false);
+      ybox(0.08, 0.06, 4, M.stone, 3.0, 0.03, 0, g, false); ybox(0.08, 0.06, 4, M.stone, -3.0, 0.03, 0, g, false);
+    } else if (it.t === "path") {                                 // tosh yo'lak: alohida plitalar
+      for (let i = 0; i < 6; i++) ybox(1.1, 0.06, 0.7, M.stone, ((i * 7) % 3 - 1) * 0.03, 0.03, -2.1 + i * 0.84, g, false);
+    } else if (it.t === "jacuzzi") {                              // jakuzi: dumaloq vanna, suv va zinapoya
+      ymesh(ytrack(new THREE.CylinderGeometry(1.15, 1.15, 0.8, 28)), ymat(0xece6da), 0, 0.4, 0, g);
+      ymesh(ytrack(new THREE.CylinderGeometry(0.98, 0.98, 0.04, 28)), ymat(0x58c2e8, { roughness: 0.05, metalness: 0.2, transparent: true, opacity: 0.9 }), 0, 0.78, 0, g, false);
+      ybox(0.8, 0.3, 0.35, M.wood, 0, 0.15, 1.3, g);
+    } else if (it.t === "ayvon") {                                // ayvon: yog'och pol, o'ymakor ustunlar va soyabon tom
+      ybox(5, 0.25, 3.6, M.wood, 0, 0.125, 0, g);
+      [[-2.3, -1.6], [2.3, -1.6], [-2.3, 1.6], [2.3, 1.6], [0, 1.6], [0, -1.6]].forEach(([x, z]) => {
+        ybox(0.18, 2.6, 0.18, M.wood, x, 1.55, z, g);
+        ybox(0.3, 0.12, 0.3, M.wood, x, 2.8, z, g, false);
+      });
+      ybox(5.4, 0.16, 4, ymat(0x6a5047), 0, 2.94, 0, g);
+    } else if (it.t === "firepit") {                              // gulxan joyi: tosh halqa, cho'g' va atrofida o'rindiqlar
+      ymesh(ytrack(new THREE.CylinderGeometry(0.55, 0.6, 0.35, 16)), M.stone, 0, 0.175, 0, g);
+      ymesh(ytrack(new THREE.CylinderGeometry(0.42, 0.42, 0.03, 16)), ymat(0xe3732e, { emissive: 0x7a2a08 }), 0, 0.36, 0, g, false);
+      [0, 1, 2].forEach(i => { const a = i * 2.1, b = ybox(1.0, 0.4, 0.35, M.wood, Math.cos(a) * 1.05, 0.2, Math.sin(a) * 1.05, g); b.rotation.y = -a + Math.PI / 2; });
+    } else if (it.t === "well") {                                 // quduq: tosh halqa, ustunlar va tomcha
+      ymesh(ytrack(new THREE.CylinderGeometry(0.6, 0.65, 0.8, 16)), M.stone, 0, 0.4, 0, g);
+      [-0.55, 0.55].forEach(x => ybox(0.1, 1.5, 0.1, M.wood, x, 1.15, 0, g));
+      const rf = ybox(1.4, 0.06, 0.9, ymat(0x6a5047), 0, 1.95, 0, g); rf.rotation.x = 0.05;
+    } else if (it.t === "shed") {                                 // xo'jalik ombori: yog'och quti, nishab tom va eshik
+      ybox(3, 2.2, 2.4, M.wood, 0, 1.1, 0, g);
+      const r1 = ybox(3.3, 0.08, 1.45, ymat(0x6a5047), 0, 2.5, -0.6, g); r1.rotation.x = -0.4;
+      const r2 = ybox(3.3, 0.08, 1.45, ymat(0x6a5047), 0, 2.5, 0.6, g); r2.rotation.x = 0.4;
+      ybox(0.9, 1.8, 0.04, ymat(0x5b4331), 0, 0.9, 1.22, g, false);
     } else {                                                      // mashina joyi: chiziqli maydoncha va mashina
       const pad = new THREE.Mesh(ytrack(new THREE.PlaneGeometry(2.7, 5.3)), M.pad); pad.rotation.x = -Math.PI / 2; pad.position.y = 0.02; pad.receiveShadow = true; g.add(pad);
       [-1.31, 1.31].forEach(x => ybox(0.08, 0.02, 5.3, M.white, x, 0.03, 0, g, false));
@@ -2206,7 +2266,7 @@
     applyRenderer();
 
     bar = document.createElement("div"); bar.className = "v3-bar";
-    bar.innerHTML = '<button type="button" data-v="corner">Burchak</button><button type="button" data-v="front">Old</button>' +
+    bar.innerHTML = '<button type="button" data-v="corner">Burchak</button><button type="button" data-v="front">Old</button><button type="button" data-v="back" title="Orqa fasad">Orqa</button>' +
       '<button type="button" data-v="side">Yon</button><button type="button" data-v="top">Tepa</button>' +
       '<label class="v3-sun" title="Quyosh holati: tengkunlik, Toshkent">Quyosh <input type="range" min="5" max="19" step="0.5" value="15" aria-label="Quyosh soati"><output>15:00</output></label>' +
       '<button type="button" data-v="move" aria-pressed="false" title="Uylarni sichqoncha yoki barmoq bilan sudrab ko\'chirish">Ko\'chirish</button><button type="button" data-v="rot" title="Faol uyni 90° burish">↻ 90°</button>' +
@@ -2304,6 +2364,7 @@
       const v = b.dataset.v;
       if (v === "corner") goTo(-0.65, 1.12);
       else if (v === "front") goTo(0, 1.4);
+      else if (v === "back") goTo(Math.PI, 1.4);
       else if (v === "side") goTo(Math.PI / 2, 1.4);
       else if (v === "top") goTo(0, 0.12);
       else if (v === "in") { zoom = clamp(zoom * 0.8, 0.35, 2.4); request(); }

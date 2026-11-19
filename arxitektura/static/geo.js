@@ -43,15 +43,17 @@ const Geo = (function () {
       if (t === "door" || t === "arcade") doors += a; else glass += a;
     }
     const sideCols = Math.max(1, Math.round(D / p.bay_w)), sideW = D / sideCols;
-    const sideOpen = 2 * N * sideCols * openingArea(upper, sideW, h), backOpen = N * p.bays * openingArea(upper, p.bay_w, h);
-    counts[upper] = (counts[upper] || 0) + 2 * N * sideCols + N * p.bays;
+    const sideT = sideType(p), backT = backType(p);                    // orqa va yon devorlar o'z deraza turi bilan
+    const sideOpen = 2 * N * sideCols * openingArea(sideT, sideW, h), backOpen = N * p.bays * openingArea(backT, p.bay_w, h);
+    counts[sideT] = (counts[sideT] || 0) + 2 * N * sideCols; counts[backT] = (counts[backT] || 0) + N * p.bays;
     glass += sideOpen + backOpen;
     let gross = 2 * (W + D) * Hb, open = frontOpen + sideOpen + backOpen, net = gross - open;
     const ps = shapeOf(p) !== "rect" ? planShape(p) : null;
     if (ps) {                                                         // shakldor plan: old fasaddan boshqa qirralar bo'yicha derazalar
       let cols = 0, colW = 0;
       planEdges(ps).forEach(e => { if (e.full || e.L < 1.2) return; const c = Math.max(1, Math.round(e.L / p.bay_w)); cols += c; colW += e.L; });
-      counts[upper] = Math.max(0, (counts[upper] || 0) - (2 * N * sideCols + N * p.bays)) + N * cols;
+      counts[sideT] = Math.max(0, (counts[sideT] || 0) - 2 * N * sideCols); counts[backT] = Math.max(0, (counts[backT] || 0) - N * p.bays);
+      counts[upper] = (counts[upper] || 0) + N * cols;
       glass -= sideOpen + backOpen;
       const other = N * cols * openingArea(upper, cols ? colW / cols : p.bay_w, h);
       glass += other;
@@ -249,8 +251,9 @@ const Geo = (function () {
   const FURN_PRODUCT = { kitchen: ["int-oshxona", 2.4], ac: ["eng-kondi", 1], boiler: ["eng-kotel", 1], radiator: ["eng-radiator", 8] };
   const YARD_PRODUCT = { tree: "yrd-daraxt", fruit: "yrd-daraxt", pine: "yrd-archa", bush: "yrd-buta", suri: "yrd-suri", lamp: "yrd-chiroq", fountain: "yrd-favvora", gazebo: "yrd-shiypon",
     tandir: "yrd-tandir", bench: "yrd-orindiq", play: "yrd-bolalar", greenhouse: "yrd-issiqxona", bbq: "yrd-mangal", lounger: "yrd-shezlong", umbrella: "yrd-soyabon", pot: "yrd-tuvak",
-    swing: "yrd-argimchoq", doghouse: "yrd-ituycha", bed: "yrd-gulzor" };
-  const YARD_AREA_PRODUCT = { pool: "yrd-hovuz", swim: "yrd-basseyn", ishkom: "yrd-pergola" };
+    swing: "yrd-argimchoq", doghouse: "yrd-ituycha", bed: "yrd-gulzor", rose: "yrd-atirgul", jacuzzi: "yrd-jakuzi", firepit: "yrd-gulxan", well: "yrd-quduq", shed: "yrd-ombor" };
+  const YARD_AREA_PRODUCT = { pool: "yrd-hovuz", swim: "yrd-basseyn", ishkom: "yrd-pergola", lawn: "yrd-maysa", path: "yrd-brusatka", ayvon: "yrd-ayvon", veg: "yrd-poliz", hedge: "yrd-jonli" };
+  const ROOF_MAT_PRODUCT = { cherepitsa: "roof-tile", shingla: "roof-shingle", metall: "roof-metal", shifer: "roof-ondulin", mis: "roof-metal", yashil: "roof-green" };
   const ROOF_PRODUCT = { nishab: "roof-tile", piramida: "roof-tile", bir: "roof-metal", tekis: "roof-flat", terrasa: "roof-flat" };
   function boq(list) {
     const qty = {}, add = (id, q) => { if (id && q > 0) qty[id] = (qty[id] || 0) + q; };
@@ -259,6 +262,7 @@ const Geo = (function () {
       add(`mat-${b.params.material}`, m.net);                                  // fasad qoplamasi: sof devor yuzasi
       Object.entries(m.counts).forEach(([t, n]) => add(CELL_PRODUCT[t], n));   // deraza, eshik, balkon, vitrina
       if (b.params.roof === "gumbaz") { add("roof-flat", m.A0); add("roof-dome", m.dome); }
+      else if (b.params.roof !== "tekis" && b.params.roof !== "terrasa" && ROOF_MAT_PRODUCT[b.params.roof_mat]) add(ROOF_MAT_PRODUCT[b.params.roof_mat], m.roofArea);   // tanlangan tom qoplamasi
       else add(ROOF_PRODUCT[b.params.roof], m.roofArea);
       add("con-slab", m.slabVol);                                              // qavatlararo yopma
       if (b.interior && typeof Interior !== "undefined")                       // ichki jihozlar: har biri dona (oshxona — pog. m)
@@ -376,6 +380,16 @@ const Geo = (function () {
     if (it.t === "swing") return `<path class="gy-line" d="M${x} ${f.cz} H${x + f.w}"/>` + R("gy-suri", ` rx="0.05" fill-opacity=".25"`) + `<rect class="gy-suri" x="${f.cx - 0.3}" y="${f.cz - 0.2}" width="0.6" height="0.4"/>`;
     if (it.t === "doghouse") return R("gy-suri") + `<path class="gy-line" d="M${x} ${z} L${f.cx} ${f.cz} L${x + f.w} ${z}"/>`;
     if (it.t === "ishkom") return R("gy-suri", ` fill-opacity=".25"`) + `<path class="gy-line" d="${Array.from({ length: 5 }, (_, i) => `M${x} ${z + i * f.d / 4} H${x + f.w}`).join("")}"/>` + [[0.25, 0.3], [0.7, 0.55], [0.4, 0.8]].map(([a, b]) => `<circle class="gy-bush" cx="${x + a * f.w}" cy="${z + b * f.d}" r="0.5"/>`).join("");
+    if (it.t === "hedge") return R("gy-bush", ` rx="0.3"`);
+    if (it.t === "veg") return R("gy-bed", ` rx="0.2"`) + `<path class="gy-line" d="${[1, 2, 3].map(i => `M${x + 0.2} ${z + i * f.d / 4} H${x + f.w - 0.2}`).join("")}"/>`;
+    if (it.t === "rose") return R("gy-bed", ` rx="0.3"`) + [-0.3, 0, 0.3].map(k => `<circle class="gy-fruit" cx="${f.cx + (f.w > f.d ? k * f.w * 0.8 : 0)}" cy="${f.cz + (f.w > f.d ? 0 : k * f.d * 0.8)}" r="0.3"/>`).join("");
+    if (it.t === "lawn") return R("gy-green", ` fill-opacity=".55"`);
+    if (it.t === "path") return R("gy-pool-rim", ` rx="0.1"`) + `<path class="gy-line" d="${Array.from({ length: 5 }, (_, i) => f.w < f.d ? `M${x} ${z + (i + 1) * f.d / 6} H${x + f.w}` : `M${x + (i + 1) * f.w / 6} ${z} V${z + f.d}`).join("")}"/>`;
+    if (it.t === "jacuzzi") return `<circle class="gy-pool-rim" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><circle class="gy-swim" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2 - 0.2}"/>`;
+    if (it.t === "ayvon") return R("gy-suri") + [[0.05, 0.05], [0.95, 0.05], [0.05, 0.95], [0.95, 0.95], [0.5, 0.05], [0.5, 0.95]].map(([a, b]) => `<circle class="gy-trunk" cx="${x + a * f.w}" cy="${z + b * f.d}" r="0.15"/>`).join("");
+    if (it.t === "firepit") return `<circle class="gy-tandir" cx="${f.cx}" cy="${f.cz}" r="0.6"/><circle class="gy-fruit" cx="${f.cx}" cy="${f.cz}" r="0.35"/>`;
+    if (it.t === "well") return `<circle class="gy-pool-rim" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2}"/><circle class="gy-pool" cx="${f.cx}" cy="${f.cz}" r="${f.w / 2 - 0.2}"/>`;
+    if (it.t === "shed") return R("gy-garage") + `<path class="gy-line" d="M${x} ${f.cz} H${x + f.w}"/>`;
     if (it.t === "suri") return `<rect class="gy-suri" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><path class="gy-line" d="M${x} ${z} L${x + f.w} ${z + f.d} M${x + f.w} ${z} L${x} ${z + f.d}"/>`;
     return `<rect class="gy-car" x="${x}" y="${z}" width="${f.w}" height="${f.d}"/><text class="gy-p" x="${f.cx}" y="${f.cz + Math.min(f.w, f.d) * 0.2}" text-anchor="middle" font-size="${Math.min(f.w, f.d) * 0.55}">P</text>`;
   }
@@ -449,15 +463,21 @@ const Geo = (function () {
     const yc = Y
       ? `<label class="gp-chk"><input type="checkbox" data-gy="on" checked> Hovli</label>` +
         `<label class="gp-sel">To'siq <select data-gy="fence">${Object.entries(FENCES).map(([k, v]) => `<option value="${k}"${k === Y.fence ? " selected" : ""}>${v}</option>`).join("")}</select></label>` +
-        `<label class="gp-rng">Chekinish <input type="range" min="2" max="20" step="1" value="${Y.margin}" data-gy="margin" aria-label="Binolardan to'siqqacha, m"><output>${Y.margin} m</output></label>`
+        `<label class="gp-rng">Chekinish <input type="range" min="2" max="20" step="1" value="${Y.margin}" data-gy="margin" aria-label="Binolardan to'siqqacha, m"><output>${Y.margin} m</output></label>` +
+        `<label class="gp-rng" title="Uy ortidagi alohida bog' va hovli maydoni">Bog' maydoni <input type="range" min="0" max="40" step="2" value="${Y.garden || 0}" data-gy="garden" aria-label="Uy ortidagi bog' maydoni, m"><output>${Y.garden || 0} m</output></label>`
       : `<label class="gp-chk"><input type="checkbox" data-gy="on"> Hovli qo'shish</label>`;
     const bar = `<div class="gp-bar">${n > 1 ? `<span class="muted">Uyni sudrab ko'chiring</span>` : ""}${yc}<span class="sp"></span>` +
       (n > 1 ? `<button type="button" class="btn-ghost" data-gp="rot">↻ ${active + 1}-uyni 90° burish</button><button type="button" class="btn-ghost" data-gp="row">Qatorga tizish</button>` : "") + `</div>`;
     const sel = Y && ysel >= 0 && Y.items[ysel];
-    const ybar = Y ? `<div class="gp-bar gp-ybar"><span class="muted">Hovliga:</span>` +
-      Object.entries(YARD_ITEMS).map(([k, v]) => `<button type="button" class="btn-ghost" data-yadd="${k}"${Y.items.length >= YARD_MAX_ITEMS ? " disabled" : ""}>+ ${v.label}</button>`).join("") +
-      `<span class="sp"></span>` + (sel ? `<b>${YARD_ITEMS[sel.t].label}</b><button type="button" class="btn-ghost" data-yact="rot" title="90° burish">↻</button><button type="button" class="btn-ghost" data-yact="del">O'chirish</button>`
-                                         : `<span class="muted">Elementni bosib tanlang, sudrab suring</span>`) + `</div>` : "";
+    const full = Y && Y.items.length >= YARD_MAX_ITEMS ? " disabled" : "";
+    const ybar = Y ? `<div class="gp-ybuild"><div class="gp-bar"><b>Hovli quruvchi</b><span class="muted">${Y.items.length} / ${YARD_MAX_ITEMS}</span><span class="sp"></span>` +
+      `<button type="button" class="btn-ghost" data-yact="garden"${full} title="Uy ortida mevali daraxtlar, poliz, atirgul, ishkom va yo'lak bilan bog' yaratadi">Bog' yaratish</button>` +
+      `<button type="button" class="btn-ghost" data-yact="rest"${full} title="Basseyn, shezlong, ayvon, mangal va so'ri qo'yadi">Dam olish hovlisi</button>` +
+      `<button type="button" class="btn-ghost" data-yact="clear"${Y.items.length ? "" : " disabled"}>Hovlini tozalash</button></div>` +
+      Object.values(YARD_GROUPS).map(gr => `<div class="gp-bar gp-ybar"><span class="muted">${gr.label}:</span>` +
+        gr.items.filter(k => YARD_ITEMS[k]).map(k => `<button type="button" class="btn-ghost" data-yadd="${k}"${full}>+ ${YARD_ITEMS[k].label}</button>`).join("") + `</div>`).join("") +
+      `<div class="gp-bar gp-ybar"><span class="sp"></span>` + (sel ? `<b>${YARD_ITEMS[sel.t].label}</b><button type="button" class="btn-ghost" data-yact="rot" title="90° burish">↻</button><button type="button" class="btn-ghost" data-yact="del">O'chirish</button>`
+                                         : `<span class="muted">Elementni bosib tanlang, sudrab suring</span>`) + `</div></div>` : "";
     return bar + ybar + `<svg class="gp" viewBox="${vx} ${vz} ${vw} ${vd}" role="img" aria-label="Bosh reja: ${n} ta uy${Y ? `, hovli ${Y.items.length} ta element bilan` : ""}, uchastka ${fmt(pw)} × ${fmt(pd)} m">${o.join("")}</svg>`;
   }
 
@@ -552,16 +572,18 @@ const Geo = (function () {
     if (b.dataset.yadd && !Site.addItem(b.dataset.yadd)) flash("Bo'sh joy yo'q", `+ ${YARD_ITEMS[b.dataset.yadd].label}`);
     if (b.dataset.yact === "rot" && !Site.rotItem(Site.ysel)) flash("Joy yetmaydi", "↻");
     if (b.dataset.yact === "del") Site.delItem(Site.ysel);
+    if (b.dataset.yact === "garden" || b.dataset.yact === "rest") { const n = Site.preset(b.dataset.yact); if (!n) flash("Bo'sh joy yo'q", b.textContent); }
+    if (b.dataset.yact === "clear") Site.clearItems();
   });
   // Hovli sozlamalari: slayder qo'yib yuborilganda qo'llanadi (chizma qayta yaratilganda sudrash uzilmasin)
   document.addEventListener("change", e => {
     const t = e.target.closest && e.target.closest("[data-gy]");
     if (!t || typeof Site === "undefined") return;
     const k = t.dataset.gy;
-    Site.setYard(k === "on" ? { on: t.checked } : k === "fence" ? { fence: t.value } : { margin: Number(t.value) });
+    Site.setYard(k === "on" ? { on: t.checked } : k === "fence" ? { fence: t.value } : k === "garden" ? { garden: Number(t.value) } : { margin: Number(t.value) });
   });
   document.addEventListener("input", e => {
-    const t = e.target.closest && e.target.closest('[data-gy="margin"]');
+    const t = e.target.closest && e.target.closest('[data-gy="margin"],[data-gy="garden"]');
     if (t && t.nextElementSibling) t.nextElementSibling.textContent = `${t.value} m`;
   });
 

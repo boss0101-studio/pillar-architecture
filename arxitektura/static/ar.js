@@ -65,8 +65,8 @@ const UstunAR = (function () {
     const cnt = {}, add = (t, w, h) => { if (!OPENING[t]) return; const o = OPENING[t], k = `${t}|${n2((o[1] - o[0]) * w)}×${n2((o[3] - o[2]) * h)}`; cnt[k] = (cnt[k] || 0) + 1; };
     const sc = Math.max(1, Math.round(p.depth / p.bay_w)), sw = p.depth / sc;
     for (let f = 0; f < p.floors; f++) {
-      for (let b = 0; b < p.bays; b++) { add(cellType(p, cells, f, b), p.bay_w, p.floor_h); add(upperType(p), p.bay_w, p.floor_h); }
-      for (let c = 0; c < 2 * sc; c++) add(upperType(p), sw, p.floor_h);
+      for (let b = 0; b < p.bays; b++) { add(cellType(p, cells, f, b), p.bay_w, p.floor_h); add(backType(p), p.bay_w, p.floor_h); }
+      for (let c = 0; c < 2 * sc; c++) add(sideType(p), sw, p.floor_h);
     }
     return Object.entries(cnt).map(([k, n]) => { const [t, size] = k.split("|"); return [CELL_LABELS[t] || t, size, String(n), t]; })
       .sort((a, b) => (/door|garage|shop|arcade/.test(a[3]) ? 1 : 0) - (/door|garage|shop|arcade/.test(b[3]) ? 1 : 0));
@@ -163,9 +163,9 @@ const UstunAR = (function () {
           if (horiz) o.push(`<path d="M${hx} ${hz}v${outSide ? -L : L}M${hx} ${hz + (outSide ? -L : L)}A${L} ${L} 0 0 ${outSide ? 1 : 0} ${hx + L} ${hz}" fill="none" stroke="${INK}" stroke-width="0.2"/>`);
         }
       };
-      for (let bb = 0; bb < p.bays; bb++) { mark(cellType(p, b.cells, f, bb), bb * p.bay_w, p.bay_w, true, D - Tw, true); mark(upperType(p), bb * p.bay_w, p.bay_w, true, 0, false); }
+      for (let bb = 0; bb < p.bays; bb++) { mark(cellType(p, b.cells, f, bb), bb * p.bay_w, p.bay_w, true, D - Tw, true); mark(backType(p), bb * p.bay_w, p.bay_w, true, 0, false); }
       const sc = Math.max(1, Math.round(D / p.bay_w)), sw = D / sc;
-      for (let c = 0; c < sc; c++) { mark(upperType(p), c * sw, sw, false, 0); mark(upperType(p), c * sw, sw, false, W - Tw); }
+      for (let c = 0; c < sc; c++) { mark(sideType(p), c * sw, sw, false, 0); mark(sideType(p), c * sw, sw, false, W - Tw); }
     }
     // ichki devorlar va eshiklar
     for (const [key, state] of Object.entries(fd.e)) {

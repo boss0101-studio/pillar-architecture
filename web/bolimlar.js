@@ -65,8 +65,8 @@ const UstunRP = (function () {
     const add = (t, w, h) => { const o = OPENING[t]; if (!o || t === "arcade") return; const a = (o[1] - o[0]) * w * (o[3] - o[2]) * h; if (DOOR_RE.test(t)) { door += a; doorN++; } else { win += a; winN++; } };
     const sc = Math.max(1, Math.round(p.depth / p.bay_w)), sw = p.depth / sc;
     for (let f = 0; f < p.floors; f++) {
-      for (let b = 0; b < p.bays; b++) { add(cellType(p, cells, f, b), p.bay_w, p.floor_h); add(upperType(p), p.bay_w, p.floor_h); }
-      for (let c = 0; c < 2 * sc; c++) add(upperType(p), sw, p.floor_h);
+      for (let b = 0; b < p.bays; b++) { add(cellType(p, cells, f, b), p.bay_w, p.floor_h); add(backType(p), p.bay_w, p.floor_h); }
+      for (let c = 0; c < 2 * sc; c++) add(sideType(p), sw, p.floor_h);
     }
     return { win, door, winN, doorN };
   }

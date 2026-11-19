@@ -51,6 +51,25 @@ const OPENING = {
 // Umumiy deraza turi -> yuqori qavatlardagi katak turi
 const WINDOW_CELL = { oddiy: "win", arkali: "arch", panorama: "wide", tor: "slit", dumaloq: "round", panjara: "lattice", baland: "tall", kvadrat: "square", uchtabaqa: "triple", yoq: "wall" };
 const upperType = p => WINDOW_CELL[p.window] || "win";
+// Uy tomonlari alohida: orqa va yon devor derazalari ("mos" — old fasaddagi umumiy deraza turi), tom qoplamasi va poydevor (sokol)
+const SIDE_WINDOWS = { mos: "Old fasad kabi", ...Object.fromEntries(Object.keys(WINDOW_CELL).map(k => [k, k])) };
+const backType = p => (p.back && p.back !== "mos" && WINDOW_CELL[p.back]) || upperType(p);
+const sideType = p => (p.side && p.side !== "mos" && WINDOW_CELL[p.side]) || upperType(p);
+// Tom qoplamasi: rang (2D/3D) va realistik tekstura turi (view3d DRAW: roof — cherepitsa, seam — falsli metall)
+const ROOF_MATS = {
+  standart: { label: "Standart", fill: "#6a5047", real: "#7e4632", kind: "roof" },
+  cherepitsa: { label: "Qizil cherepitsa", fill: "#a24b2e", real: "#a24b2e", kind: "roof" },
+  shingla: { label: "Yumshoq cherepitsa", fill: "#4a4644", real: "#4a4644", kind: "roof" },
+  metall: { label: "Metall (falsli)", fill: "#3d4b57", real: "#3d4b57", kind: "seam" },
+  shifer: { label: "Shifer", fill: "#8d9092", real: "#8d9092", kind: "roof" },
+  mis: { label: "Mis (patina)", fill: "#4f9a83", real: "#4f9a83", kind: "seam" },
+  yashil: { label: "Yashil tom", fill: "#5b7f3a", real: "#5b7f3a", kind: "grass" },
+};
+// Poydevor (sokol): uy tagidagi 0,6 m chiqib turgan belbog'
+const BASES = { yoq: { label: "Yo'q" }, beton: { label: "Beton", fill: "#9a9893", kind: "plaster" }, tosh: { label: "Tabiiy tosh", fill: "#8e8778", kind: "rubble" },
+                gisht: { label: "G'isht", fill: "#8a4a36", kind: "brick" }, granit: { label: "Granit", fill: "#55585c", kind: "stone" } };
+const BASE_H = 0.6, BASE_GAP = new Set(["door", "door2", "glassdoor", "archdoor", "garage", "arcade", "shop"]);
+const roofFill = p => (p.roof_mat && p.roof_mat !== "standart" && ROOF_MATS[p.roof_mat] ? ROOF_MATS[p.roof_mat].fill : "#5a4840");
 
 // Tanlov ro'yxatlari (server.py dagi DESIGN_CHOICES bilan bir xil bo'lishi kerak)
 // Plan shakllari. To'rtburchakdan tashqari: to'rtburchaklar birlashmasi ("qanotlar") va qavariq ko'pburchaklar
@@ -66,11 +85,13 @@ const OPTIONS = {
   material: Object.keys(MATERIALS),
   window: Object.keys(WINDOW_CELL),
   ground: ["oddiy", "arkada", "vitrina"],
+  back: Object.keys(SIDE_WINDOWS), side: Object.keys(SIDE_WINDOWS), roof_mat: Object.keys(ROOF_MATS), base: Object.keys(BASES),
 };
 
 const DEFAULT_PARAMS = {
   category: "turar-joy", quality: "biznes", floors: 5, bays: 6, floor_h: 3.3, bay_w: 4.2, depth: 14,
   roof: "tekis", material: "gisht", window: "oddiy", ground: "oddiy", shape: "rect", wing: 0.4,
+  back: "mos", side: "mos", roof_mat: "standart", base: "yoq",
 };
 
 // Boshlang'ich nuqta: "bosh" — noldan (tayyor andozalar olib tashlangan; Sozlamalar "Mening sozlamam"ni qo'shadi)
@@ -210,7 +231,7 @@ function renderFacade(p, cells, opts = {}) {
   const x0 = L + ((VW - L - Rm) - g.W * s) / 2, gy = VH - B;
   const X = m => x0 + m * s, Y = z => gy - z * s;
   const mat = matOf(p);
-  const out = [];
+  const out = [], ROOF_TILE = roofFill(p);                     // tanlangan tom qoplamasi rangi
 
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" class="bld">`);
   out.push(`<defs>${patternDef(uid, mat.pattern, s)}</defs>`);
@@ -274,6 +295,14 @@ function renderFacade(p, cells, opts = {}) {
     out.push(drawCell(cellType(p, cells, f, b), X(b * p.bay_w), Y((f + 1) * p.floor_h), p.bay_w * s, p.floor_h * s));
   }
   out.push(`<rect x="${X(0)}" y="${Y(g.Hb)}" width="${g.W * s}" height="${g.Hb * s}" fill="none" stroke="${INK}" stroke-width="1.6"/>`);
+  const bs = BASES[p.base];
+  if (bs && bs.fill) {                                  // poydevor (sokol): eshik, darvoza va vitrinalar ostida uzilib o'tadi
+    for (let b = 0; b < p.bays; b++) {
+      if (BASE_GAP.has(cellType(p, cells, 0, b))) continue;
+      const xa = b === 0 ? -0.08 : b * p.bay_w, xb = b === p.bays - 1 ? g.W + 0.08 : (b + 1) * p.bay_w;
+      out.push(`<rect x="${X(xa)}" y="${Y(BASE_H)}" width="${(xb - xa) * s}" height="${BASE_H * s}" fill="${bs.fill}" stroke="${INK}" stroke-width="1"/>`);
+    }
+  }
 
   if (p.roof === "bir") {                               // bir nishabli tom: devor uchburchagi + qiya plita
     const oh = 0.55, k = g.R / g.W, tri = `${X(0)},${Y(g.Hb)} ${X(g.W)},${Y(g.Hb)} ${X(g.W)},${Y(g.H)}`;
@@ -618,18 +647,37 @@ const YARD_ITEMS = {
   swing: { label: "Arg'imchoq", w: 2.4, d: 1.5 },
   doghouse: { label: "It uychasi", w: 1.0, d: 1.2 },
   ishkom: { label: "Ishkom (tok so'risi)", w: 3.2, d: 4.4 },
+  hedge: { label: "Jonli to'siq", w: 4, d: 0.8 },
+  veg: { label: "Poliz (sabzavot)", w: 4, d: 2.4 },
+  rose: { label: "Atirgulzor", w: 2.4, d: 1.2 },
+  lawn: { label: "Maysazor", w: 6, d: 4 },
+  path: { label: "Tosh yo'lak", w: 1.2, d: 5 },
+  jacuzzi: { label: "Jakuzi", w: 2.3, d: 2.3 },
+  ayvon: { label: "Ayvon (terrasa)", w: 5, d: 3.6 },
+  firepit: { label: "Gulxan joyi", w: 2.6, d: 2.6 },
+  well: { label: "Quduq", w: 1.4, d: 1.4 },
+  shed: { label: "Xo'jalik ombori", w: 3, d: 2.4 },
 };
-const YARD_GREEN = ["tree", "bed", "pine", "fruit", "bush"];   // ko'kalamzor (qattiq qoplama emas)
+// Hovli quruvchidagi guruhlar (tugmalar shu tartibda)
+const YARD_GROUPS = {
+  bog: { label: "Bog'", items: ["tree", "fruit", "pine", "bush", "hedge", "bed", "rose", "veg", "lawn", "pot", "greenhouse", "ishkom"] },
+  suv: { label: "Suv", items: ["swim", "pool", "jacuzzi", "fountain", "well"] },
+  dam: { label: "Dam olish", items: ["ayvon", "suri", "gazebo", "lounger", "umbrella", "bench", "firepit", "bbq", "tandir", "play", "swing"] },
+  xojalik: { label: "Xo'jalik", items: ["path", "car", "garage", "shed", "lamp", "doghouse"] },
+};
+const YARD_GREEN = ["tree", "bed", "pine", "fruit", "bush", "hedge", "veg", "rose", "lawn"];   // ko'kalamzor (qattiq qoplama emas)
 const FENCES = { devor: "G'isht devor", panjara: "Temir panjara", yogoch: "Yog'och to'siq", yoq: "To'siqsiz" };
-const YARD_GATE = 4, YARD_MAX_ITEMS = 40;
+const YARD_GATE = 4, YARD_MAX_ITEMS = 60;
 // Ishonchsiz ma'lumotni (fayl, baza) ruxsat etilgan ko'rinishga keltiradi
 function cleanYard(y) {
-  if (!y || typeof y !== "object") return { on: false, margin: 6, fence: "devor", items: [] };
+  if (!y || typeof y !== "object") return { on: false, margin: 6, garden: 0, fence: "devor", items: [] };
   const m = Number(y.margin), c = v => Math.round(Math.min(400, Math.max(-400, v)) * 100) / 100;
   const items = (Array.isArray(y.items) ? y.items : []).slice(0, YARD_MAX_ITEMS)
     .filter(it => it && YARD_ITEMS[it.t] && Number.isFinite(Number(it.x)) && Number.isFinite(Number(it.z)))
     .map(it => ({ t: it.t, x: c(Number(it.x)), z: c(Number(it.z)), rot: Number(it.rot) === 90 ? 90 : 0 }));
-  return { on: !!y.on, margin: Number.isFinite(m) ? Math.min(20, Math.max(2, Math.round(m))) : 6, fence: FENCES[y.fence] ? y.fence : "devor", items };
+  const gd = Number(y.garden);                                        // uy ortidagi alohida bog' maydoni (m): hovli to'sig'i orqaga kengayadi
+  return { on: !!y.on, margin: Number.isFinite(m) ? Math.min(20, Math.max(2, Math.round(m))) : 6, garden: Number.isFinite(gd) ? Math.min(40, Math.max(0, Math.round(gd))) : 0,
+           fence: FENCES[y.fence] ? y.fence : "devor", items };
 }
 // Element plani (90° da eni va bo'yi almashadi) — footGap bilan bir xil shakl
 function itemFoot(it) { const s = YARD_ITEMS[it.t], side = it.rot === 90; return { cx: it.x, cz: it.z, w: side ? s.d : s.w, d: side ? s.w : s.d }; }
@@ -637,7 +685,7 @@ function itemFoot(it) { const s = YARD_ITEMS[it.t], side = it.rot === 90; return
 function yardRect(L, y) {
   const m = y.margin;
   const x0 = Math.min(...L.map(l => l.cx - l.w / 2)) - m, x1 = Math.max(...L.map(l => l.cx + l.w / 2)) + m;
-  const z0 = Math.min(...L.map(l => l.cz - l.d / 2)) - m, z1 = Math.max(...L.map(l => l.cz + l.d / 2)) + m;
+  const z0 = Math.min(...L.map(l => l.cz - l.d / 2)) - m - (y.garden || 0), z1 = Math.max(...L.map(l => l.cz + l.d / 2)) + m;
   const fr = L.reduce((a, l) => (l.cz + l.d / 2 > a.cz + a.d / 2 ? l : a), L[0]);
   const gx = Math.min(x1 - YARD_GATE / 2 - 0.5, Math.max(x0 + YARD_GATE / 2 + 0.5, fr.cx));
   return { x0, x1, z0, z1, gx, gw: YARD_GATE };

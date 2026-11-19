@@ -51,6 +51,11 @@ const Interior = (function () {
     aquarium:   { n: "Akvarium",         w: 1.2,  d: 0.45, h: 1.3,  c: "#5aa8d8", g: "bezak" },
   };
   const GROUPS = { mebel: "Mebel", texnika: "Maishiy texnika", hammom: "Hammom", bezak: "Bezak va yoritish" };
+  // Qavat pardozi (ixtiyoriy): wall — devor bo'yog'i (#rrggbb), floor — pol qoplamasi turi
+  const FLOORS = { parket: "Parket", laminat: "Laminat", koshin: "Koshin", marmar: "Marmar", beton: "Beton", gilam: "Gilam" };
+  const okWall = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
+  const okFloor = v => typeof v === "string" && Object.prototype.hasOwnProperty.call(FLOORS, v);
+  const finish = (src, o) => { if (src && okWall(src.wall)) o.wall = src.wall.toLowerCase(); if (src && okFloor(src.floor)) o.floor = src.floor; return o; };
   const mounted = t => !!(ITEMS[t] && ITEMS[t].m);
   const DIRS = [[0, 1], [1, 0], [0, -1], [-1, 0]];     // zina ko'tarilish yo'nalishi (rot 0..3)
 
@@ -229,7 +234,7 @@ const Interior = (function () {
         if (![t[1], t[2]].every(Number.isFinite)) continue;
         if (rectInside(g, r)) items.push(t);
       }
-      out.floors.push({ e, items });
+      out.floors.push(finish(src, { e, items }));
     }
     if (N > 1) {
       const st = raw && raw.stair !== undefined ? raw.stair : undefined;     // null — zina ataylab olib tashlangan
@@ -248,7 +253,7 @@ const Interior = (function () {
       for (const it of ((f && f.items) || []).slice(0, 80)) {
         if (Array.isArray(it) && ITEMS[it[0]] && Number.isFinite(Number(it[1])) && Number.isFinite(Number(it[2]))) items.push([it[0], round2(Number(it[1])), round2(Number(it[2])), (it[3] | 0) % 4]);
       }
-      return { e, items };
+      return finish(f, { e, items });
     });
     const out = { floors };
     if (raw.stair === null) out.stair = null;
@@ -383,11 +388,11 @@ const Interior = (function () {
 
   // Tahrirlash uchun: saqlangan ma'lumot bo'lmasa, normallashtirilgan nusxa yaratiladi (zina aniq yoziladi)
   function editable(p, raw) {
-    const n = norm(p, raw), out = { floors: n.floors.map(f => ({ e: { ...f.e }, items: f.items.map(i => i.slice()) })) };
+    const n = norm(p, raw), out = { floors: n.floors.map(f => finish(f, { e: { ...f.e }, items: f.items.map(i => i.slice()) })) };
     if (p.floors > 1) out.stair = n.stair;
     return out;
   }
 
-  return { T, STAIR_W, DOOR_W, PART, ITEMS, GROUPS, mounted, fits, placeFree, DIRS, size, lineX, lineZ, edgeSeg, wallPieces, itemRect, stairDims, stairInfo, defaultStair, fitsStair, norm, clean, auto, editable,
+  return { T, STAIR_W, DOOR_W, PART, ITEMS, GROUPS, FLOORS, mounted, fits, placeFree, DIRS, size, lineX, lineZ, edgeSeg, wallPieces, itemRect, stairDims, stairInfo, defaultStair, fitsStair, norm, clean, auto, editable,
            cellOn, cellArea, rectInside, inRings, roomsOf };
 })();

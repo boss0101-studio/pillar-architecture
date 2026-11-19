@@ -286,7 +286,13 @@ def validate_interior(raw):
             if not (0 <= x <= 100 and 0 <= z <= 40 and 0 <= rot <= 3):
                 raise ValidationError("Mebel joylashuvi chegaradan tashqarida")
             items.append([it[0], x, z, rot])
-        floors.append({"e": edges, "items": items})
+        floor = {"e": edges, "items": items}
+        wall = fl.get("wall")                # ixtiyoriy pardoz: devor bo'yog'i va pol qoplamasi (interior.js FLOORS)
+        if isinstance(wall, str) and re.fullmatch(r"#[0-9a-fA-F]{6}", wall):
+            floor["wall"] = wall.lower()
+        if fl.get("floor") in ("parket", "laminat", "koshin", "marmar", "beton", "gilam"):
+            floor["floor"] = fl["floor"]
+        floors.append(floor)
     out = {"floors": floors}
     if "stair" in raw:                       # null — zina ataylab olib tashlangan (kalit bor, qiymat yo'q)
         st = raw["stair"]

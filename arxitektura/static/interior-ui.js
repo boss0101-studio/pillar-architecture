@@ -329,8 +329,25 @@ const InteriorUI = (function () {
   function vrEdit(op, a) {
     if (op === "furnUndo") { doUndo(); return true; }
     if (op === "furnRedo") { doRedo(); return true; }
+    if (op === "furnAuto") { const { b } = current(); if (b.interior) return false; startAuto(); return true; }   // 3D: tom olinganda ichki reja yo'q bo'lsa
     return mutate((int, p, I) => {
       const items = int.floors[a.f] && int.floors[a.f].items; if (!items) return false;
+      if (op === "furnStyle") {                                        // 3D ichki dizayn: devor bo'yog'i va pol qoplamasi
+        const fd = int.floors[a.f];
+        if (a.wall !== undefined) { if (!/^#[0-9a-f]{6}$/i.test(a.wall)) return false; fd.wall = a.wall.toLowerCase(); }
+        if (a.floor !== undefined) { if (!Interior.FLOORS[a.floor]) return false; fd.floor = a.floor; }
+        return;
+      }
+      if (op === "furnAdd") {                                          // katalogdan: qavatdagi birinchi bo'sh joyga
+        const it = Interior.placeFree(p, I, a.f, a.type); if (!it) return false;
+        items.push(it); return;
+      }
+      if (op === "furnMove") {                                         // 3D'da sudrab qo'yish
+        const o = items[a.idx]; if (!o) return false;
+        const t = [o[0], r2(a.x), r2(a.z), o[3]];
+        if (!Interior.fits(p, I, a.f, t, a.idx)) return false;
+        items[a.idx] = t; return;
+      }
       if (op === "furn") {
         const it = [a.type, r2(a.x), r2(a.z), (a.rot | 0) % 4];
         if (!ITEMS[a.type] || items.length >= 80 || !Interior.fits(p, I, a.f, it, -1)) return false;

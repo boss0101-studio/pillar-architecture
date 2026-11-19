@@ -1677,3 +1677,19 @@ body::before, body::after, html.bg-photo body::after { content: none; display: n
 #galereya > main > section:first-child > .sec-head::before, #galereya > main > section:first-child > .sec-head::after { content: none; }
 .svc-card::before, .svc-card::after { content: none; }
 .svc-card .svc-credit { display: none; }
+
+/* ---------- 3D: Detallar rejimi va ichki dizayn paneli ---------- */
+.v3.parts { cursor: pointer; }
+.v3.parts.drag { cursor: grabbing; }
+.v3-int { position: absolute; top: 28px; right: 8px; width: min(268px, calc(100% - 16px)); max-height: calc(100% - 84px); overflow: auto; display: grid; gap: 6px; padding: 8px; background: var(--surface); border: 1px solid var(--fg); font-size: .72rem; touch-action: auto; cursor: default; }
+.v3-int[hidden], .v3.vr-on .v3-int { display: none; }
+.v3i-row { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.v3i-h { margin: 2px 0 0; font-family: var(--font-mono); font-size: .66rem; color: var(--muted); text-transform: uppercase; }
+.v3i-note { margin: 0; color: var(--muted); }
+.v3i-sel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.v3-int button, .v3-int select { font: inherit; padding: 3px 7px; border: 1px solid var(--fg); border-radius: 0; background: var(--surface); color: var(--fg); cursor: pointer; }
+.v3-int select { flex: 1; min-width: 0; }
+.v3-int button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.v3-int button:disabled { opacity: .4; cursor: default; }
+.v3-int .v3i-sw { width: 22px; height: 22px; padding: 0; }
+.v3-int .v3i-sw[aria-pressed="true"] { outline: 2px solid var(--accent); outline-offset: 1px; }

@@ -15,6 +15,8 @@ const MATERIALS = {
   metall:    { label: "Metall panel",  fill: "#8e99a2", pattern: "seam",   dens: 400,  u: 0.35 },
   shisha:    { label: "Shisha (vitraj)", fill: "#8fb3cf", pattern: "glass", dens: 2500, u: 1.4 },   // butunlay oynali bino: 3D'da shaffof
 };
+// Rasmdan qurilgan uyda devorning aniq rangi (p.color, "#rrggbb") material rangi o'rniga; naqsh va hisob — materialniki
+const matOf = p => { const m = MATERIALS[p.material] || MATERIALS.gisht; return /^#[0-9a-f]{6}$/i.test(p.color || "") ? { ...m, fill: p.color } : m; };
 const INK = "#1f2326", GLASS = "#3f5f7e", GLASS_HI = "#9cbdd8", ROOF_TILE = "#5a4840", DOME = "#2a9896";
 
 const CELL_LABELS = {
@@ -200,6 +202,20 @@ function metrics(p, cells) {
 const f1 = n => (Math.round(n * 10) / 10).toLocaleString("ru-RU");
 
 // ---------------- FASAD (old ko'rinish) ----------------
+// Rasmdan qurilgan uy fotosurati (rasm.js saqlaydi: localStorage "ustun-fasad-foto" = { sig, img }).
+// sig — parametrlar izi (rasm.js va view3d.js dagi photoSig bilan bir xil); mos kelsa — rasm (data URL), aks holda null
+const facadePhotoSig = p => [p.shape || "rect", p.floors, p.bays, Number(p.bay_w).toFixed(2), Number(p.floor_h).toFixed(2)].join("|");
+const _fphoto = { raw: undefined, val: null };                    // katta qator har chizishda qayta JSON.parse qilinmasin
+function facadePhotoFor(p) {
+  let raw = null;
+  try { raw = localStorage.getItem("ustun-fasad-foto"); } catch {}
+  if (raw !== _fphoto.raw) {
+    _fphoto.raw = raw;
+    try { const d = JSON.parse(raw || "null"); _fphoto.val = d && typeof d.img === "string" && /^data:image\/jpeg;base64,/.test(d.img) && d.sig ? d : null; } catch { _fphoto.val = null; }
+  }
+  return _fphoto.val && _fphoto.val.sig === facadePhotoSig(p) ? _fphoto.val.img : null;
+}
+
 function renderFacade(p, cells, opts = {}) {
   const uid = opts.uid || "f" + Math.random().toString(36).slice(2, 7);
   const VW = 640, VH = 520, L = 56, Rm = 80, T = 24, B = 56;
@@ -207,7 +223,7 @@ function renderFacade(p, cells, opts = {}) {
   const s = Math.min((VW - L - Rm) / (g.W + 1), (VH - T - B) / g.H);
   const x0 = L + ((VW - L - Rm) - g.W * s) / 2, gy = VH - B;
   const X = m => x0 + m * s, Y = z => gy - z * s;
-  const mat = MATERIALS[p.material];
+  const mat = matOf(p);
   const out = [];
 
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" class="bld">`);
@@ -271,6 +287,9 @@ function renderFacade(p, cells, opts = {}) {
   for (let f = 0; f < p.floors; f++) for (let b = 0; b < p.bays; b++) {
     out.push(drawCell(cellType(p, cells, f, b), X(b * p.bay_w), Y((f + 1) * p.floor_h), p.bay_w * s, p.floor_h * s));
   }
+  // "Rasmdan dizayn → aslidek qurish": devorlar o'rnida rasmning o'zi (3D old fasad bilan bir xil shart — parametrlar o'zgarmagan)
+  const photo = opts.photo && facadePhotoFor(p);
+  if (photo) out.push(`<image href="${photo}" x="${X(0)}" y="${Y(g.Hb)}" width="${g.W * s}" height="${g.Hb * s}" preserveAspectRatio="none"/>`);
   out.push(`<rect x="${X(0)}" y="${Y(g.Hb)}" width="${g.W * s}" height="${g.Hb * s}" fill="none" stroke="${INK}" stroke-width="1.6"/>`);
 
   if (p.roof === "bir") {                               // bir nishabli tom: devor uchburchagi + qiya plita
@@ -466,7 +485,7 @@ function renderIso(p, cells) {
   const oy = M + g.H * s + ((VH - 2 * M) - spanY * s) / 2;
   const P = (x, y, z) => `${(ox + (x - y) * c * s).toFixed(1)},${(oy + (x + y) * 0.5 * s - z * s).toFixed(1)}`;
   const poly = (pts, fill, extra = "") => `<polygon points="${pts.join(" ")}" fill="${fill}" ${extra}/>`;
-  const mat = MATERIALS[p.material], edge = `stroke="${INK}" stroke-width="1" stroke-linejoin="round"`;
+  const mat = matOf(p), edge = `stroke="${INK}" stroke-width="1" stroke-linejoin="round"`;
   const { W, D, Hb } = g;
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}" class="bld">`];
   if (shapeOf(p) !== "rect") {                                       // shakldor plan: devorlar prizma, orqadan oldga chiziladi

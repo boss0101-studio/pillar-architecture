@@ -71,7 +71,7 @@ function render() {
   Site.sync(); Site.renderUI();
   const n = Site.list.length;
   $("facadeCap").textContent = n > 1 ? `${Site.active + 1}-uy · old fasad` : "Old fasad";
-  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags });
+  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags, photo: true });
   Geo.update(Site.list, Site.layout(), Site.active, Site.yard);   // geometrik chizma, bosh reja, hovli va hisob-kitoblar
   if (window.View3D && View3D.ready()) View3D.updateSite(Site.list, Site.gap, Site.active, Geo.flags, Site.yard); else $("iso").innerHTML = renderIso(params, cells);
   if (typeof InteriorUI !== "undefined") InteriorUI.render();     // ichki makon tahrirlash oynasi
@@ -161,7 +161,7 @@ RANGES.forEach(k => $(k).addEventListener("input", e => {
 }));
 document.querySelectorAll(".seg").forEach(seg => seg.addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  params[seg.dataset.name] = b.dataset.v; syncControls(); render();
+  params[seg.dataset.name] = b.dataset.v; if (seg.dataset.name === "material") delete params.color; syncControls(); render();
 }));
 $("materials").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
@@ -257,7 +257,7 @@ if (window.View3D) View3D.onVrEdit = (i, op, a) => {
 $("export").addEventListener("click", () => {
   // CSS o'zgaruvchilari fayl ichida ishlamaydi — o'lcham chiziqlari uchun aniq ranglar qo'shiladi
   const style = `<style>.d-dim line,.d-dim path{stroke:#555;fill:#555}.d-text{fill:#555;font:11px monospace}.d-ground{stroke:#1f2326}</style>`;
-  const svg = renderFacade(params, cells, { dims: true, uid: "exp" }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
+  const svg = renderFacade(params, cells, { dims: true, uid: "exp", photo: true }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
   const a = Object.assign(document.createElement("a"), { href: url, download: `${($("dName").value || "bino").replace(/[^\w\-]+/g, "_")}.svg` });
   document.body.appendChild(a); a.click(); a.remove();

@@ -201,6 +201,7 @@ const AIDesign = (function () {
           }
           case "set_params": {
             const i = pickHouse(a), r = houseRef(i), np = cleanP(r.params, a.params);
+            if (a.params && a.params.material && !a.params.color) { delete np.color; delete r.params.color; }
             Object.assign(r.params, np);
             const ok = ProjectIO.cleanCells(r.cells, np); Object.keys(r.cells).forEach(k => { if (!(k in ok)) delete r.cells[k]; });   // kichraygan fasaddan tashqaridagi kataklar
             done.push(`house ${i + 1} params: ${Object.keys(a.params || {}).map(k => `${k}=${np[k]}`).join(", ")}`);

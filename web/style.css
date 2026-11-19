@@ -1745,6 +1745,7 @@ html.bg-photo body::after {
 .rzm-c { position: relative; border: 1px dashed rgba(255, 209, 102, .85); background: transparent; color: #fff; font: 700 .8rem var(--font-mono); cursor: pointer; padding: 0; text-shadow: 0 1px 2px #000; line-height: 1; }
 .rzm-c:hover { background: rgba(255, 209, 102, .22); }
 .rzm-c.on { background: rgba(43, 74, 203, .45); }
+.rzm-c.det { background: rgba(17, 118, 111, .32); }   /* rasmdan avtomatik aniqlangan katak */
 .rzm-c:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 .rzm-h { position: absolute; width: 16px; height: 16px; background: #ffd166; border: 2px solid #1b2024; border-radius: 50%; cursor: nwse-resize; touch-action: none; z-index: 2; font-style: normal; }
 .rzm-h.nw { left: -8px; top: -8px; } .rzm-h.ne { right: -8px; top: -8px; cursor: nesw-resize; } .rzm-h.sw { left: -8px; bottom: -8px; cursor: nesw-resize; } .rzm-h.se { right: -8px; bottom: -8px; }

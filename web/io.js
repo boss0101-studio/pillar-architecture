@@ -28,6 +28,7 @@ const ProjectIO = (function () {
       p[k] = Number.isFinite(v) ? Math.round(Math.round(Math.min(hi, Math.max(lo, v)) / step) * step * 10) / 10 : DEFAULT_PARAMS[k];
     }
     for (const [k, list] of Object.entries(OPTIONS)) p[k] = list.includes(raw && raw[k]) ? raw[k] : DEFAULT_PARAMS[k];
+    if (raw && /^#[0-9a-f]{6}$/i.test(raw.color || "")) p.color = raw.color.toLowerCase();   // rasmdan olingan devor rangi
     return p;
   }
   function cleanCells(raw, p) {

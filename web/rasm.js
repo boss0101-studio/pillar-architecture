@@ -177,15 +177,15 @@ const UstunRasm = (function () {
   // ---------- Rasmdagi uyni Konstruktorga moslash ----------
   // Ramka (rect, rasmga nisbatan 0..1) — devorlar chegarasi (tomsiz); ichida qavat × oraliq to'ri. Katak bosilsa turi almashadi.
   // Bino eni ramka proporsiyasidan: W = (ramka eni / ramka balandligi) × qavatlar × qavat balandligi.
-  const CYCLE = ["auto", "balc", "door", "wall", "shop", "garage", "wide", "arch", "tall"];
-  const CELL_SHORT = { auto: "", balc: "B", door: "E", wall: "▮", shop: "V", garage: "G", wide: "P", arch: "A", tall: "T" };
+  const CYCLE = ["auto", "win", "wide", "tall", "square", "triple", "balc", "door", "door2", "glassdoor", "garage", "shop", "arch", "wall"];
+  const CELL_SHORT = { auto: "", win: "D", balc: "B", door: "E", door2: "E2", glassdoor: "SE", wall: "▮", shop: "V", garage: "G", wide: "P", arch: "A", tall: "T", square: "K", triple: "U" };
   const ROOFS = { tekis: "Tekis", nishab: "Nishab (ikki tomonga)", bir: "Bir nishabli", piramida: "Piramida", gumbaz: "Gumbaz", terrasa: "Terrasa" };
   const GROUNDS = { oddiy: "Oddiy (deraza va eshik)", vitrina: "Vitrina (do'kon)", arkada: "Arkada" };
   let match = null;
   const clampN = (v, a, b) => Math.min(b, Math.max(a, v));
   function newMatch() {
     const m = { rect: [0.12, 0.3, 0.88, 0.92], floors: 2, bays: 4, floor_h: 3.0, depth: 10, roof: "nishab", material: "oqgisht", window: "oddiy", ground: "oddiy", cells: {}, src: "taxmin" };
-    if (img && img.work) { const e = estimate(m.rect); m.floors = e.floors; m.bays = e.bays; m.material = e.material; }
+    if (img && img.work) { const e = estimate(m.rect); m.floors = e.floors; m.bays = e.bays; m.material = e.material; analyze(m); }
     return m;
   }
   // Rasm piksellari bo'yicha taxmin: qavat/ustun — yorqinlik o'zgarishi profilidagi davriylik; material — devor rangi
@@ -215,6 +215,60 @@ const UstunRasm = (function () {
     }
     return { floors, bays, material };
   }
+  // ---------- Rasmdan: devor rangi, material va har katakdagi teshik (deraza / eshik / shisha) ----------
+  // Devor rangi — ramka ichida eng ko'p uchraydigan rang (4 bitli guruhlar). Material — rang va yuzaning tekisligi bo'yicha
+  // (g'isht/tosh — yorqinlik tarqoq, suvoq/beton — tekis). Teshik — devordan sezilarli farq qiladigan, undan to'qroq (oyna,
+  // eshik) yoki ko'kish (shisha) piksellar. Har katakdagi teshik chegarasi Konstruktordagi qaysi turga (OPENING) eng yaqin
+  // bo'lsa (kesishma / birlashma) — shu tur. 3D model shu kataklardan quriladi.
+  const GROUND_T = ["win", "wide", "tall", "square", "triple", "door", "glassdoor"];   // vitrina/ikki tabaqali — do'kon uchun; garaj shakli shishaga o'xshab ketadi — qo'lda tanlanadi
+  const UPPER_T = ["win", "wide", "tall", "square", "triple", "balc"];
+  const SMOOTH_M = ["ganch", "beton", "qorabeton", "metall"], ROUGH_M = ["gisht", "oqgisht", "travertin", "tosh", "yogoch", "koshin"];
+  const hex2 = v => Math.round(clampN(v, 0, 255)).toString(16).padStart(2, "0");
+  function analyze(m) {
+    if (!img || !img.work) return;
+    const c = img.work, w = c.width, h = c.height, px = c.getContext("2d").getImageData(0, 0, w, h).data;
+    const [rx0, ry0, rx1, ry1] = m.rect, X0 = Math.floor(rx0 * w), X1 = Math.ceil(rx1 * w), Y0 = Math.floor(ry0 * h), Y1 = Math.ceil(ry1 * h);
+    const lum = i => (px[i] + px[i + 1] + px[i + 2]) / 765;
+    // devor rangi
+    const bins = new Map();
+    for (let y = Y0; y < Y1; y += 2) for (let x = X0; x < X1; x += 2) {
+      const i = (y * w + x) * 4, L = lum(i); if (L < 0.18 || L > 0.985) continue;
+      const k = ((px[i] >> 4) << 8) | ((px[i + 1] >> 4) << 4) | (px[i + 2] >> 4), e = bins.get(k) || [0, 0, 0, 0];
+      e[0]++; e[1] += px[i]; e[2] += px[i + 1]; e[3] += px[i + 2]; bins.set(k, e);
+    }
+    let best = null; bins.forEach(e => { if (!best || e[0] > best[0]) best = e; });
+    if (!best) return;
+    const wall = [best[1] / best[0], best[2] / best[0], best[3] / best[0]], Lw = (wall[0] + wall[1] + wall[2]) / 765;
+    const dist = i => Math.hypot(px[i] - wall[0], px[i + 1] - wall[1], px[i + 2] - wall[2]);
+    let n = 0, s = 0, s2 = 0;
+    for (let y = Y0; y < Y1; y += 2) for (let x = X0; x < X1; x += 2) { const i = (y * w + x) * 4; if (dist(i) < 48) { const L = lum(i); s += L; s2 += L * L; n++; } }
+    const sd = n ? Math.sqrt(Math.max(0, s2 / n - (s / n) ** 2)) : 0;
+    const near = list => list.slice().sort((a, b) => { const A = THREE_Color(MATERIALS[a].fill), B = THREE_Color(MATERIALS[b].fill); return Math.hypot(A[0] - wall[0], A[1] - wall[1], A[2] - wall[2]) - Math.hypot(B[0] - wall[0], B[1] - wall[1], B[2] - wall[2]); })[0];
+    m.color = "#" + wall.map(hex2).join("");
+    m.material = sd < 0.05 ? near(SMOOTH_M) : near(ROUGH_M);
+    // teshiklar: har katak
+    const open = i => dist(i) > 55 && (lum(i) < Lw - 0.12 || (px[i + 2] > px[i] + 14 && px[i + 2] >= px[i + 1]));
+    const cw = (X1 - X0) / m.bays, ch = (Y1 - Y0) / m.floors, auto = {}, ups = {};
+    for (let f = 0; f < m.floors; f++) for (let b = 0; b < m.bays; b++) {
+      const cx0 = Math.round(X0 + b * cw), cx1 = Math.round(X0 + (b + 1) * cw), cy0 = Math.round(Y1 - (f + 1) * ch), cy1 = Math.round(Y1 - f * ch);
+      const W = Math.max(1, cx1 - cx0), H = Math.max(1, cy1 - cy0), col = new Array(W).fill(0), row = new Array(H).fill(0); let tot = 0;
+      for (let y = cy0; y < cy1; y++) for (let x = cx0; x < cx1; x++) { if (x < 0 || y < 0 || x >= w || y >= h) continue; const i = (y * w + x) * 4; if (open(i)) { col[x - cx0]++; row[y - cy0]++; tot++; } }
+      const frac = tot / (W * H), key = `${f},${b}`;
+      // eng uzun uzluksiz bo'lak (ulush ≥ thr bo'lgan qatorlar/ustunlar) -> [boshi, oxiri] 0..1
+      const run = (arr, len, thr) => { let bs = -1, bl = 0, cs = -1; arr.forEach((v, j) => { if (v / len >= thr) { if (cs < 0) cs = j; if (j - cs + 1 > bl) { bl = j - cs + 1; bs = cs; } } else cs = -1; }); return bs < 0 ? null : [bs / arr.length, (bs + bl) / arr.length]; };
+      const rx = run(col, H, 0.3), ry = run(row, W, 0.3);
+      if (frac < 0.06 || !rx || !ry || (rx[1] - rx[0]) * (ry[1] - ry[0]) < 0.04) { auto[key] = "wall"; continue; }
+      const box = [rx[0], rx[1], 1 - ry[1], 1 - ry[0]];                       // [x1, x2, z1, z2] — z pastdan yuqoriga
+      const iou = o => { const ix = Math.max(0, Math.min(box[1], o[1]) - Math.max(box[0], o[0])), iz = Math.max(0, Math.min(box[3], o[3]) - Math.max(box[2], o[2])), I = ix * iz;
+        return I / ((box[1] - box[0]) * (box[3] - box[2]) + (o[1] - o[0]) * (o[3] - o[2]) - I); };
+      const t = (f === 0 ? GROUND_T : UPPER_T).map(k => [k, iou(OPENING[k])]).sort((a, z) => z[1] - a[1])[0][0];
+      auto[key] = t; if (f > 0) ups[t] = (ups[t] || 0) + 1;
+    }
+    m.auto = auto;
+    const top = Object.entries(ups).sort((a, z) => z[1] - a[1])[0];               // yon fasadlar uchun umumiy deraza turi
+    const WIN_OF = Object.fromEntries(Object.entries(WINDOW_CELL).map(([k, v]) => [v, k]));
+    if (top && WIN_OF[top[0]]) m.window = WIN_OF[top[0]];
+  }
   function THREE_Color(hx) { const v = parseInt(String(hx).slice(1), 16); return [(v >> 16) & 255, (v >> 8) & 255, v & 255]; }
   function matchParams(style) {
     const m = match, [x0, y0, x1, y1] = m.rect, H = m.floors * m.floor_h;
@@ -222,9 +276,10 @@ const UstunRasm = (function () {
     const bay_w = clampN(Math.round(W / m.bays * 10) / 10, 3, 7.5);
     const p = { ...DEFAULT_PARAMS, category: "turar-joy", shape: "rect", floors: m.floors, bays: m.bays, floor_h: m.floor_h, bay_w, depth: m.depth, roof: m.roof, material: m.material, window: m.window, ground: m.ground };
     if (style) { const k = (ai && ai.konstruktor) || STYLES[st.style].k; if (k.material) p.material = k.material; if (k.window && k.window !== "yoq") p.window = k.window; }
+    else if (m.color) p.color = m.color;                                       // aslidek: devor rasmdagi aniq rangda
     return { p, W, clamped: bay_w !== Math.round(W / m.bays * 10) / 10 };
   }
-  const cellsOf = () => Object.fromEntries(Object.entries(match.cells).filter(([k, t]) => t !== "auto" && Number(k.split(",")[0]) < match.floors && Number(k.split(",")[1]) < match.bays));
+  const cellsOf = () => Object.fromEntries(Object.entries({ ...(match.auto || {}), ...match.cells }).filter(([k, t]) => t !== "auto" && Number(k.split(",")[0]) < match.floors && Number(k.split(",")[1]) < match.bays));
   function renderMatch() {
     const box = $("rzMatch"); if (!box || !img) return;
     if (!match) match = newMatch();
@@ -256,8 +311,8 @@ const UstunRasm = (function () {
     el.style.gridTemplateColumns = `repeat(${m.bays}, 1fr)`; el.style.gridTemplateRows = `repeat(${m.floors}, 1fr)`;
     let cells = "";
     for (let row = 0; row < m.floors; row++) for (let b = 0; b < m.bays; b++) {
-      const f = m.floors - 1 - row, t = m.cells[`${f},${b}`] || "auto";
-      cells += `<button type="button" class="rzm-c${t !== "auto" ? " on" : ""}" data-rzc="${f},${b}" title="${f + 1}-qavat, ${b + 1}-ustun: ${esc(t === "auto" ? "deraza" : CELL_LABELS[t] || t)}">${CELL_SHORT[t] || ""}</button>`;
+      const f = m.floors - 1 - row, own = m.cells[`${f},${b}`], t = own || (m.auto && m.auto[`${f},${b}`]) || "auto";
+      cells += `<button type="button" class="rzm-c${own ? " on" : t !== "auto" ? " det" : ""}" data-rzc="${f},${b}" title="${f + 1}-qavat, ${b + 1}-ustun: ${esc(t === "auto" ? "deraza" : CELL_LABELS[t] || t)}">${CELL_SHORT[t] || ""}</button>`;
     }
     el.innerHTML = cells + ["nw", "ne", "sw", "se"].map(c => `<i class="rzm-h ${c}" data-rzh="${c}" aria-hidden="true"></i>`).join("") + `<i class="rzm-h mv" data-rzh="mv" title="Ramkani surish" aria-hidden="true">✥</i>`;
   }
@@ -280,6 +335,7 @@ const UstunRasm = (function () {
     if (ROOFS[a.roof]) m.roof = a.roof; if (MATERIALS[a.material]) m.material = a.material;
     if (WINDOW_CELL[a.window] && a.window !== "yoq") m.window = a.window; if (GROUNDS[a.ground]) m.ground = a.ground;
     (Array.isArray(a.cells) ? a.cells : []).forEach(c => { const f = Math.round(c.floor) - 1, b = Math.round(c.bay) - 1; if (f >= 0 && f < m.floors && b >= 0 && b < m.bays && CELL_LABELS[c.type] && c.type !== "auto") m.cells[`${f},${b}`] = c.type; });
+    const aiMat = m.material; analyze(m); if (MATERIALS[a.material]) m.material = aiMat;
     m.src = "ai"; match = m; renderMatch();
   }
   // Ramka burchaklarini va o'zini sudrash
@@ -298,7 +354,9 @@ const UstunRasm = (function () {
     match.rect = r; const el = document.querySelector("[data-rzm-rect]");
     if (el) Object.assign(el.style, { left: `${r[0] * 100}%`, top: `${r[1] * 100}%`, width: `${(r[2] - r[0]) * 100}%`, height: `${(r[3] - r[1]) * 100}%` });
   });
-  document.addEventListener("pointerup", () => { if (drag) { drag = null; drawPrev(); } });
+  document.addEventListener("pointerup", () => { if (drag) { drag = null; reanalyze(); } });
+  // ramka yoki to'r o'zgardi: kataklar va rang qayta aniqlanadi; foydalanuvchi tanlagan material saqlanadi
+  function reanalyze() { const mat = match.material, own = match.matOwn; analyze(match); if (own) { match.material = mat; match.color = null; } drawRect(); drawPrev(); const sel = document.querySelector('[data-rzm="material"]'); if (sel) sel.value = match.material; }
 
   // ---------- Holat va ko'rinish ----------
   let st = { kind: "fasad", style: "zamonaviy", goal: "tamir", budget: "orta", area: "" }, last = null, ai = null, aiBusy = false, aiErr = "";
@@ -398,7 +456,7 @@ const UstunRasm = (function () {
   async function build(style) {
     if (!match) match = newMatch();
     const { p } = matchParams(style), cells = Object.entries(cellsOf()).map(([k, t]) => { const [f, b] = k.split(",").map(Number); return { floor: f + 1, bay: b + 1, type: t }; });
-    // aslidek: 3D'da old fasad rasmning o'zi; yangi uslub: rasm olib tashlanadi (ko'rinish ataylab o'zgaradi)
+    // aslidek: 2D fasadda rasm namuna sifatida turadi, 3D — aniqlangan kataklar va devor rangi bilan model; yangi uslub: rasm olib tashlanadi
     try {
       if (style) localStorage.removeItem("ustun-fasad-foto");
       else localStorage.setItem("ustun-fasad-foto", JSON.stringify({ sig: photoSig(p), img: await cropFacade() }));
@@ -425,9 +483,9 @@ const UstunRasm = (function () {
     const s = e.target.closest("[data-rz]");
     if (s) { st[s.dataset.rz] = s.dataset.v; save(); if (last) { last = plan(st); } render(); return; }
     const c = e.target.closest("[data-rzc]");                          // katak turi: deraza → balkon → eshik → …
-    if (c && match) { const k = c.dataset.rzc, t = match.cells[k] || "auto", nx = CYCLE[(CYCLE.indexOf(t) + 1) % CYCLE.length]; if (nx === "auto") delete match.cells[k]; else match.cells[k] = nx; drawRect(); drawPrev(); return; }
+    if (c && match) { const k = c.dataset.rzc, t = match.cells[k] || (match.auto && match.auto[k]) || "auto", nx = CYCLE[(CYCLE.indexOf(t) + 1) % CYCLE.length]; if (nx === "auto") delete match.cells[k]; else match.cells[k] = nx; drawRect(); drawPrev(); return; }
     const sp = e.target.closest("[data-rzs]");
-    if (sp && match) { const n = sp.dataset.rzs, lim = n === "floors" ? [1, 30] : [2, 12]; match[n] = clampN(match[n] + Number(sp.dataset.d), lim[0], lim[1]); sp.parentElement.querySelector("b").textContent = match[n]; drawRect(); drawPrev(); return; }
+    if (sp && match) { const n = sp.dataset.rzs, lim = n === "floors" ? [1, 30] : [2, 12]; match[n] = clampN(match[n] + Number(sp.dataset.d), lim[0], lim[1]); sp.parentElement.querySelector("b").textContent = match[n]; reanalyze(); return; }
     const a = e.target.closest("[data-rz-act]"); if (!a) return;
     const act = a.dataset.rzAct;
     if (act === "pick") document.querySelector("[data-rz-file]").click();
@@ -443,7 +501,7 @@ const UstunRasm = (function () {
     const f = e.target.closest("[data-rz-file],[data-rz-cam]"); if (f && f.files && f.files[0]) take(f.files[0]);
     const ar = e.target.closest("[data-rz-area]"); if (ar) { st.area = ar.value; save(); if (last) { last = plan(st); showOut(); } }
     const mz = e.target.closest("[data-rzm]");
-    if (mz && match) { const n = mz.dataset.rzm, v = mz.value; match[n] = n === "floor_h" ? clampN(Number(v) || 3, 2.7, 4.5) : n === "depth" ? clampN(Number(v) || 10, 6, 30) : v; drawPrev(); }
+    if (mz && match) { const n = mz.dataset.rzm, v = mz.value; if (n === "material") { match.matOwn = true; match.color = null; } match[n] = n === "floor_h" ? clampN(Number(v) || 3, 2.7, 4.5) : n === "depth" ? clampN(Number(v) || 10, 6, 30) : v; drawPrev(); }
   });
   document.addEventListener("dragover", e => { const d = e.target.closest && e.target.closest("[data-rz-drop]"); if (d) { e.preventDefault(); d.classList.add("over"); } });
   document.addEventListener("dragleave", e => { const d = e.target.closest && e.target.closest("[data-rz-drop]"); if (d) d.classList.remove("over"); });

@@ -395,7 +395,7 @@
   // ---------- Bitta uyni yig'ish (markazi koordinata boshida, asosi y=0 da) ----------
   function makeBuilding(p, cells, sh, interior) {
     const out = new THREE.Group();
-    const g = geometry(p), mat = MATERIALS[p.material];
+    const g = geometry(p), mat = matOf(p);
     const { W, D, Hb } = g;
     const { glassMat, ironMat, roofMat } = sh;
     const maxAniso = renderer.capabilities.getMaxAnisotropy();
@@ -1000,23 +1000,6 @@
     labels.forEach((lb, i) => { lb.sprite.visible = many; drawLabel(lb, i, i === activeIdx); });
   }
 
-  // Rasmdagi fasad (rasm.js saqlaydi): { sig, img } — sig parametrlar bilan solishtiriladi
-  const photoSig = p => [p.shape || "rect", p.floors, p.bays, Number(p.bay_w).toFixed(2), Number(p.floor_h).toFixed(2)].join("|");
-  function facadePhoto() {
-    try { const d = JSON.parse(localStorage.getItem("ustun-fasad-foto") || "null"); return d && typeof d.img === "string" && /^data:image\/jpeg;base64,/.test(d.img) && d.sig ? d : null; } catch { return null; }
-  }
-  const photoCache = {};                                           // bir xil rasm har qayta yig'ishda qayta yuklanmasin
-  function photoTex(url) {
-    if (photoCache.url === url && photoCache.tex) return photoCache.tex;
-    if (photoCache.tex) photoCache.tex.dispose();
-    const t = new THREE.TextureLoader().load(url, () => request());
-    t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    photoCache.url = url; photoCache.tex = t;
-    return t;
-  }
-  const photoChanged = () => { if (lastArgs) { builtSig = ""; schedule(); } };
-  window.addEventListener("storage", e => { if (e.key === "ustun-fasad-foto") photoChanged(); });   // boshqa oynada (server sahifalari)
-  window.addEventListener("ustun-fasad-foto", photoChanged);                                     // shu sahifada (rasm.js)
 
   function build(site) {
     disposables.splice(0).forEach(o => o.dispose && o.dispose());
@@ -1043,18 +1026,7 @@
     const totalW = bb.x1 - bb.x0, Dmax = bb.z1 - bb.z0, Hmax = Math.max(...items.map(it => it.g.H));
     const mx = (bb.x0 + bb.x1) / 2, mz = (bb.z0 + bb.z1) / 2;
 
-    // "Rasmdan dizayn → aslidek qurish": rasmdagi devorlar old fasadga tekstura bo'lib tushadi (bino rasmdagidek ko'rinadi).
-    // Faqat parametrlari rasm saqlangandagi bilan bir xil to'rtburchak uyga; bino o'zgartirilsa — odatdagi fasad qaytadi.
-    const ph = facadePhoto();
-    if (ph) items.forEach((it, i) => {
-      const p = site.list[i].params;
-      if (photoSig(p) !== ph.sig || !it.frontG || it.frontG.type !== "Group") return;
-      const { W, Hb, D } = { W: it.g.W, Hb: it.g.Hb, D: it.g.D };
-      const tex = photoTex(ph.img), m = track(new THREE.MeshStandardMaterial({ map: tex, roughness: 0.85, metalness: 0 }));
-      const plane = new THREE.Mesh(track(new THREE.PlaneGeometry(W, Hb)), m);
-      plane.position.set(0, Hb / 2, D / 2 + 0.09); plane.receiveShadow = true; plane.castShadow = false;
-      it.frontG.visible = false; it.group.add(plane); it.frontG = plane;
-    });
+    // Rasmdan qurilgan uy 3D'da rasm yopishtirilmaydi — rasm.js aniqlagan kataklar va devor rangi (p.color) bilan to'liq model quriladi
 
     items.forEach((it, i) => {
       const { cx, cz, W, D, H } = layout[i];

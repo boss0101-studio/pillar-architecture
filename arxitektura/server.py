@@ -212,6 +212,8 @@ def validate_building(raw):
     # Plan shakli (building.js SHAPES) va qanot eni — ixtiyoriy: eski dizaynlar to'rtburchak bo'lib qoladi
     params["shape"] = req_choice(raw_params, "shape", DESIGN_SHAPES) if raw_params.get("shape") is not None else "rect"
     params["wing"] = req_float(raw_params, "wing", 0.2, 0.6) if raw_params.get("wing") is not None else 0.4
+    if isinstance(raw_params.get("color"), str) and re.fullmatch(r"#[0-9a-fA-F]{6}", raw_params["color"]):
+        params["color"] = raw_params["color"].lower()          # rasmdan olingan devor rangi (ixtiyoriy)
 
     raw_cells = raw.get("cells") or {}
     if not isinstance(raw_cells, dict) or len(raw_cells) > 30 * 12:

@@ -1026,7 +1026,6 @@
     const totalW = bb.x1 - bb.x0, Dmax = bb.z1 - bb.z0, Hmax = Math.max(...items.map(it => it.g.H));
     const mx = (bb.x0 + bb.x1) / 2, mz = (bb.z0 + bb.z1) / 2;
 
-    // Rasmdan qurilgan uy 3D'da rasm yopishtirilmaydi — rasm.js aniqlagan kataklar va devor rangi (p.color) bilan to'liq model quriladi
 
     items.forEach((it, i) => {
       const { cx, cz, W, D, H } = layout[i];

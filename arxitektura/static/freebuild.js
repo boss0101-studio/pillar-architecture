@@ -748,7 +748,7 @@
   init3d();
   changed();
   // Chizilgan uyni Konstruktorga o'tkazish: aylantirish ai-design.js "from_freebuild" amalida (u Konstruktor kodi bilan birga yuklanadi).
-  // Web: shu sahifaning o'zida; statik sayt: designer.html ochilganda rasm.js amalni bajaradi ("ustun-rasm-acts")
+  // Web: shu sahifaning o'zida; statik sayt: designer.html ochilganda designer.js amalni bajaradi ("ustun-rasm-acts")
   function toDesigner() {
     finishDraw();
     if (!M.levels[0].chains.some(c => c.k === "out" && c.closed && c.pts.length >= 3)) { flash("Avval 1-qavatda yopiq tashqi devor chizing"); return; }

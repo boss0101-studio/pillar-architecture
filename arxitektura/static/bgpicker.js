@@ -38,14 +38,13 @@
     gp: { photo: "fon/b-gp.jpg", by: "Peter Nguyen", pid: "fsgyO8vF7do", n: "Bosh reja" },
     ar: { photo: "fon/b-ar.jpg", by: "Steve driscoll", pid: "VsBl5PwVZpY", n: "Arxitektura" },
     bolimlar: { photo: "fon/b-bolimlar.jpg", by: "Josh Olalde", pid: "X1P1_EDNnok", n: "Loyiha bo'limlari" },
-    rasm: { photo: "fon/b-rasm.jpg", by: "Jorik Kleen", pid: "oAvRgNu6oVY", n: "Rasmdan dizayn" },
     galereya: { photo: "fon/b-galereya.jpg", by: "Clay Banks", pid: "IE0m2PUI4Fg", n: "Galereya" },
     mahsulotlar: { photo: "fon/b-mahsulotlar.jpg", by: "Declan Sun", pid: "RaTyAZrysv4", n: "Mahsulotlar" },
     sozlamalar: { photo: "fon/b-sozlamalar.jpg", by: "Neon Wang", pid: "DAjAgQBs9AY", n: "Sozlamalar" },
   };
   SECTION.qogoz = SECTION.erkin; SECTION.admin = SECTION.sozlamalar;
   const PAGE = { "index.html": "bosh", "designer.html": "konstruktor", "builder.html": "erkin", "paper.html": "erkin", "gp.html": "gp", "ar.html": "ar",
-    "bolimlar.html": "bolimlar", "rasm.html": "rasm", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" };
+    "bolimlar.html": "bolimlar", "shop.html": "mahsulotlar", "settings.html": "sozlamalar", "admin.html": "admin" };
   function section() {
     const views = document.querySelectorAll(".view");
     if (views.length) { const v = [...views].find(x => !x.hidden); return v ? v.id : "bosh"; }

@@ -71,7 +71,7 @@ function render() {
   Site.sync(); Site.renderUI();
   const n = Site.list.length;
   $("facadeCap").textContent = n > 1 ? `${Site.active + 1}-uy · old fasad` : "Old fasad";
-  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags, photo: true });
+  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags });
   Geo.update(Site.list, Site.layout(), Site.active, Site.yard);   // geometrik chizma, bosh reja, hovli va hisob-kitoblar
   if (window.View3D && View3D.ready()) View3D.updateSite(Site.list, Site.gap, Site.active, Geo.flags, Site.yard); else $("iso").innerHTML = renderIso(params, cells);
   if (typeof InteriorUI !== "undefined") InteriorUI.render();     // ichki makon tahrirlash oynasi
@@ -257,7 +257,7 @@ if (window.View3D) View3D.onVrEdit = (i, op, a) => {
 $("export").addEventListener("click", () => {
   // CSS o'zgaruvchilari fayl ichida ishlamaydi — o'lcham chiziqlari uchun aniq ranglar qo'shiladi
   const style = `<style>.d-dim line,.d-dim path{stroke:#555;fill:#555}.d-text{fill:#555;font:11px monospace}.d-ground{stroke:#1f2326}</style>`;
-  const svg = renderFacade(params, cells, { dims: true, uid: "exp", photo: true }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
+  const svg = renderFacade(params, cells, { dims: true, uid: "exp" }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
   const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
   const a = Object.assign(document.createElement("a"), { href: url, download: `${($("dName").value || "bino").replace(/[^\w\-]+/g, "_")}.svg` });
   document.body.appendChild(a); a.click(); a.remove();
@@ -362,5 +362,8 @@ render();
 window.playBuild && window.playBuild();
 loadGallery();
 // Birinchi kirish: qoralama ham, ochilgan dizayn ham yo'q — boshlang'ich nuqtani tanlashni taklif qilamiz
-const incoming = (() => { try { return !!localStorage.getItem("ustun-rasm-acts"); } catch { return false; } })();   // Rasmdan dizayn / Erkin qurishdan kelgan uy
+const incoming = (() => { try { return !!localStorage.getItem("ustun-rasm-acts"); } catch { return false; } })();   // Erkin qurishdan kelgan uy
 if (!startId && !hasDraft && !incoming) openNewDialog();
+// Erkin qurishdan (builder.html) kelgan uy: freebuild.js amalni "ustun-rasm-acts" ga yozadi, bu yerda AIDesign bajaradi
+// (ai-design.js shu fayldan keyin yuklanadi — shuning uchun biroz kechiktiriladi)
+if (incoming) setTimeout(() => { try { const acts = JSON.parse(localStorage.getItem("ustun-rasm-acts") || "null"); if (Array.isArray(acts) && acts.length && window.AIDesign) { localStorage.removeItem("ustun-rasm-acts"); AIDesign.apply(acts.slice(0, 3)); } } catch {} }, 600);

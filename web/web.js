@@ -20,7 +20,7 @@ function estimate(category, quality, area, floors) {
 }
 
 // ================= BO'LIMLAR =================
-const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "bolimlar", "rasm", "galereya", "mahsulotlar", "sozlamalar"];
+const VIEWS = ["bosh", "konstruktor", "erkin", "gp", "ar", "bolimlar", "galereya", "mahsulotlar", "sozlamalar"];
 let firstDesignerVisit = true;
 function showView(v, scroll = true) {
   if (v === "qogoz") { v = "erkin"; if (window.UstunErkin) UstunErkin.set("qolda"); }   // Oq qog'oz endi Erkin qurish ichida
@@ -34,7 +34,6 @@ function showView(v, scroll = true) {
   if (v === "sozlamalar" && typeof UstunSettings !== "undefined") UstunSettings.render();
   if (v === "gp" && window.UstunGP) UstunGP.render();
   if (v === "bolimlar" && window.UstunRP) UstunRP.render();
-  if (v === "rasm" && window.UstunRasm) UstunRasm.render();                                // rasmdan dizayn rejasi                               // muhandislik bo'limlari joriy binodan
   if (v === "ar" && window.UstunAR) UstunAR.render();                                     // arxitektura chizmalari joriy binodan                                     // bosh reja joriy loyihadan chiziladi   // saqlangan loyihalar ro'yxati yangilansin
   if (v === "konstruktor") {
     render();
@@ -186,7 +185,7 @@ if (window.View3D) View3D.onPick = i => Site.select(i);   // 3D'da uyni bosib ta
 window.DesignHost = {
   params: () => params, cells: () => cells,
   refresh() { undoStack.length = 0; redoStack.length = 0; syncControls(); if ($("konstruktor").hidden) showView("konstruktor"); else render(); },
-  // tashqaridan kelgan dizaynni (AI, Rasmdan dizayn, Erkin qurish) "Nimadan boshlaymiz?" oynasi bosib ketmasin
+  // tashqaridan kelgan dizaynni (AI, Erkin qurish, Tezkor loyiha) "Nimadan boshlaymiz?" oynasi bosib ketmasin
   load(list, gap, name, note, yard) { firstDesignerVisit = false; loadIntoDesigner(list, gap, name == null ? $("dName").value : name, note, yard); },
 };
 if (window.View3D) { View3D.onMove = (i, x, z) => Site.move(i, x, z); View3D.onRotate = i => Site.rotate(i); }   // 3D'da ko'chirish va burish
@@ -214,7 +213,7 @@ function render() {
   if ($("konstruktor").hidden) { saveDraft(); return; }      // yashirin bo'limni chizish shart emas
   const n = Site.list.length;
   $("facadeCap").textContent = n > 1 ? `${Site.active + 1}-uy · old fasad` : "Old fasad";
-  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags, photo: true });
+  $("facade").innerHTML = renderFacade(params, cells, { interactive: true, dims: true, uid: "main", geo: Geo.flags });
   Geo.update(Site.list, Site.layout(), Site.active, Site.yard);   // geometrik chizma, bosh reja, hovli va hisob-kitoblar
   if (window.View3D && View3D.ready()) View3D.updateSite(Site.list, Site.gap, Site.active, Geo.flags, Site.yard); else $("iso").innerHTML = renderIso(params, cells);
   if (typeof InteriorUI !== "undefined") InteriorUI.render();     // ichki makon tahrirlash oynasi
@@ -342,7 +341,7 @@ let downloads = null;
 })();
 $("export").addEventListener("click", async () => {
   const style = `<style>.d-dim line,.d-dim path{stroke:#555;fill:#555}.d-text{fill:#555;font:11px monospace}.d-ground{stroke:#1f2326}</style>`;
-  const svg = renderFacade(params, cells, { dims: true, uid: "exp", photo: true }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
+  const svg = renderFacade(params, cells, { dims: true, uid: "exp" }).replace(/(<svg[^>]*>)/, `$1${style}<rect width="100%" height="100%" fill="#f7f8f7"/>`);
   const name = ($("dName").value.trim() || "bino").replace(/[^\w\-]+/g, "_");
   const msg = $("saveMsg");
   try {

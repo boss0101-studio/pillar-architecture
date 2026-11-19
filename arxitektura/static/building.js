@@ -202,20 +202,6 @@ function metrics(p, cells) {
 const f1 = n => (Math.round(n * 10) / 10).toLocaleString("ru-RU");
 
 // ---------------- FASAD (old ko'rinish) ----------------
-// Rasmdan qurilgan uy fotosurati (rasm.js saqlaydi: localStorage "ustun-fasad-foto" = { sig, img }).
-// sig — parametrlar izi (rasm.js va view3d.js dagi photoSig bilan bir xil); mos kelsa — rasm (data URL), aks holda null
-const facadePhotoSig = p => [p.shape || "rect", p.floors, p.bays, Number(p.bay_w).toFixed(2), Number(p.floor_h).toFixed(2)].join("|");
-const _fphoto = { raw: undefined, val: null };                    // katta qator har chizishda qayta JSON.parse qilinmasin
-function facadePhotoFor(p) {
-  let raw = null;
-  try { raw = localStorage.getItem("ustun-fasad-foto"); } catch {}
-  if (raw !== _fphoto.raw) {
-    _fphoto.raw = raw;
-    try { const d = JSON.parse(raw || "null"); _fphoto.val = d && typeof d.img === "string" && /^data:image\/jpeg;base64,/.test(d.img) && d.sig ? d : null; } catch { _fphoto.val = null; }
-  }
-  return _fphoto.val && _fphoto.val.sig === facadePhotoSig(p) ? _fphoto.val.img : null;
-}
-
 function renderFacade(p, cells, opts = {}) {
   const uid = opts.uid || "f" + Math.random().toString(36).slice(2, 7);
   const VW = 640, VH = 520, L = 56, Rm = 80, T = 24, B = 56;
@@ -287,9 +273,6 @@ function renderFacade(p, cells, opts = {}) {
   for (let f = 0; f < p.floors; f++) for (let b = 0; b < p.bays; b++) {
     out.push(drawCell(cellType(p, cells, f, b), X(b * p.bay_w), Y((f + 1) * p.floor_h), p.bay_w * s, p.floor_h * s));
   }
-  // "Rasmdan dizayn → aslidek qurish": devorlar o'rnida rasmning o'zi (3D old fasad bilan bir xil shart — parametrlar o'zgarmagan)
-  const photo = opts.photo && facadePhotoFor(p);
-  if (photo) out.push(`<image href="${photo}" x="${X(0)}" y="${Y(g.Hb)}" width="${g.W * s}" height="${g.Hb * s}" preserveAspectRatio="none"/>`);
   out.push(`<rect x="${X(0)}" y="${Y(g.Hb)}" width="${g.W * s}" height="${g.Hb * s}" fill="none" stroke="${INK}" stroke-width="1.6"/>`);
 
   if (p.roof === "bir") {                               // bir nishabli tom: devor uchburchagi + qiya plita

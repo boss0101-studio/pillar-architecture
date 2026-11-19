@@ -21,7 +21,7 @@
   let host, renderer, scene, camera, canvas, group, sun, hemi, bar;
   let mounted = false, failed = false, visible = true;
   let theta = -0.65, phi = 1.12, zoom = 1, tTheta = theta, tPhi = phi;
-  let auto = !reduce, baseDist = 40, riseStart = 0, raf = 0, last = 0, buildTimer = 0, lastArgs = null, builtSig = "";
+  let auto = false, baseDist = 40, riseStart = 0, raf = 0, last = 0, buildTimer = 0, lastArgs = null, builtSig = "";
   let plates = [], labels = [], bGroups = [], activeIdx = 0, accentCss = "rgb(43,74,203)";
   let lastLayout = [], vrGround = null;     // uylar joylashuvi (VR to'qnashuvi uchun) va VR dagi keng yer sathi
   const center = new THREE.Vector3();
@@ -170,7 +170,7 @@
   // Haqiqiy o'lchamdagi teksturalar (g'isht 250×65 mm, chok 10 mm va h.k.) rang + bo'rtiq (bump) xaritasi bilan,
   // osmon gumbazi, osmondan atrof yorug'ligi (PMREM: oynalarda osmon aksi), ACES tonlash, maysa, otmostka, uzoqdagi daraxtlar.
   // "Maket" rejimi (oq plinta va to'r) bitta tugma bilan qaytadi; tanlov brauzerda eslab qolinadi.
-  let real = (() => { try { return localStorage.getItem("ustun-3d-real") !== "0"; } catch { return true; } })();
+  let real = (() => { try { return localStorage.getItem("ustun-3d-real") === "1"; } catch { return false; } })();   // standart: oddiy maket (engil), Realistik va Aylanish tugma bilan yoqiladi
   const realTex = {}, REAL_TILE = 1.2;
   let skyDome = null, envDome = null, envScene = null, envRT = null, pmrem = null, envTimer = 0, skyState = null;
   const seeded = s => () => ((s = (s * 16807) % 2147483647) - 1) / 2147483646;

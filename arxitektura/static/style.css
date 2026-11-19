@@ -1751,3 +1751,22 @@ html.bg-photo body::after {
 .pv-tabs button { font: inherit; font-size: .9rem; padding: 7px 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: inherit; cursor: pointer; }
 .pv-tabs button:hover { border-color: var(--accent, #6f86ff); }
 .pv-tabs button.on { background: var(--accent, #6f86ff); border-color: var(--accent, #6f86ff); color: #fff; }
+
+/* ===================== MINIMAL: tinch va engil dizayn (sayt qotmasligi uchun, 2026-11-19) =====================
+   Butun ekranli fon qatlamlari (to'r, foto), cheksiz animatsiyalar va bo'lim fotosuratlari o'chirildi.
+   Eski ko'rinishga qaytish — shu blokni olib tashlash kifoya (bg3d.js ham sahifalardan olib tashlangan). */
+body::before, body::after, html.bg-photo body::after { content: none; display: none; }      /* to'r chiziqlari va foto fon */
+.bgp-btn, .bgp { display: none !important; }                                               /* "Fon" tanlovi: tanlanadigan fon yo'q */
+.hero2::before { animation: none; }                                                        /* aurora */
+.marquee { display: none; }                                                                /* yuguruvchi lenta */
+.phero-slide.is-on { animation: none; }                                                    /* slayd-shou: kattalashish yo'q, faqat almashinadi */
+.ai-btn.robot-btn svg.robot { animation: none; filter: none; }                             /* AI tugmasi: tebranish va soya */
+.robot .rb-light, .robot .rb-eyes, .tour-av { animation: none; }
+.board { will-change: auto; }
+.lang-modal, .auth-modal { -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* bo'lim sarlavhalari va xizmat kartalari: foto o'rniga tekis to'q fon */
+.ds-head, #galereya > main > section:first-child > .sec-head { background: #1b2024; min-height: 0; }
+.ds-head::before, .ds-head::after,
+#galereya > main > section:first-child > .sec-head::before, #galereya > main > section:first-child > .sec-head::after { content: none; }
+.svc-card::before, .svc-card::after { content: none; }
+.svc-card .svc-credit { display: none; }

@@ -788,7 +788,7 @@
         return (mc[key] = track(m));
       }
       const X = x => x - W / 2, Z = z => z - D / 2;
-      const rects = [], grow = (r, m) => ({ x0: X(r.x0) - m, x1: X(r.x1) + m, z0: Z(r.z0) - m, z1: Z(r.z1) + m });
+      const rects = [], rectsF = Array.from({ length: N }, () => []), grow = (r, m) => ({ x0: X(r.x0) - m, x1: X(r.x1) + m, z0: Z(r.z0) - m, z1: Z(r.z1) + m });   // rectsF — har qavat to'siqlari (VR'da qavatlarda yurish)
       const st = N > 1 && I.stair ? Interior.stairInfo(p, I.stair, ig) : null;
       const upperHalf = (r, rot) => rot === 0 ? { ...r, z0: (r.z0 + r.z1) / 2 } : rot === 2 ? { ...r, z1: (r.z0 + r.z1) / 2 } : rot === 1 ? { ...r, x0: (r.x0 + r.x1) / 2 } : { ...r, x1: (r.x0 + r.x1) / 2 };
 
@@ -925,6 +925,7 @@
           wp.walls.forEach(r => {
             G.add(box(r.x1 - r.x0, top - base, r.z1 - r.z0, wallM, X((r.x0 + r.x1) / 2), (base + top) / 2, Z((r.z0 + r.z1) / 2), false));
             if (f === 0) rects.push(grow(r, 0.22));
+            rectsF[f].push(grow(r, 0.22));
           });
           if (wp.lintel) {
             const r = wp.lintel, hh = top - base - 2.1;
@@ -942,7 +943,7 @@
             const L = new THREE.PointLight(0xffd8a8, 0.55, 7, 2);
             L.position.set(X(it[1]), base + lift + d.h * (d.top ? 0.3 : 0.85), Z(it[2])); G.add(L);
           }
-          if (f === 0 && it[0] !== "carpet" && !d.m) rects.push(grow(Interior.itemRect(it), 0.12));
+          if (it[0] !== "carpet" && !d.m && d.h >= 0.1) { const r = grow(Interior.itemRect(it), 0.12); rectsF[f].push(r); if (f === 0) rects.push(r); }
         });
         if (st && f < N - 1) {                                       // zina: pog'onalar (yo'nalish — ko'tarilish tomoni)
           const n = st.n, rise = (fh - (f === 0 ? 0.06 : 0)) / n, alongZ = !!st.dir[1];
@@ -958,7 +959,9 @@
       // VR: old fasaddagi eshik va arkadalar — ichkariga kirish joyi
       const doors = [];
       for (let b = 0; b < p.bays; b++) { const t = cellType(p, cells, 0, b); if (t === "door" || t === "arcade") doors.push(-W / 2 + (b + 0.5) * p.bay_w); }
-      return { rects, doors };
+      // Zina (VR): markazi, ko'tarilish yo'nalishi, uzunligi va yuqori qavatdagi chiqish joyi — uyning markazidagi koordinatalarda
+      const stair = st && N > 1 ? { cx: X(st.center.x), cz: Z(st.center.z), dx: st.dir[0], dz: st.dir[1], L: st.L, W: Interior.STAIR_W, ex: X(st.exit.x), ez: Z(st.exit.z) } : null;
+      return { rects, rectsF, doors, stair, fh, N };
     }
 
     // Ichki hajm: ichki reja yo'q bo'lsa — qorong'i hajm (deraza ortida bo'shliq ko'rinmasin), bo'lsa — real xonalar
@@ -1828,7 +1831,7 @@
   const vr = { on: false, stereo: true, x: 0, z: 0, yaw: 0, pitch: 0, dragYaw: 0, lookYaw: 0, eye: 1.65, walk: 0,
                keys: new Set(), gyro: false, devQ: null, yawOffset: null, xr: null, xrOffset: new THREE.Vector3(), ui: null,
                build: true, tool: "win", aim: null, aimNdc: new THREE.Vector2(), aimKey: "", flash: 0,
-               room: false, ftype: "sofa", frot: 0, faim: null, fl: 0, fy: 0, hq: true, msg: "", msgT: 0 };
+               room: false, ftype: "sofa", frot: 0, faim: null, fl: 0, fy: 0, st: null, hq: true, msg: "", msgT: 0 };
   const FURN = typeof Interior !== "undefined" ? Object.keys(Interior.ITEMS) : [];
   const furnName = t => (typeof Interior !== "undefined" && Interior.ITEMS[t] ? Interior.ITEMS[t].n : t);
   let vrGhost = null, vrSel = null;
@@ -1871,6 +1874,52 @@
     return l.coll.rects.some(r => xl > r.x0 && xl < r.x1 && zl > r.z0 && zl < r.z1);
   }
   const vrBlocked = (x, z) => fenceAt(x, z) || lastLayout.some(l => l.coll ? collBlocked(l, x, z) : Math.abs(x - l.cx) < l.w / 2 + 0.6 && Math.abs(z - l.cz) < l.d / 2 + 0.6);
+
+  // ---- Qavatlarda yurish: ichki rejali uyda zinadan ko'tarilish/tushish, har qavatning o'z devor va mebel to'siqlari ----
+  // Holat: vr.fl — turgan qavat, vr.st — zinada bo'lsa uning pastki qavati (aks holda null), vr.fy — oyoq balandligi
+  const toLocal = (l, x, z) => { const th = (l.rot * Math.PI) / 180, dx = x - l.cx, dz = z - l.cz; return [dx * Math.cos(th) - dz * Math.sin(th), dx * Math.sin(th) + dz * Math.cos(th)]; };
+  const toWorld = (l, xl, zl) => { const th = (l.rot * Math.PI) / 180, cs = Math.cos(th), sn = Math.sin(th); return [l.cx + xl * cs + zl * sn, l.cz - xl * sn + zl * cs]; };
+  function houseIn(x, z) {
+    for (const l of lastLayout) {
+      if (!l.coll || !l.coll.rectsF) continue;
+      const [xl, zl] = toLocal(l, x, z);
+      if (Math.abs(xl) < l.W / 2 - T - 0.25 && Math.abs(zl) < l.D / 2 - T - 0.25) return { l, xl, zl };
+    }
+    return null;
+  }
+  const freeOn = (C, f, xl, zl) => !(C.rectsF[f] || []).some(r => xl > r.x0 && xl < r.x1 && zl > r.z0 && zl < r.z1);
+  // Zina bo'ylab o'rin: t — 0 (pastki uchi) … 1 (yuqori uchi), ichida — zina eni ichida
+  function stairPos(S, xl, zl) {
+    const ax = (xl - S.cx) * S.dx + (zl - S.cz) * S.dz, lat = (xl - S.cx) * S.dz - (zl - S.cz) * S.dx;
+    return { inSt: Math.abs(ax) <= S.L / 2 && Math.abs(lat) <= S.W / 2, t: ax / S.L + 0.5 };
+  }
+  // (x, z) ga qadam qo'yilsa yangi holat; o'tib bo'lmasa — null
+  function vrWalk(x, z) {
+    const h = houseIn(x, z);
+    if (!h) return vr.fl > 0 || vr.st !== null || vrBlocked(x, z) ? null : { fl: 0, st: null, fy: 0 };   // tashqariga faqat 1-qavatdan
+    const C = h.l.coll, fh = C.fh, N = C.N, S = C.stair, f = vr.fl;
+    const sp = S ? stairPos(S, h.xl, h.zl) : { inSt: false, t: 0 }, t = sp.t;
+    if (vr.st !== null) {                                            // zinada: balandlik qadamga mos, yon tomondan tushib bo'lmaydi
+      const s = vr.st;
+      if (sp.inSt) return { fl: s, st: s, fy: (s + clamp(t, 0, 1)) * fh };
+      if (t >= 0.85) return freeOn(C, s + 1, h.xl, h.zl) ? { fl: s + 1, st: null, fy: (s + 1) * fh } : null;
+      if (t <= 0.15) return freeOn(C, s, h.xl, h.zl) ? { fl: s, st: null, fy: s * fh } : null;
+      return null;
+    }
+    if (sp.inSt) {
+      if (f < N - 1 && t < 0.2) return { fl: f, st: f, fy: (f + Math.max(0, t)) * fh };          // pastki uchidan zinaga chiqish
+      if (f >= 1 && t > 0.8) return { fl: f - 1, st: f - 1, fy: (f - 1 + Math.min(1, t)) * fh };  // yuqori qavatdan zinaga tushish
+      if (!(f === N - 1 && t < 0.5)) return null;                     // zina yoni va teshik — panjara
+    }
+    return freeOn(C, f, h.xl, h.zl) ? { fl: f, st: null, fy: f * fh } : null;
+  }
+  function vrSetLevel(s) {
+    const changed = s.fl !== vr.fl;
+    vr.fl = s.fl; vr.st = s.st; vr.fy = s.fy;
+    if (vr.xr) { vr.xrOffset.y = -vr.fy; if (group) group.position.copy(vr.xrOffset); }
+    if (changed) { vrFloorLabel(); vr.aimKey = ""; }
+  }
+  function vrFloorLabel() { if (vr.ui) vr.ui.querySelectorAll('[data-vo="fl"]').forEach(el => { el.textContent = vr.fl + 1; }); }
 
   function setVrScene(on) {
     if (real) { if (vrGround) vrGround.visible = true; scene.background = null; updateSky(); }    // realistik: osmon gumbazi va tuman doim bor
@@ -1983,13 +2032,34 @@
     if (vr.ui) vr.ui.querySelectorAll("[data-vf]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.vf === t)));
   }
   // Qavat almashtirish: ko'z balandligi o'sha qavat poliga ko'tariladi (shlemda — sahna pastga suriladi)
+  // Tugma bilan qavat almashtirish: odam o'sha qavatdagi bo'sh joyga (avval zina chiqishiga, keyin shu nuqtaga, so'ng eng yaqiniga) o'tadi.
+  // Uy tashqarisida bosilsa — avval faol uyning ichiga kiriladi.
   function vrFloor(d) {
     if (!lastArgs) return;
-    const p = lastArgs.site.list[clamp(activeIdx, 0, lastArgs.site.list.length - 1)].params;
-    vr.fl = clamp(vr.fl + d, 0, p.floors - 1); vr.fy = vr.fl * p.floor_h;
-    if (vr.xr) { vr.xrOffset.y = -vr.fy; if (group) group.position.copy(vr.xrOffset); }
-    const el = vr.ui && vr.ui.querySelector('[data-vo="fl"]'); if (el) el.textContent = vr.fl + 1;
-    vr.aimKey = "";
+    if (vr.xr) {                                                     // shlemda turgan joy: sahna siljishi + bosh holati
+      const hc = renderer.xr.getCamera(camera).position;
+      vr.x = hc.x - vr.xrOffset.x; vr.z = hc.z - vr.xrOffset.z;
+    }
+    let h = houseIn(vr.x, vr.z);
+    if (!h) {
+      if (!d || d < 0) return;
+      vrGoInside(); h = houseIn(vr.x, vr.z);
+      if (!h) return;
+    }
+    const C = h.l.coll, f = clamp(vr.fl + d, 0, C.N - 1);
+    if (f === vr.fl && vr.st === null) { vrSay(d > 0 ? "Bu eng yuqori qavat" : "Bu birinchi qavat"); return; }
+    const ok = (xl, zl) => freeOn(C, f, xl, zl) && Math.abs(xl) < h.l.W / 2 - T - 0.4 && Math.abs(zl) < h.l.D / 2 - T - 0.4 &&
+                           !(C.stair && stairPos(C.stair, xl, zl).inSt);
+    const cand = [];
+    if (C.stair) cand.push([C.stair.ex, C.stair.ez]);
+    cand.push([h.xl, h.zl]);
+    for (let r = 0.5; r < Math.max(h.l.W, h.l.D); r += 0.5) for (let a = 0; a < 16; a++) cand.push([h.xl + Math.cos(a * Math.PI / 8) * r, h.zl + Math.sin(a * Math.PI / 8) * r]);
+    const pt = cand.find(([xl, zl]) => ok(xl, zl));
+    if (!pt) { vrSay(`${f + 1}-qavatda bo'sh joy topilmadi`); return; }
+    [vr.x, vr.z] = toWorld(h.l, pt[0], pt[1]);
+    vrSetLevel({ fl: f, st: null, fy: f * C.fh });
+    if (vr.xr) { vr.xrOffset.set(-vr.x, -vr.fy, -vr.z); if (group) group.position.copy(vr.xrOffset); }
+    vrSay(`${f + 1}-qavat`);
   }
   // Odam biror uyning ichidami (uy burilgan bo'lsa ham)
   function vrInside() {
@@ -2007,7 +2077,7 @@
       if (Math.abs(xl) > l.W / 2 - 0.8) continue;
       const x = l.cx + xl * cs + zl * sn, z = l.cz - xl * sn + zl * cs;
       if (!vrBlocked(x, z)) {
-        vr.x = x; vr.z = z; vr.yaw = th; vr.pitch = -0.35; vr.dragYaw = 0; vr.yawOffset = null;
+        vr.x = x; vr.z = z; vrSetLevel({ fl: 0, st: null, fy: 0 }); vr.yaw = th; vr.pitch = -0.35; vr.dragYaw = 0; vr.yawOffset = null;
         if (vr.xr) { vr.xrOffset.set(-x, -vr.fy, -z); if (group) group.position.copy(vr.xrOffset); }
         vr.aimKey = ""; return;
       }
@@ -2115,7 +2185,7 @@
     stopAuto();
     host.classList.add("vr-on", "stereo"); document.documentElement.classList.add("vr-lock");
     camera.fov = 80; camera.near = 0.05; camera.updateProjectionMatrix();
-    vr.fl = 0; vr.fy = 0; applyQuality(vr.hq);
+    vr.fl = 0; vr.fy = 0; vr.st = null; vrFloorLabel(); applyQuality(vr.hq);
     setVrScene(true);
     startGyro();
     try { if (host.requestFullscreen) host.requestFullscreen().catch(() => {}); } catch {}
@@ -2130,18 +2200,30 @@
     camera.fov = 35; camera.near = 0.5; camera.updateProjectionMatrix();
     renderer.setScissorTest(false);
     vr.aim = null; vr.faim = null; if (vrMark) vrMark.visible = false; if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
-    vr.fl = 0; vr.fy = 0; applyQuality(false);
+    vr.fl = 0; vr.fy = 0; vr.st = null; applyQuality(false);
     setVrScene(false);
     try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch {}
     resize(); request();
   }
 
   // Haqiqiy VR shlem: sahna ko'chiriladi, odam fasad ro'parasida turadi; kontroller tugmasi — qaragan tomonga 3 m
+  // Shlem kontrolleri: dastak (thumbstick) yuqoriga — yuqori qavat, pastga — pastki qavat (qo'yib yuborilguncha bir marta)
+  let xrStickLatch = false;
+  function xrSticks(session) {
+    let y = 0;
+    for (const src of session.inputSources || []) {
+      const ax = src.gamepad && src.gamepad.axes; if (!ax || !ax.length) continue;
+      const v = ax.length >= 4 ? ax[3] : ax[1]; if (Math.abs(v) > Math.abs(y)) y = v;
+    }
+    if (Math.abs(y) < 0.3) { xrStickLatch = false; return; }
+    if (xrStickLatch || Math.abs(y) < 0.8) return;
+    xrStickLatch = true; vrFloor(y < 0 ? 1 : -1);
+  }
   async function enterXR() {
     try {
       const session = await navigator.xr.requestSession("immersive-vr", { optionalFeatures: ["local-floor"] });
       vrStartPos();
-      vr.xr = session; vr.fl = 0; vr.fy = 0;
+      vr.xr = session; vr.fl = 0; vr.fy = 0; vr.st = null;
       renderer.xr.enabled = true;
       renderer.xr.setReferenceSpaceType("local-floor");
       if (renderer.xr.setFramebufferScaleFactor) renderer.xr.setFramebufferScaleFactor(vr.hq ? 1.5 : 1);   // shlemda tiniqroq tasvir
@@ -2165,10 +2247,10 @@
       session.addEventListener("end", () => {
         renderer.setAnimationLoop(null); renderer.xr.enabled = false;
         vr.xr = null; vr.xrOffset.set(0, 0, 0); if (group) group.position.set(0, 0, 0);
-        vr.aim = null; vr.faim = null; vr.fl = 0; vr.fy = 0; if (vrMark) vrMark.visible = false; if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
+        vr.aim = null; vr.faim = null; vr.fl = 0; vr.fy = 0; vr.st = null; if (vrMark) vrMark.visible = false; if (vrGhost) vrGhost.visible = false; if (vrSel) vrSel.visible = false;
         setVrScene(false); resize(); request();
       });
-      renderer.setAnimationLoop(() => { vrAim(renderer.xr.getCamera(camera)); renderer.render(scene, camera); });
+      renderer.setAnimationLoop(() => { xrSticks(session); vrAim(renderer.xr.getCamera(camera)); renderer.render(scene, camera); });
     } catch (err) {
       console.warn("WebXR ochilmadi, ekran rejimiga o'tildi:", err);
       xrSupported = false; vr.xr = null; renderer.xr.enabled = false; enterVR();
@@ -2215,8 +2297,8 @@
     if (!f && !s) return;
     const sp = (k.has("ShiftLeft") || k.has("ShiftRight") ? 6.3 : 2.4) * dt, yw = vr.lookYaw;   // m/s: yurish va tez yurish (Shift)
     const dx = (-Math.sin(yw) * f + Math.cos(yw) * s) * sp, dz = (-Math.cos(yw) * f - Math.sin(yw) * s) * sp;
-    if (!vrBlocked(vr.x + dx, vr.z)) vr.x += dx;
-    if (!vrBlocked(vr.x, vr.z + dz)) vr.z += dz;
+    const a = vrWalk(vr.x + dx, vr.z); if (a) { vr.x += dx; vrSetLevel(a); }      // x va z alohida: devor bo'ylab sirpanib yuriladi
+    const b = vrWalk(vr.x, vr.z + dz); if (b) { vr.z += dz; vrSetLevel(b); }
   }
 
   // Sensorli ekran va sichqoncha: sudrash — qarash, bosib turish — yurish
@@ -2292,7 +2374,9 @@
     vr.ui = document.createElement("div"); vr.ui.className = "v3-vr";
     const icon = t => typeof drawCell === "function" && t !== "auto"
       ? `<svg viewBox="0 0 40 40" aria-hidden="true">${drawCell(t, 0, 0, 40, 40)}</svg>` : `<svg viewBox="0 0 40 40" aria-hidden="true"><text x="20" y="26" text-anchor="middle" font-size="14" fill="#fff">A</text></svg>`;
-    vr.ui.innerHTML = '<div class="vr-top"><b>VR rejimi</b><span class="sp"></span><button type="button" data-vr="build" aria-pressed="true">Qurish</button>' +
+    vr.ui.innerHTML = '<div class="vr-top"><b>VR rejimi</b><span class="sp"></span>' +
+      '<span class="vr-step vr-flr" title="Qavatga chiqish/tushish (PageUp / PageDown). Ichkarida zinadan yurib ham chiqiladi">Qavat <button type="button" data-vfl="-1" aria-label="Pastki qavatga tushish">▼</button><b data-vo="fl">1</b><button type="button" data-vfl="1" aria-label="Yuqori qavatga chiqish">▲</button></span>' +
+      '<button type="button" data-vr="build" aria-pressed="true">Qurish</button>' +
       '<button type="button" data-vr="room" aria-pressed="false" title="Uy ichida turib jihozlarni joylash">Ichki dizayn</button>' +
       '<button type="button" data-vr="hq" aria-pressed="true" title="Full HD: kadr kamida 1920×1080 chiziladi, kuchliroq qurilma talab qiladi">FHD <small data-vo="res"></small></button>' +
       '<button type="button" data-vr="mode">Bitta ekran</button><button type="button" data-vr="exit">Chiqish ✕</button></div>' +
@@ -2340,12 +2424,13 @@
     window.addEventListener("keydown", e => {
       if (!vr.on) return;
       if (e.key === "Escape") { exitVR(); return; }
+      if (e.code === "PageUp" || e.code === "PageDown") { e.preventDefault(); if (!e.repeat) vrFloor(e.code === "PageUp" ? 1 : -1); return; }   // qavat almashtirish (har rejimda)
       if (vr.room && !e.ctrlKey && !e.metaKey && !e.altKey) {         // ichki dizayn tugmalari
         if (e.code === "KeyE" || e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (!e.repeat) { vrAim(); vrRoomPlace(); } return; }
         if (e.code === "KeyR") { e.preventDefault(); if (!e.repeat) { vrAim(); vrRoomRot(); } return; }
         if (e.code === "KeyX" || e.code === "Delete" || e.code === "Backspace") { e.preventDefault(); vrAim(); vrRoomDel(); return; }
         if (e.code === "KeyQ") { vrSetFurn(FURN[(FURN.indexOf(vr.ftype) + (e.shiftKey ? FURN.length - 1 : 1)) % FURN.length]); return; }
-        if (e.code === "PageUp" || e.code === "PageDown") { e.preventDefault(); vrFloor(e.code === "PageUp" ? 1 : -1); return; }
+
       }
       if (vr.build && !vr.room && !e.ctrlKey && !e.metaKey && !e.altKey) {
         if (e.code === "KeyE" || e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (!e.repeat) { vrAim(); vrPlace(); } return; }

@@ -24,3 +24,9 @@ Ekran yozuvlari (`TX.uz`) hali eski ssenariyda.
 Videoda "Peshtoq" logotipi: 1-sahnada chap yuqorida, har sahnada o'ng yuqori burchakda (ixcham), yakuniy sahnada katta to'liq logo (+ "architecture").
 Geometriya `generator.html` dagi `BRAND` o'zgarmasida — `brend/yaratish.py` dan olingan (ARKA, WORD, SUB, SW, KW, HW). Logo o'zgarsa, shu qiymatlarni qayta ko'chiring.
 Shriftlar yuklanmasa (fonts.gstatic.com ochilmasa) `RUN()` xato beradi — video zaxira shriftda chiqib qolmasin.
+
+## Villa sahnasi — haqiqiy dron kadrlari (2026-11-19)
+2-sahna "Orzuingizdagi villa — avval Pillar'da" (13,9 s, diktorsiz): tepadan villa → villa atrofida uchish → ichkariga "sho'ng'ish" (oq chaqnash) → oshxona → yotoqxona → hovli va basseyn. Ustida dron ekrani (REC, ALT/SPD).
+Kliplar Mixkit'dan (Mixkit Stock Video Free License — tijoratda bepul, muallif ko'rsatish shart emas), gitga qo'shilmaydi — qayta yasashdan oldin `web/_villa/` ga yuklab oling:
+`8179, 27543, 43033, 4196, 47286` → `https://assets.mixkit.co/videos/<id>/<id>-720.mp4` → `web/_villa/<id>.mp4`. Klip vaqtlari `generator.html` dagi `VILLA` jadvalida.
+"Rasmdan dizayn" sahnasi olib tashlandi (bo'lim saytda yo'q); diktorning 6-jumlasi `VOICE_SKIP` bilan o'tkazib yuboriladi.

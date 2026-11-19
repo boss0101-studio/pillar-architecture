@@ -3,15 +3,27 @@
 // Sonli matnlar qolip bo'yicha: "3-qavat" -> "{0}-qavat" -> "Floor {0}". Birinchi kirishda til tanlash oynasi chiqadi (inglizcha, English birinchi).
 const UstunI18n = (function () {
   const KEY = "ustun-til";
+  const READY = ["en", "es", "ru", "uz"];   // lug'ati tayyor tillar; yangisi tarjimasi tugagach qo'shiladi
+  // Inglizcha nomi bo'yicha alifbo tartibida; rtl — o'ngdan chapga yoziladigan til
   const LANGS = [
+    { code: "ar", name: "العربية", en: "Arabic", rtl: true },
+    { code: "zh", name: "中文", en: "Chinese" },
     { code: "en", name: "English", en: "English" },
-    { code: "es", name: "Español", en: "Spanish" },
+    { code: "fr", name: "Français", en: "French" },
+    { code: "de", name: "Deutsch", en: "German" },
+    { code: "hi", name: "हिन्दी", en: "Hindi" },
+    { code: "ja", name: "日本語", en: "Japanese" },
+    { code: "kk", name: "Қазақша", en: "Kazakh" },
+    { code: "ko", name: "한국어", en: "Korean" },
+    { code: "ky", name: "Кыргызча", en: "Kyrgyz" },
+    { code: "pt", name: "Português", en: "Portuguese" },
     { code: "ru", name: "Русский", en: "Russian" },
+    { code: "es", name: "Español", en: "Spanish" },
+    { code: "tg", name: "Тоҷикӣ", en: "Tajik" },
+    { code: "tr", name: "Türkçe", en: "Turkish" },
     { code: "uz", name: "O'zbekcha", en: "Uzbek" },
-    // lug'at tayyorlanmoqda: { code: "tr", name: "Türkçe", en: "Turkish" },
-    // lug'at tayyorlanmoqda: { code: "fr", name: "Français", en: "French" },
-    // lug'at tayyorlanmoqda: { code: "de", name: "Deutsch", en: "German" },
-  ];
+  ].filter(l => READY.includes(l.code));
+
   const ATTRS = ["placeholder", "title", "aria-label", "alt"];
   const SKIP = "script,style,noscript,textarea,[translate='no'],.notranslate,[contenteditable='true']";
   const NUM = /\d{1,3}(?:[ \u00A0\u202F]\d{3})+(?:[.,]\d+)?|\d+(?:[.,]\d+)?/g;   // "40 530" va "4,2" — bitta son
@@ -97,6 +109,7 @@ const UstunI18n = (function () {
   let titleSrc = null;
   function applyAll() {
     document.documentElement.lang = active();
+    document.documentElement.dir = (LANGS.find(l => l.code === active()) || {}).rtl ? "rtl" : "ltr";
     if (titleSrc === null) titleSrc = document.title;
     document.title = active() === "uz" ? titleSrc : t(titleSrc);
     walk(document.body);
@@ -134,7 +147,7 @@ const UstunI18n = (function () {
       <h2 id="langTitle">${first ? "Welcome! Choose your language" : "Choose your language"}</h2>
       <p>${first ? "Please select the language for the website. You can change it any time with the 🌐 button at the top or in Settings." : "The page switches immediately."}</p>
       <div class="lang-list" role="radiogroup" aria-label="Languages">${LANGS.map((l, i) => `<button type="button" role="radio" data-lang="${l.code}" aria-checked="${l.code === active()}">
-        <b>${l.name}</b><small>${l.en}${i === 0 ? " · recommended" : ""}</small><i>${l.code.toUpperCase()}</i></button>`).join("")}</div>
+        <b>${l.name}</b><small>${l.en}${l.code === "en" ? " · recommended" : ""}</small><i>${l.code.toUpperCase()}</i></button>`).join("")}</div>
       ${first ? "" : `<button type="button" class="lang-close">Close</button>`}
     </div>`;
     document.body.appendChild(m);

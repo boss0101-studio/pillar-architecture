@@ -15,15 +15,22 @@
   // oflayn matn tili: savol tili lug'ati bo'lmasa — inglizcha (o'zbekcha asl matndan tushunarliroq)
   const txtLang = () => (!ansLang ? undefined : ansLang === "uz" || (window.USTUN_I18N || {})[ansLang] ? ansLang : "en");
   const T = s => (I18N() ? I18N().t(s, 0, txtLang()) : s);
-  const NAMES = { uz: "Uzbek", en: "English", es: "Spanish", ru: "Russian", tr: "Turkish", fr: "French", de: "German" };
+  const NAMES = { uz: "Uzbek", en: "English", es: "Spanish", ru: "Russian", tr: "Turkish", fr: "French", de: "German", kk: "Kazakh", ky: "Kyrgyz", tg: "Tajik",
+                  ar: "Arabic", zh: "Chinese", hi: "Hindi", pt: "Portuguese", ja: "Japanese", ko: "Korean" };
   // Savol qaysi tilda yozilganini taxminlaydi (oflayn javob uchun). Aniqlanmasa — interfeys tili.
   function detectLang(q) {
     const s = ` ${String(q).toLowerCase()} `;
-    if (/[а-яё]/.test(s)) return /[ўқғҳ]/.test(s) ? "uz" : "ru";
+    if (/[\u0600-\u06ff]/.test(s)) return "ar";                       // yozuv bo'yicha: arab, kana, hangul, xitoy, devanagari
+    if (/[\u3040-\u30ff]/.test(s)) return "ja";
+    if (/[\uac00-\ud7af]/.test(s)) return "ko";
+    if (/[\u4e00-\u9fff]/.test(s)) return "zh";
+    if (/[\u0900-\u097f]/.test(s)) return "hi";
+    if (/[а-яёўқғҳәіңүұөһӣӯҷ]/.test(s)) return /[ӣӯҷ]/.test(s) ? "tg" : /[әіұ]/.test(s) ? "kk" : /[ңүө]/.test(s) ? "ky" : /[ўқғҳ]/.test(s) ? "uz" : "ru";
     const score = {
       uz: /o'|g'|ʻ| (qanday|nega|nima|qayerda|qilib|bilan|uchun|kerak|qanaqa|qila|qo'y|bormi|yo'q|qanaqasiga|ishlamayapti|chiqmayapti|uyning|uyni|ichini|yarat|loyihalab|menga|qurib|ber)\b/g,
       tr: /[ışğ]| (nasıl|neden|nedir|nerede|bir|ve|için|değil|mı|mi|yapabilirim)\b/g,
       es: /[ñ¿¡]| (cómo|como|qué|que|por|para|puedo|dónde|donde|el|la|los|una|no funciona)\b/g,
+      pt: /[ãõ]| (você|não|porque|onde|posso|uma|funciona|fazer)\b/g,
       fr: /[çœ]| (comment|pourquoi|quoi|est|les|des|une|je|peux|ne|pas|où)\b/g,
       de: /[ßäö]| (wie|warum|was|ich|kann|nicht|der|die|das|und|ist|wo)\b/g,
       en: / (how|what|why|where|can|the|is|does|do|i|my|not|to|a|it|work)\b/g,

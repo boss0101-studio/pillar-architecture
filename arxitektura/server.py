@@ -467,7 +467,7 @@ def validate_ai(data):
 AI_LANGS = {"uz": "Uzbek (O'zbekcha)", "en": "English", "es": "Spanish (Español)", "ru": "Russian (Русский)",
             "tr": "Turkish (Türkçe)", "fr": "French (Français)", "de": "German (Deutsch)", "kk": "Kazakh (Қазақша)",
             "ky": "Kyrgyz (Кыргызча)", "tg": "Tajik (Тоҷикӣ)", "ar": "Arabic (العربية)", "zh": "Chinese (中文)",
-            "hi": "Hindi (हिन्दी)", "pt": "Portuguese (Português)", "ja": "Japanese (日本語)", "ko": "Korean (한국어)"}
+            "hi": "Hindi (हिन्दी)", "pt": "Portuguese (Português)", "it": "Italian (Italiano)", "ja": "Japanese (日本語)", "ko": "Korean (한국어)"}
 
 
 _ROOFS = ["tekis", "nishab", "bir", "piramida", "gumbaz", "terrasa"]

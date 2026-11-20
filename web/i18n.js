@@ -3,7 +3,7 @@
 // Sonli matnlar qolip bo'yicha: "3-qavat" -> "{0}-qavat" -> "Floor {0}". Birinchi kirishda til tanlash oynasi chiqadi (inglizcha, English birinchi).
 const UstunI18n = (function () {
   const KEY = "ustun-til";
-  const READY = ["en", "es", "ru", "uz"];   // lug'ati tayyor tillar; yangisi tarjimasi tugagach qo'shiladi
+  const READY = ["ar", "zh", "en", "fr", "de", "hi", "it", "ja", "kk", "ko", "ky", "pt", "ru", "es", "tg", "tr", "uz"];   // lug'ati tayyor tillar (tarjima-vositalari/build_i18n.py)
   // Inglizcha nomi bo'yicha alifbo tartibida; rtl — o'ngdan chapga yoziladigan til
   const LANGS = [
     { code: "ar", name: "العربية", en: "Arabic", rtl: true },
@@ -12,6 +12,7 @@ const UstunI18n = (function () {
     { code: "fr", name: "Français", en: "French" },
     { code: "de", name: "Deutsch", en: "German" },
     { code: "hi", name: "हिन्दी", en: "Hindi" },
+    { code: "it", name: "Italiano", en: "Italian" },
     { code: "ja", name: "日本語", en: "Japanese" },
     { code: "kk", name: "Қазақша", en: "Kazakh" },
     { code: "ko", name: "한국어", en: "Korean" },

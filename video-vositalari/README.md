@@ -30,3 +30,8 @@ Shriftlar yuklanmasa (fonts.gstatic.com ochilmasa) `RUN()` xato beradi — video
 Kliplar Mixkit'dan (Mixkit Stock Video Free License — tijoratda bepul, muallif ko'rsatish shart emas), gitga qo'shilmaydi — qayta yasashdan oldin `web/_villa/` ga yuklab oling:
 `8179, 27543, 43033, 4196, 47286` → `https://assets.mixkit.co/videos/<id>/<id>-720.mp4` → `web/_villa/<id>.mp4`. Klip vaqtlari `generator.html` dagi `VILLA` jadvalida.
 "Rasmdan dizayn" sahnasi olib tashlandi (bo'lim saytda yo'q); diktorning 6-jumlasi `VOICE_SKIP` bilan o'tkazib yuboriladi.
+
+## Dron kadrlari tiniqligi (2026-11-20)
+Kodlash `bitrateMode: "quantizer"` bilan: har kadrga o'z sifati — villa sahnasi QP 26, qolgan sahnalar QP 30 (`QP_VILLA`, `QP_REST`). Fayl < 20 MB (artifact chegarasi).
+720p kliplar 1080p ga kattalashtirishdan oldin yengil keskinlashtiriladi (`window.SHARP = 0.2`). Kuchliroq keskinlik donadorlikni ham oshiradi — hajm keskin o'sadi (0.5 da ~27 MB).
+Kliplar blob sifatida yuklanadi, kodlovchi navbati `dequeue` hodisasi bilan kutiladi — brauzer oynasi yashirin bo'lsa ham to'xtab qolmaydi. Baribir generator yorlig'i oldinda tursa tezroq ishlaydi.

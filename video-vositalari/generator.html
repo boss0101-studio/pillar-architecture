@@ -18,6 +18,7 @@ let D = "'Big Shoulders Display'", B = "Archivo"; const M = "'JetBrains Mono'", 
 
 // ---------- chizish yordamchilari ----------
 function cover(img, zoom = 1, fx = 0.5, fy = 0.5, alpha = 1) {
+  x.imageSmoothingQuality = "high";                                             // 720p → 1080p kattalashtirishda yumshoqroq
   const iw = img.videoWidth || img.width, ih = img.videoHeight || img.height;   // rasm yoki video kadri
   const s = Math.max(W / iw, H / ih) * zoom, w = iw * s, h = ih * s;
   x.globalAlpha = alpha; x.drawImage(img, (W - w) * fx, (H - h) * fy, w, h); x.globalAlpha = 1;
@@ -188,8 +189,24 @@ const XF = 0.45, VILLA = [
 ];
 // dive — klip oxirgi 30% da tezlashib yaqinlashadi (dron eshik/oynadan ichkariga kirgandek)
 const vZoom = (c, k) => lerp(c.z[0], c.z[1], k) * (c.dive ? 1 + 2.4 * Math.pow(clamp((k - .55) / .45), 2) : 1);
-const vid = src => new Promise((res, rej) => { const v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.playsInline = true; v.onloadeddata = () => res(v); v.onerror = () => rej(new Error(src)); v.src = src; });
+// Klip avval to'liq yuklanadi (blob): yashirin oynada ham "seeked" ishonchli ishlaydi, server Range so'rovlariga bog'liq emas
+const vid = async src => { const r = await fetch(src); if (!r.ok) throw new Error(src); const url = URL.createObjectURL(await r.blob());
+  return new Promise((res, rej) => { const v = document.createElement("video"); v.muted = true; v.preload = "auto"; v.playsInline = true;
+    v.onloadedmetadata = () => { v.currentTime = 0.01; }; v.onseeked = () => { v.onseeked = null; res(v); }; v.onerror = () => rej(new Error(src)); v.src = url; }); };
 const seekTo = (v, t) => new Promise(r => { t = Math.min(t, v.duration - 0.05); if (Math.abs(v.currentTime - t) < 0.002) return r(); v.addEventListener("seeked", () => r(), { once: true }); v.currentTime = t; });
+// Unsharp (markaz 1+4a, qo'shnilar −a) — klipning o'z o'lchamida (720p), alohida CPU kanvasda: 1080p kadrda qilishdan ~4 barobar tez
+const SHC = {};
+window.SHARP = 0.2;   // kuchliroq keskinlik donadorlikni ham oshiradi — fayl hajmi keskin o'sadi
+function sharpFrame(v, a = window.SHARP) {
+  if (!a) return v;
+  const w = v.videoWidth, h = v.videoHeight; let o = SHC[v.src];
+  if (!o || o.c.width !== w) { const cc = document.createElement("canvas"); cc.width = w; cc.height = h; o = SHC[v.src] = { c: cc, g: cc.getContext("2d", { willReadFrequently: true }), src: new Uint8ClampedArray(w * h * 4) }; }
+  o.g.drawImage(v, 0, 0, w, h); const img = o.g.getImageData(0, 0, w, h), d = img.data, S = o.src; S.set(d);
+  const k = 1 + 4 * a, row = w * 4;
+  for (let y = 1; y < h - 1; y++) { let i = y * row + 4;
+    for (let xx = 1; xx < w - 1; xx++, i += 4) { d[i] = k * S[i] - a * (S[i - 4] + S[i + 4] + S[i - row] + S[i + row]); d[i + 1] = k * S[i + 1] - a * (S[i - 3] + S[i + 5] + S[i + 1 - row] + S[i + 1 + row]); d[i + 2] = k * S[i + 2] - a * (S[i - 2] + S[i + 6] + S[i + 2 - row] + S[i + 2 + row]); } }
+  o.g.putImageData(img, 0, 0); return o.c;
+}
 // Kadr chizilishidan oldin villa videolarini kerakli joyga suradi (frame() sinxron, video esa asinxron)
 async function syncVideo(sec) {
   let t0 = 0, i = 0; while (i < SC.length - 1 && sec >= t0 + SC[i].d) { t0 += SC[i].d; i++; }
@@ -205,7 +222,7 @@ const SC = [
   } },
   { d: 13.9, nv: true, draw(t, s) {                                            // 2. Hayotdagi villa — haqiqiy dron kadrlari (Mixkit)
     VILLA.forEach(c => { const xf = c.xf || XF, a = c === VILLA[0] ? 1 : clamp((s - c.at + xf) / xf); if (s < c.at - xf || s > c.at + c.len + FADE) return;
-      const k = clamp((s - c.at) / c.len); cover(A.vil[c.v], vZoom(c, k), c.fx, c.fy, a); });
+      const k = clamp((s - c.at) / c.len); cover(sharpFrame(A.vil[c.v]), vZoom(c, k), c.fx, c.fy, a); });   // 720p klip keskinlashtirilib 1080p ga kattalashtiriladi
     { const dv = VILLA.find(c => c.dive), e = dv.at + dv.len, fl = 1 - Math.abs(s - e) / .3; if (fl > 0) { x.fillStyle = `rgba(255,255,255,${fl * .55})`; x.fillRect(0, 0, W, H); } }   // ichkariga kirish chaqnashi
     const g = x.createLinearGradient(0, H * .35, 0, H); g.addColorStop(0, "rgba(10,12,14,0)"); g.addColorStop(1, "rgba(10,12,14,.85)"); x.fillStyle = g; x.fillRect(0, 0, W, H);
     // dron ekrani: burchak qavslari, REC, balandlik va tezlik
@@ -455,10 +472,13 @@ async function encodeAudio(buf) {
 }
 window.MUSIC = async () => { const b = await makeMusic(); return { seconds: b.duration, ch: b.numberOfChannels }; };
 
+// QP (past = tiniqroq, fayl kattaroq): villa dron kadrlari 26 (yengil keskinlik bilan), qolgan sahnalar 30 — fayl < 20 MB (artifact chegarasi)
+const QP_VILLA = 26, QP_REST = 30;
+function qpAt(sec) { let t0 = 0, i = 0; while (i < SC.length - 1 && sec >= t0 + SC[i].d) { t0 += SC[i].d; i++; } const vi = SC.findIndex(q => q.nv); return i === vi || (i === vi + 1 && sec - t0 < FADE) ? QP_VILLA : QP_REST; }
 async function encode() {
   log("musiqa yaratilmoqda…"); const music = await encodeAudio(await makeMusic());
   const cands = ["avc1.640028", "avc1.4d0028", "avc1.420028"]; let cfg = null;
-  for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 1_600_000, framerate: FPS, avc: { format: "avc" }, latencyMode: "quality" }; const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
+  for (const codec of cands) { const t = { codec, width: W, height: H, bitrate: 1_600_000, framerate: FPS, bitrateMode: "quantizer", avc: { format: "avc" }, latencyMode: "quality" };   /* kadr sifati QP bilan beriladi */ const r = await VideoEncoder.isConfigSupported(t).catch(() => null); if (r && r.supported) { cfg = t; break; } }
   if (!cfg) throw new Error("H.264 kodlash qo'llab-quvvatlanmaydi");
   const chunks = [], keys = []; let avcc = null;
   const enc = new VideoEncoder({ output: (ch, meta) => { if (meta && meta.decoderConfig && meta.decoderConfig.description) avcc = new Uint8Array(meta.decoderConfig.description); const b = new Uint8Array(ch.byteLength); ch.copyTo(b); chunks.push(b); keys.push(ch.type === "key"); }, error: e => { throw e; } });
@@ -466,8 +486,8 @@ async function encode() {
   for (let i = 0; i < N; i++) {
     await syncVideo(i / FPS); frame(i / FPS);
     const vf = new VideoFrame(c, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
-    enc.encode(vf, { keyFrame: i % (FPS * 2) === 0 }); vf.close();
-    while (enc.encodeQueueSize > 8) await new Promise(r => setTimeout(r, 5));
+    enc.encode(vf, { keyFrame: i % (FPS * 2) === 0, avc: { quantizer: qpAt(i / FPS) } }); vf.close();
+    while (enc.encodeQueueSize > 8) await new Promise(r => enc.addEventListener("dequeue", r, { once: true }));   // taymer emas: yashirin oynada setTimeout 1 s gacha cho'ziladi
     if (i % 30 === 0) log(`kodlanmoqda ${i}/${N} (${cfg.codec})`);
   }
   await enc.flush(); enc.close();

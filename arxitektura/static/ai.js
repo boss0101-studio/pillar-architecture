@@ -16,7 +16,7 @@
   const txtLang = () => (!ansLang ? undefined : ansLang === "uz" || (window.USTUN_I18N || {})[ansLang] ? ansLang : "en");
   const T = s => (I18N() ? I18N().t(s, 0, txtLang()) : s);
   const NAMES = { uz: "Uzbek", en: "English", es: "Spanish", ru: "Russian", tr: "Turkish", fr: "French", de: "German", kk: "Kazakh", ky: "Kyrgyz", tg: "Tajik",
-                  ar: "Arabic", zh: "Chinese", hi: "Hindi", pt: "Portuguese", ja: "Japanese", ko: "Korean" };
+                  ar: "Arabic", zh: "Chinese", hi: "Hindi", pt: "Portuguese", it: "Italian", ja: "Japanese", ko: "Korean" };
   // Savol qaysi tilda yozilganini taxminlaydi (oflayn javob uchun). Aniqlanmasa — interfeys tili.
   function detectLang(q) {
     const s = ` ${String(q).toLowerCase()} `;
@@ -31,6 +31,7 @@
       tr: /[ışğ]| (nasıl|neden|nedir|nerede|bir|ve|için|değil|mı|mi|yapabilirim)\b/g,
       es: /[ñ¿¡]| (cómo|como|qué|que|por|para|puedo|dónde|donde|el|la|los|una|no funciona)\b/g,
       pt: /[ãõ]| (você|não|porque|onde|posso|uma|funciona|fazer)\b/g,
+      it: / (come|perché|perche|cosa|dove|posso|della|questo|gli|funziona|fare)\b/g,
       fr: /[çœ]| (comment|pourquoi|quoi|est|les|des|une|je|peux|ne|pas|où)\b/g,
       de: /[ßäö]| (wie|warum|was|ich|kann|nicht|der|die|das|und|ist|wo)\b/g,
       en: / (how|what|why|where|can|the|is|does|do|i|my|not|to|a|it|work)\b/g,

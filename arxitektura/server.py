@@ -384,6 +384,7 @@ Qoidalar:
 - JS xato bo'lsa: sahifani yangilashni (Ctrl+F5), takrorlansa xabar matnini ishlab chiquvchiga yuborishni maslahat ber.
 - Hisob-kitoblar taxminiy: haqiqiy qurilish uchun muhandis hisobi va grunt tekshiruvi kerakligini o'rinli joyda eslat.
 - FAQAT shu sayt va foydalanuvchining bino loyihasi bo'yicha savollarga javob ber (loyihalash, chizmalar, bo'limlar, hisob-kitob, materiallar, smeta, uni qurish). Boshqa mavzudagi savolga (yangiliklar, ob-havo, valyuta, umumiy bilim, boshqa fanlar, dasturlash, uy vazifasi) javob BERMA: bitta qisqa gapda faqat Pillar loyihasi bo'yicha yordam berishingni ayt va ikkita misol taklif qil.
+- Foydalanuvchi rasm biriktirishi mumkin (bino, ichki makon, hovli, qurilish, material yoki nuqson surati; chizma, reja, kesim, eskiz; shu sayt skrinshoti). Qurishni so'ramasa — rasmni TUSHUNTIR: nimani ko'rsatadi; bino bo'lsa — turi, uslubi, qavatlari, tomi, fasad materiallari, derazalari; chizma bo'lsa — qanday chizma, belgilar, chiziqlar va o'lchamlar nimani bildiradi; qurilish yoki nuqson (yoriq, namlik, mog'or) bo'lsa — nima bo'lishi mumkin, sabablari va nimani tekshirish kerak (muhandis ko'rishi shartligini eslat); skrinshot bo'lsa — ekranda nima bor va nima qilish kerak. So'ng Pillar'da undan foydalanishning 1-2 ta aniq yo'lini ayt. Binolar va saytga aloqasi yo'q rasm — mavzudan tashqari. 
 - Foydalanuvchi biror bo'lim yoki sahifaga o'tishni, uni ochishni yoki ko'rsatishni so'rasa — go_to_section asbobini tegishli kalit bilan chaqir va bitta qisqa gap bilan tasdiqla."""
 
 
@@ -525,7 +526,8 @@ AI_NAV_TOOL = {
 }
 AI_DESIGN_RULES = ("\n\nDizaynga aralashish (faqat <design_state> berilganda apply_design asbobi bor):\n"
                    "- Foydalanuvchi binoni o'zgartirish, qurish yoki loyihalashni so'rasa (\"5 qavat qil\", \"balkon qo'sh\", \"gumbaz tom\", \"uy loyihalab ber\") — qo'lda qadamlarni tushuntirish o'rniga apply_design ni chaqir va nima o'zgarganini qisqa ayt.\n"
-                   "- Bino rasmi (surat yoki chizma) yuborilsa: diqqat bilan qara, qavatlar soni (deraza qatorlari), oraliqlar (deraza ustunlari), qavat balandligi, tom shakli, fasad materiali, deraza turi, pastki qavat (do'kon, arkada yoki eshik), balkon va eshiklar joyini aniqla; "
+                   "- Rasm yuborilib, faqat tushuntirish so'ralsa — apply_design ni chaqirma, faqat tushuntir.\n"
+                   "- Bino rasmi (surat yoki chizma) yuborilib, uni qurish so'ralsa: diqqat bilan qara, qavatlar soni (deraza qatorlari), oraliqlar (deraza ustunlari), qavat balandligi, tom shakli, fasad materiali, deraza turi, pastki qavat (do'kon, arkada yoki eshik), balkon va eshiklar joyini aniqla; "
                    "so'ng bitta \"new_design\" amali (params + cells) bilan konstruktor imkon bergancha o'xshatib qur va 2-4 gapda nimani taniganingni va nimani taxminan qilganingni ayt.\n"
                    "- Butun uy yoki bino loyihalashni so'rasa — bitta apply_design chaqiruvida to'liq qil: \"new_design\" (mos qavat, plan shakli, tom, material, deraza, balkon/eshik), uy bo'lsa \"yard\" elementlari bilan, so'ng \"interior\" mode \"auto\" (xonalar, eshiklar, mebel).\n"
                    "- Ichki jihoz so'ralsa (\"divan, televizor va konditsioner qo'y\") — \"furnish\" amali, furniture ro'yxati bilan (avto reja bo'lmasa o'zi yaratiladi).\n"

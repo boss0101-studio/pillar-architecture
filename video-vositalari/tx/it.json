@@ -1,0 +1,68 @@
+{
+  "tx": {
+    "k1": "PIATTAFORMA DI PROGETTAZIONE",
+    "t1": "Disegna la tua casa\noggi",
+    "s1": "Funziona nel browser: disegna, guarda in 3D, calcola — tutto in un unico posto.",
+    "k2": "PROGETTISTA",
+    "t2": "Progetta l'edificio\nda solo",
+    "s2": "Piani, tetto, materiali e finestre — in pochi clic. Subito nei disegni e in 3D.",
+    "c2": [
+      "Piano",
+      "Tetto",
+      "Materiale",
+      "Finestra",
+      "Balcone"
+    ],
+    "k3": "COSTRUZIONE LIBERA",
+    "t3": "Schizza a mano —\necco la pianta esatta",
+    "s3": "Disegna i muri a matita: Pillar li raddrizza e calcola misure e superfici.",
+    "rooms": [
+      "Soggiorno",
+      "Camera da letto",
+      "Cucina"
+    ],
+    "k4": "3D · VR · INTERNI",
+    "t4": "Cammina dentro\ncasa tua",
+    "s4": "Esplora le stanze in 3D e VR, disponi mobili ed elettrodomestici, arreda il cortile.",
+    "c4": [
+      "FHD VR",
+      "Interni",
+      "Cortile",
+      "Posizione sole"
+    ],
+    "k5": "SEZIONI DEL PROGETTO",
+    "t5": "13 sezioni —\ndisegni pronti",
+    "s5": "GP, AR, strutture, riscaldamento, acqua, elettrico, gas, antincendio, preventivo… Tavole A3 automatiche.",
+    "k7": "PREVENTIVO E MATERIALI",
+    "t7": "Conosci il prezzo\nin anticipo",
+    "s7": "Calcolo con formule, distinta dei materiali e preventivo riepilogativo con IVA — esportato in PDF.",
+    "k8": "ASSISTENTE AI",
+    "t8": "Fai una domanda —\nti ci porta lui",
+    "s8": "Risponde solo sul progetto, apre le sezioni e modifica l'edificio.",
+    "m8": [
+      "Vai alla sezione Preventivo",
+      "Aperto: Preventivo (SM) →",
+      "Fallo di 3 piani con tetto a cupola",
+      "Fatto ✓ 3 piani, tetto a cupola"
+    ],
+    "o1": "Piattaforma di progettazione architettonica",
+    "o2": "PROVALO GRATIS",
+    "o3": "Inquadra il codice QR con la fotocamera →",
+    "o4": "Scansiona — apri il sito",
+    "o5": "Foto: Unsplash · Video: Mixkit (licenza gratuita)",
+    "kv": "UNA VILLA VERA · RIPRESA CON DRONE",
+    "tv": "La villa dei tuoi sogni —\nnasce in Pillar",
+    "sv": "Anche una grande villa nasce da un disegno: pianta, 3D e preventivo — prima di costruire."
+  },
+  "lines": [
+    "Pillar — progetta la tua casa oggi.",
+    "Scegli piani, tetto, materiali e finestre — l'edificio appare subito nel disegno.",
+    "Con la Costruzione libera, disegna i muri a mano — Pillar li trasforma in un disegno preciso.",
+    "Guarda la tua casa in 3D, camminaci dentro in realtà virtuale e disponi i mobili.",
+    "Tredici sezioni del progetto: planimetria, architettura, strutture, impianti e preventivo — i disegni si generano da soli.",
+    "",
+    "Conosci in anticipo il costo di costruzione: materiali e preventivo si calcolano in un attimo.",
+    "L'assistente AI risponde alle tue domande e apre la sezione giusta.",
+    "Pillar. Provalo gratis — scansiona il codice QR."
+  ]
+}

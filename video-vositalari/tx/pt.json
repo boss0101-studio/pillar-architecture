@@ -1,0 +1,68 @@
+{
+  "tx": {
+    "k1": "PLATAFORMA DE PROJETO ARQUITETÔNICO",
+    "t1": "Desenhe sua casa\nhoje",
+    "s1": "Funciona no navegador: desenhe, veja em 3D, calcule — tudo em um só lugar.",
+    "k2": "CONSTRUTOR",
+    "t2": "Projete o prédio\nvocê mesmo",
+    "s2": "Andares, telhado, materiais e janelas — em poucos cliques. Na hora, em plantas e em 3D.",
+    "c2": [
+      "Andares",
+      "Telhado",
+      "Material",
+      "Janela",
+      "Sacada"
+    ],
+    "k3": "CONSTRUÇÃO LIVRE",
+    "t3": "Esboce à mão —\nplanta precisa pronta",
+    "s3": "Desenhe as paredes a lápis: o Pillar as endireita e calcula medidas e áreas.",
+    "rooms": [
+      "Sala de estar",
+      "Quarto",
+      "Cozinha"
+    ],
+    "k4": "3D · VR · INTERIOR",
+    "t4": "Caminhe dentro\nda sua casa",
+    "s4": "Percorra os cômodos em 3D e VR, posicione móveis e eletrodomésticos, decore o quintal.",
+    "c4": [
+      "FHD VR",
+      "Interior",
+      "Quintal",
+      "Posição do sol"
+    ],
+    "k5": "SEÇÕES DO PROJETO",
+    "t5": "13 seções —\nplantas prontas",
+    "s5": "GP, AR, estrutura, aquecimento, água, elétrica, gás, incêndio, orçamento… Pranchas A3 automáticas.",
+    "k7": "ORÇAMENTO E MATERIAIS",
+    "t7": "Saiba o preço\nantes",
+    "s7": "Cálculo por fórmulas, lista de materiais e orçamento resumido com impostos — exportado em PDF.",
+    "k8": "ASSISTENTE DE AI",
+    "t8": "Faça uma pergunta —\nele leva você lá",
+    "s8": "Responde só sobre o projeto, abre as seções e altera o prédio.",
+    "m8": [
+      "Vá para a seção Orçamento",
+      "Aberto: Orçamento (SM) →",
+      "Faça 3 andares com telhado em cúpula",
+      "Feito ✓ 3 andares, telhado em cúpula"
+    ],
+    "o1": "Plataforma de projeto arquitetônico",
+    "o2": "EXPERIMENTE GRÁTIS",
+    "o3": "Aponte a câmera do celular para o QR code →",
+    "o4": "Escaneie — abra o site",
+    "o5": "Fotos: Unsplash · Vídeo: Mixkit (licença gratuita)",
+    "kv": "UMA VILLA REAL · CÂMERA DE DRONE",
+    "tv": "A villa dos seus sonhos —\ncomeça no Pillar",
+    "sv": "Até uma grande villa começa com um desenho: planta, 3D e orçamento — antes da obra."
+  },
+  "lines": [
+    "Pillar — projete sua casa hoje.",
+    "Escolha andares, telhado, materiais e janelas — o prédio aparece na planta na hora.",
+    "Na Construção livre, desenhe as paredes à mão — o Pillar as transforma em uma planta precisa.",
+    "Veja sua casa em 3D, caminhe por dentro em realidade virtual e posicione os móveis.",
+    "Treze seções do projeto: implantação, arquitetura, estrutura, instalações e orçamento — as plantas são geradas automaticamente.",
+    "",
+    "Saiba o custo da obra antes: materiais e orçamento são calculados num instante.",
+    "O assistente de AI responde às suas perguntas e abre a seção certa.",
+    "Pillar. Experimente grátis — escaneie o QR code."
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "tx": {
+    "k1": "MİMARİ TASARIM PLATFORMU",
+    "t1": "Evinizi bugün\nçizin",
+    "s1": "Tarayıcıda çalışır: çizin, 3D'de görün, hesaplayın — hepsi tek yerde.",
+    "k2": "TASARIMCI",
+    "t2": "Binayı kendiniz\ntasarlayın",
+    "s2": "Kat, çatı, malzeme ve pencereler — birkaç tıkla. Sonuç anında çizimde ve 3D'de.",
+    "c2": [
+      "Kat",
+      "Çatı",
+      "Malzeme",
+      "Pencere",
+      "Balkon"
+    ],
+    "k3": "SERBEST İNŞA",
+    "t3": "Elle çizin —\nkesin plan hazır",
+    "s3": "Duvarları kalemle çizin: Pillar onları düzeltir, ölçüleri ve alanları hesaplar.",
+    "rooms": [
+      "Oturma odası",
+      "Yatak odası",
+      "Mutfak"
+    ],
+    "k4": "3D · VR · İÇ MEKÂN",
+    "t4": "Evinizin içinde\ngezin",
+    "s4": "3D ve VR'da odaları gezin, mobilya ve cihazları yerleştirin, avluyu düzenleyin.",
+    "c4": [
+      "FHD VR",
+      "İç mekân",
+      "Avlu",
+      "Güneş konumu"
+    ],
+    "k5": "PROJE BÖLÜMLERİ",
+    "t5": "13 bölüm —\nçizimler hazır",
+    "s5": "GP, AR, taşıyıcı sistem, ısıtma, su, elektrik, gaz, yangın güvenliği, keşif… A3 paftalar otomatik.",
+    "k7": "KEŞİF VE MALZEMELER",
+    "t7": "Fiyatı önceden\nbilin",
+    "s7": "Formüllü hesap, malzeme listesi ve KDV'li özet keşif — PDF olarak dışa aktarılır.",
+    "k8": "AI ASİSTAN",
+    "t8": "Soru sorun —\no sizi götürsün",
+    "s8": "Yalnızca projeyle ilgili yanıt verir, bölümleri açar ve binayı değiştirir.",
+    "m8": [
+      "Keşif bölümüne geç",
+      "Açıldı: Keşif (SM) →",
+      "3 katlı yap, çatısı kubbe olsun",
+      "Tamam ✓ 3 kat, kubbe çatı"
+    ],
+    "o1": "Mimari tasarım platformu",
+    "o2": "ÜCRETSİZ DENEYİN",
+    "o3": "Telefon kameranızı QR koda tutun →",
+    "o4": "Tarayın — siteyi açın",
+    "o5": "Fotoğraflar: Unsplash · Video: Mixkit (ücretsiz lisans)",
+    "kv": "GERÇEK BİR VİLLA · DRON KAMERASI",
+    "tv": "Hayalinizdeki villa —\nönce Pillar'da",
+    "sv": "Büyük bir villa bile tek bir çizimle başlar: plan, 3D ve keşif — inşaattan önce."
+  },
+  "lines": [
+    "Pillar — evinizi bugün tasarlayın.",
+    "Kat, çatı, malzeme ve pencereleri seçin — binanız anında çizimde belirir.",
+    "Serbest inşada duvarları elle çizin — Pillar onları kesin bir çizime dönüştürür.",
+    "Evinizi 3D'de görün, sanal gerçeklikte içinde gezin ve mobilyaları yerleştirin.",
+    "On üç proje bölümü: vaziyet planı, mimari, taşıyıcı sistem, tesisat ve maliyet keşfi — çizimler otomatik hazırlanır.",
+    "",
+    "İnşaat maliyetini önceden bilin: malzemeler ve keşif bir anda hesaplanır.",
+    "AI asistan sorularınızı yanıtlar ve doğru bölümü açar.",
+    "Pillar. Ücretsiz deneyin — QR kodu tarayın."
+  ]
+}

@@ -88,6 +88,7 @@ USTUN_I18N.hi = {
  "/ paket": "/ पैकेज",
  "1 m² narxi": "प्रति m² कीमत",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. फ़ोटो अपलोड करें · 2. लक्ष्य, शैली और बजट चुनें · 3. \"डिज़ाइन योजना बनाएँ\" दबाएँ।",
+ "17 tilda": "17 भाषाओं में",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "2–3 घर जोड़ें और उन्हें साइट प्लान पर व्यवस्थित करें; आँगन भी यहीं चालू होता है।",
  "3D ga o'tkazish": "3D पर जाएँ",
  "4 tilda": "4 भाषाओं में",

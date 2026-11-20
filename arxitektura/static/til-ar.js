@@ -88,6 +88,7 @@ USTUN_I18N.ar = {
  "/ paket": "/ حزمة",
  "1 m² narxi": "السعر لكل m²",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. ارفع صورة · 2. اختر الهدف والطراز والميزانية · 3. اضغط \"إنشاء خطة التصميم\".",
+ "17 tilda": "بـ 17 لغة",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "أضف 2–3 منازل ورتّبها على المخطط العام؛ ويُفعَّل الفناء هنا أيضًا.",
  "3D ga o'tkazish": "الانتقال إلى 3D",
  "4 tilda": "بـ 4 لغات",

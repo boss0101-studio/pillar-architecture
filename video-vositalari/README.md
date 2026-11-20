@@ -1,4 +1,4 @@
-# Reklama videosini qayta yasash (4 til: uz / en / ru / es)
+# Reklama videosini qayta yasash (17 til)
 
 Videolar: `web/video/pillar-reklama-<til>.mp4` (1920×1080, 30 kadr/s, ~60–65 s, H.264 1,6 Mbit/s + AAC 160 kbit/s, har biri < 15 MiB). Oxirida sayt QR kodi (qrcode-generator, M daraja). Musiqa original: brauzerda sintez qilinadi (96 BPM, Am–F–C–G) — mualliflik huquqi muammosiz.
 
@@ -35,3 +35,10 @@ Kliplar Mixkit'dan (Mixkit Stock Video Free License — tijoratda bepul, muallif
 Kodlash `bitrateMode: "quantizer"` bilan: har kadrga o'z sifati — villa sahnasi QP 26, qolgan sahnalar QP 30 (`QP_VILLA`, `QP_REST`). Fayl < 20 MB (artifact chegarasi).
 720p kliplar 1080p ga kattalashtirishdan oldin yengil keskinlashtiriladi (`window.SHARP = 0.2`). Kuchliroq keskinlik donadorlikni ham oshiradi — hajm keskin o'sadi (0.5 da ~27 MB).
 Kliplar blob sifatida yuklanadi, kodlovchi navbati `dequeue` hodisasi bilan kutiladi — brauzer oynasi yashirin bo'lsa ham to'xtab qolmaydi. Baribir generator yorlig'i oldinda tursa tezroq ishlaydi.
+
+## 17 til (2026-11-20)
+Ekran matnlari: `uz/en/ru/es` — `generator.html` dagi `TX`; qolgan 13 til — `tx/<til>.json` ("tx"), generatorga `Object.assign(TX, …)` bilan qo'shilgan (json o'zgarsa — qayta qo'shing).
+Diktor: `diktor.py` (Edge TTS) — jumlalar `tx/<til>.json` ("lines"). Qirg'iz va tojik tillari uchun Edge'da ovoz yo'q — bu videolar diktorsiz (faqat musiqa).
+Shriftlar: lotin — Big Shoulders Display + Archivo; kirill (ru/kk/ky/tg) — Oswald + Inter; arab — Cairo + Noto Sans Arabic (matn bloki o'ngga tekislanadi);
+yapon/xitoy/koreys — Noto Sans JP/SC/KR (xitoy va yapon matni belgima-belgi bo'linadi); hind — Noto Sans Devanagari.
+Videolar faqat `web/video/` da; Python server (`arxitektura/server.py`) `/video/` ni o'sha papkadan beradi. Bosh sahifadagi video sayt tiliga ergashadi (`promovideo.js`).

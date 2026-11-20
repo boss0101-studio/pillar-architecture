@@ -88,6 +88,7 @@ USTUN_I18N.ru = {
  "/ paket": "/ пакет",
  "1 m² narxi": "Цена за 1 м²",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. Загрузите фото · 2. Выберите цель, стиль и бюджет · 3. Нажмите «Составить план дизайна».",
+ "17 tilda": "На 17 языках",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "Добавьте 2–3 дома и расположите их на генплане; двор тоже включается здесь.",
  "3D ga o'tkazish": "Перевод в 3D",
  "4 tilda": "На 4 языках",

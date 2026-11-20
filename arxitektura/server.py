@@ -22,6 +22,7 @@ from urllib.parse import parse_qs, urlparse
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+VIDEO_DIR = os.path.join(os.path.dirname(BASE_DIR), "web", "video")   # reklama videolari (17 til) bitta joyda — static/ ga nusxa kerak emas
 DB_PATH = os.environ.get("DB_PATH", os.path.join(BASE_DIR, "arxitektura.db"))
 PORT = int(os.environ.get("PORT", "8000"))
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN") or secrets.token_urlsafe(16)
@@ -719,6 +720,16 @@ class Handler(SimpleHTTPRequestHandler):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=STATIC_DIR, **kwargs)
+
+    def translate_path(self, path):
+        # /video/pillar-reklama-<til>.mp4|jpg — web/video dan; faqat shu nomlar (boshqa fayl yoki ../ chiqib bo'lmaydi)
+        name = urlparse(path).path
+        if name.startswith("/video/"):
+            base = name[len("/video/"):]
+            if re.fullmatch(r"pillar-reklama-[a-z]{2}\.(?:mp4|jpg)", base):
+                return os.path.join(VIDEO_DIR, base)
+        return super().translate_path(path)
+
 
     # ---------- yordamchilar ----------
     def end_headers(self):

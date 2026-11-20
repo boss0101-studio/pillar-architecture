@@ -88,6 +88,7 @@ USTUN_I18N.tg = {
  "/ paket": "/ маҷмӯа",
  "1 m² narxi": "Нарх барои 1 m²",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. Акс бор кунед · 2. Ҳадаф, услуб ва буҷаро интихоб кунед · 3. \"Сохтани нақшаи дизайн\"-ро пахш кунед.",
+ "17 tilda": "Бо 17 забон",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "2–3 хона илова карда, онҳоро дар нақшаи бош ҷойгир кунед; ҳавлӣ низ дар ҳамин ҷо фаъол мешавад.",
  "3D ga o'tkazish": "Гузариш ба 3D",
  "4 tilda": "Бо 4 забон",

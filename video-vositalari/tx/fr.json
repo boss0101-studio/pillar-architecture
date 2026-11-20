@@ -1,0 +1,68 @@
+{
+  "tx": {
+    "k1": "PLATEFORME DE CONCEPTION ARCHITECTURALE",
+    "t1": "Dessinez votre maison\ndès aujourd'hui",
+    "s1": "Fonctionne dans le navigateur : dessinez, visualisez en 3D, calculez — tout en un.",
+    "k2": "CONCEPTEUR",
+    "t2": "Concevez le bâtiment\nvous-même",
+    "s2": "Étages, toiture, matériaux et fenêtres — en quelques clics. Aussitôt en plans et en 3D.",
+    "c2": [
+      "Étage",
+      "Toiture",
+      "Matériau",
+      "Fenêtre",
+      "Balcon"
+    ],
+    "k3": "CONSTRUCTION LIBRE",
+    "t3": "Esquissez à la main —\nle plan est précis",
+    "s3": "Tracez les murs au crayon : Pillar les redresse et calcule les cotes et les surfaces.",
+    "rooms": [
+      "Séjour",
+      "Chambre",
+      "Cuisine"
+    ],
+    "k4": "3D · VR · INTÉRIEUR",
+    "t4": "Promenez-vous\nchez vous",
+    "s4": "Parcourez les pièces en 3D et en VR, placez meubles et appareils, aménagez la cour.",
+    "c4": [
+      "FHD VR",
+      "Intérieur",
+      "Cour",
+      "Soleil"
+    ],
+    "k5": "SECTIONS DU PROJET",
+    "t5": "13 sections —\nplans prêts",
+    "s5": "GP, AR, structure, chauffage, eau, électricité, gaz, sécurité incendie, devis… Planches A3 automatiques.",
+    "k7": "DEVIS ET MATÉRIAUX",
+    "t7": "Connaissez le prix\nà l'avance",
+    "s7": "Calcul par formules, liste des matériaux et devis récapitulatif avec TVA — exporté en PDF.",
+    "k8": "ASSISTANT AI",
+    "t8": "Posez une question —\nil vous y emmène",
+    "s8": "Répond uniquement sur le projet, ouvre les sections et modifie le bâtiment.",
+    "m8": [
+      "Va à la section Devis",
+      "Ouvert : Devis (SM) →",
+      "Fais 3 étages avec un toit en dôme",
+      "C'est fait ✓ 3 étages, toit en dôme"
+    ],
+    "o1": "Plateforme de conception architecturale",
+    "o2": "ESSAYEZ GRATUITEMENT",
+    "o3": "Pointez l'appareil photo vers le code QR →",
+    "o4": "Scannez — ouvrez le site",
+    "o5": "Photos : Unsplash · Vidéo : Mixkit (licence gratuite)",
+    "kv": "UNE VRAIE VILLA · CAMÉRA DRONE",
+    "tv": "La villa de vos rêves —\ncommence dans Pillar",
+    "sv": "Même une grande villa commence par un dessin : plan, 3D et devis — avant le chantier."
+  },
+  "lines": [
+    "Pillar — concevez votre maison dès aujourd'hui.",
+    "Choisissez étages, toiture, matériaux et fenêtres — le bâtiment apparaît aussitôt sur le plan.",
+    "En Construction libre, tracez les murs à la main — Pillar en fait un plan précis.",
+    "Voyez votre maison en 3D, visitez-la en réalité virtuelle et placez les meubles.",
+    "Treize sections du projet : plan de masse, architecture, structure, réseaux techniques et devis — les plans sont générés automatiquement.",
+    "",
+    "Connaissez le coût de construction à l'avance : matériaux et devis sont calculés en un instant.",
+    "L'assistant AI répond à vos questions et ouvre la bonne section.",
+    "Pillar. Essayez gratuitement — scannez le code QR."
+  ]
+}

@@ -52,12 +52,19 @@ LINES = {
         "Pillar. Pruébalo gratis: escanea el código QR.",
     ],
 }
+# Qo'shimcha tillar: jumlalar tx/<til>.json ("lines") dan. ky va tg uchun Edge'da ovoz yo'q — bu videolar diktorsiz (faqat musiqa)
+VOICES.update({"tr": "tr-TR-AhmetNeural", "it": "it-IT-DiegoNeural", "fr": "fr-FR-HenriNeural", "de": "de-DE-ChristophNeural", "pt": "pt-BR-AntonioNeural",
+               "ar": "ar-SA-HamedNeural", "hi": "hi-IN-MadhurNeural", "ja": "ja-JP-KeitaNeural", "zh": "zh-CN-YunxiNeural", "ko": "ko-KR-InJoonNeural", "kk": "kk-KZ-DauletNeural"})
+import json
+for _f in sorted((pathlib.Path(__file__).resolve().parent / "tx").glob("*.json")):
+    if _f.stem in VOICES and _f.stem not in LINES: LINES[_f.stem] = json.loads(_f.read_text(encoding="utf-8"))["lines"]
 ROOT = pathlib.Path(__file__).resolve().parent / "ovoz"
 
 async def main(langs):
     for lang in langs:
         out = ROOT / lang; out.mkdir(parents=True, exist_ok=True)
         for i, text in enumerate(LINES[lang], 1):
+            if not text: continue                            # 6-jumla ("Rasmdan dizayn") endi ishlatilmaydi
             if (out / f"{i}.mp3").exists() and (out / f"{i}.mp3").stat().st_size > 0 and "--force" not in sys.argv:
                 continue
             for attempt in range(8):                     # xizmat ba'zan bo'sh javob qaytaradi — qayta urinamiz

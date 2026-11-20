@@ -7,11 +7,11 @@ import http.server, json, pathlib, struct, sys, functools
 
 WEB = pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\web")
 STATIC = pathlib.Path(r"C:\Users\user\Desktop\ustun-arxitektura\arxitektura\static\video")
-LANGS = {"uz", "en", "ru", "es"}
+LANGS = {"uz", "en", "ru", "es", "tr", "it", "fr", "de", "pt", "ar", "hi", "ja", "zh", "ko", "kk", "ky", "tg"}
 def outs(lang):                                                  # har til — alohida fayl: Pillar-reklama-en.mp4 va h.k.
-    return [pathlib.Path(r"C:\Users\user\Videos") / f"Pillar-reklama-{lang}.mp4", WEB / "video" / f"pillar-reklama-{lang}.mp4", STATIC / f"pillar-reklama-{lang}.mp4"]
+    return [pathlib.Path(r"C:\Users\user\Videos") / f"Pillar-reklama-{lang}.mp4", WEB / "video" / f"pillar-reklama-{lang}.mp4"]   # server (arxitektura) /video/ ni web/video dan beradi — nusxa kerak emas
 def posters(lang):
-    return [WEB / "video" / f"pillar-reklama-{lang}.jpg", STATIC / f"pillar-reklama-{lang}.jpg"]
+    return [WEB / "video" / f"pillar-reklama-{lang}.jpg"]
 
 def box(kind, *parts):
     body = b"".join(parts)

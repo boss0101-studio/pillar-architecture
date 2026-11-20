@@ -1,0 +1,68 @@
+{
+  "tx": {
+    "k1": "PLATTFORM FÜR ARCHITEKTURPLANUNG",
+    "t1": "Zeichnen Sie Ihr Haus\nnoch heute",
+    "s1": "Läuft im Browser: zeichnen, in 3D ansehen, berechnen — alles an einem Ort.",
+    "k2": "KONSTRUKTOR",
+    "t2": "Planen Sie das Gebäude\nselbst",
+    "s2": "Geschosse, Dach, Material und Fenster — mit wenigen Klicks. Sofort in Plänen und 3D.",
+    "c2": [
+      "Geschoss",
+      "Dach",
+      "Material",
+      "Fenster",
+      "Balkon"
+    ],
+    "k3": "FREIES BAUEN",
+    "t3": "Von Hand skizzieren —\nexakter Plan fertig",
+    "s3": "Wände mit dem Stift zeichnen: Pillar richtet sie aus und berechnet Maße und Flächen.",
+    "rooms": [
+      "Wohnzimmer",
+      "Schlafzimmer",
+      "Küche"
+    ],
+    "k4": "3D · VR · INNENRAUM",
+    "t4": "Gehen Sie durch\nIhr Haus",
+    "s4": "Räume in 3D und VR durchlaufen, Möbel und Geräte platzieren, den Hof gestalten.",
+    "c4": [
+      "FHD VR",
+      "Innenraum",
+      "Hof",
+      "Sonnenstand"
+    ],
+    "k5": "PROJEKTABSCHNITTE",
+    "t5": "13 Abschnitte —\nPläne fertig",
+    "s5": "GP, AR, Tragwerk, Heizung, Wasser, Elektro, Gas, Brandschutz, Kalkulation… A3-Blätter automatisch.",
+    "k7": "KALKULATION UND MATERIAL",
+    "t7": "Den Preis\nvorher kennen",
+    "s7": "Formelbasierte Kalkulation, Materialliste und Gesamtkalkulation mit MwSt. — als PDF exportiert.",
+    "k8": "AI-ASSISTENT",
+    "t8": "Stellen Sie eine Frage —\ner führt Sie hin",
+    "s8": "Antwortet nur zum Projekt, öffnet Abschnitte und ändert das Gebäude.",
+    "m8": [
+      "Geh zum Abschnitt Kalkulation",
+      "Geöffnet: Kalkulation (SM) →",
+      "Mach 3 Geschosse mit Kuppeldach",
+      "Erledigt ✓ 3 Geschosse, Kuppeldach"
+    ],
+    "o1": "Plattform für Architekturplanung",
+    "o2": "KOSTENLOS TESTEN",
+    "o3": "Handykamera auf den QR-Code richten →",
+    "o4": "Scannen — Website öffnen",
+    "o5": "Fotos: Unsplash · Video: Mixkit (kostenlose Lizenz)",
+    "kv": "ECHTE VILLA · DROHNENKAMERA",
+    "tv": "Ihre Traumvilla —\nbeginnt in Pillar",
+    "sv": "Auch eine große Villa beginnt mit einer Zeichnung: Grundriss, 3D und Kalkulation — vor dem Bau."
+  },
+  "lines": [
+    "Pillar — planen Sie Ihr Haus noch heute.",
+    "Wählen Sie Geschosse, Dach, Material und Fenster — Ihr Gebäude erscheint sofort im Plan.",
+    "Beim Freien Bauen zeichnen Sie Wände von Hand — Pillar macht daraus einen exakten Plan.",
+    "Sehen Sie Ihr Haus in 3D, gehen Sie in virtueller Realität hindurch und stellen Sie Möbel auf.",
+    "Dreizehn Projektabschnitte: Lageplan, Architektur, Tragwerk, Haustechnik und Kalkulation — die Pläne entstehen automatisch.",
+    "",
+    "Kennen Sie die Baukosten im Voraus: Material und Kalkulation sind im Nu berechnet.",
+    "Der AI-Assistent beantwortet Ihre Fragen und öffnet den richtigen Abschnitt.",
+    "Pillar. Kostenlos testen — scannen Sie den QR-Code."
+  ]
+}

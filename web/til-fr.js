@@ -88,6 +88,7 @@ USTUN_I18N.fr = {
  "/ paket": "/ lot",
  "1 m² narxi": "Prix au m²",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. Importez une photo · 2. Choisissez l'objectif, le style et le budget · 3. Appuyez sur « Créer le plan de conception ».",
+ "17 tilda": "En 17 langues",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "Ajoutez 2–3 maisons et disposez-les sur le plan de masse ; la cour s'active aussi ici.",
  "3D ga o'tkazish": "Passer en 3D",
  "4 tilda": "En 4 langues",

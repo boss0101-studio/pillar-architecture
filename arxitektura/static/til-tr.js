@@ -88,6 +88,7 @@ USTUN_I18N.tr = {
  "/ paket": "/ paket",
  "1 m² narxi": "m² başına fiyat",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. Fotoğraf yükleyin · 2. Amaç, stil ve bütçe seçin · 3. \"Tasarım planı oluştur\"a basın.",
+ "17 tilda": "17 dilde",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "2–3 ev ekleyin ve vaziyet planında yerleştirin; avlu da burada açılır.",
  "3D ga o'tkazish": "3D'ye geç",
  "4 tilda": "4 dilde",

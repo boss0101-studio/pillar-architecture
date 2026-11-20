@@ -88,6 +88,7 @@ USTUN_I18N.zh = {
  "/ paket": "/ 套",
  "1 m² narxi": "每 m² 价格",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. 上传照片 · 2. 选择目标、风格和预算 · 3. 点击\"生成设计方案\"。",
+ "17 tilda": "17 种语言",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "添加 2–3 栋房屋并在总平面上布置；这里也会开启院子。",
  "3D ga o'tkazish": "切换到 3D",
  "4 tilda": "4 种语言",

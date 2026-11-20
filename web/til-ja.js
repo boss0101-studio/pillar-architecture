@@ -88,6 +88,7 @@ USTUN_I18N.ja = {
  "/ paket": "/ パッケージ",
  "1 m² narxi": "m² あたりの価格",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. 写真をアップロード · 2. 目的・スタイル・予算を選択 · 3.「デザインプランを作成」を押す。",
+ "17 tilda": "17 か国語",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "家を2〜3棟追加して配置図上に並べます。ここで庭もオンになります。",
  "3D ga o'tkazish": "3D に切り替え",
  "4 tilda": "4 か国語で",

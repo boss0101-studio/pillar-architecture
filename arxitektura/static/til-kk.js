@@ -88,6 +88,7 @@ USTUN_I18N.kk = {
  "/ paket": "/ пакет",
  "1 m² narxi": "1 m² бағасы",
  "1. Rasm yuklang · 2. Maqsad, uslub va byudjetni tanlang · 3. \"Dizayn rejasini tuzish\"ni bosing.": "1. Фото жүктеңіз · 2. Мақсатты, стильді және бюджетті таңдаңыз · 3. «Дизайн жоспарын жасау» түймесін басыңыз.",
+ "17 tilda": "17 тілде",
  "2–3 ta uy qo'shib, bosh rejada joylashtirasiz; hovli ham shu yerda yoqiladi.": "2–3 үй қосып, оларды бас жоспарда орналастырыңыз; аула да осында қосылады.",
  "3D ga o'tkazish": "3D-ге өту",
  "4 tilda": "4 тілде",
